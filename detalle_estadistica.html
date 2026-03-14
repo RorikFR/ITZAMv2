@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>Sistema ITZAM — Estadísticas</title>
+		<link rel="stylesheet" href="styles.css" />
+	</head>
+	<body>
+		<header class="topbar"><div class="brand">Sistema web consulta de información clínica ITZAM</div></header>
+	
+	<nav>
+		<ul>
+  			<li><a href="home.html" class="active">Inicio</a></li>
+
+			<li class="dropdown">
+   			<a href="javascript:void(0)" class="dropbtn">Pacientes</a>
+			<div class="dropdown-content">
+      			<a href="consulta_paciente.html">Consultar registro</a>
+      			<a href="nuevo_paciente.html">Nuevo paciente</a>
+    		</div>
+  			</li>
+			<li class="dropdown">
+   			<a href="javascript:void(0)" class="dropbtn">Consultas médicas</a>
+			<div class="dropdown-content">
+      			<a href="consulta_expediente.html">Historia clínica</a>
+      			<a href="nueva_consulta.html">Nueva consulta</a>
+    		</div>
+  			</li>
+			<li class="dropdown">
+   			<a href="javascript:void(0)" class="dropbtn">Asesorías</a>
+			<div class="dropdown-content">
+      			<a href="nueva_asesoria.html">Nueva asesoría</a>
+      			<a href="mis_asesorias.html">Mis asesorías</a>
+    		</div>	
+  			</li>
+			<li class="dropdown">
+   			<a href="javascript:void(0)" class="dropbtn">Inventario</a>
+			<div class="dropdown-content">
+      			<a href="nueva_compra.html">Registrar compra</a>
+      			<a href="consulta_inventario.html">Consultar inventario</a>
+      			<a href="#">Modificar inventario</a>
+				<a href="#">Eliminar registro</a>
+    		</div>
+  			</li>
+			<li class="dropdown">
+   			<a href="javascript:void(0)" class="dropbtn">Personal de salud</a>
+			<div class="dropdown-content">
+      			<a href="nuevo_personal.html">Nuevo personal</a>
+      			<a href="consulta_personal.html">Consultar personal</a>
+      			<a href="#">Modificar registro de personal</a>
+				<a href="#">Eliminar registro de personal</a>
+    		</div>
+  			</li>
+			<li class="dropdown">
+   			<a href="javascript:void(0)" class="dropbtn">Unidades médicas</a>
+			<div class="dropdown-content">
+      			<a href="nueva_unidad.html">Alta de unidad médica</a>
+      			<a href="consulta_unidad.html">Consultar de unidad médica</a>
+      			<a href="#">Modificar registro de unidad médica</a>
+				<a href="#">Eliminar registro de unidad médica</a>
+    		</div>
+  			</li>
+			<li class="dropdown">
+   			<a href="javascript:void(0)" class="dropbtn">Recetas</a>
+			<div class="dropdown-content">
+      			<a href="nueva_receta.html">Nueva receta</a>
+      			<a href="consulta_receta.html">Consultar receta</a>
+      			<a href="#">Modificar receta</a>
+				<a href="#">Eliminar receta</a>
+    		</div>
+  			</li>
+			<li class="dropdown">
+   			<a href="javascript:void(0)" class="dropbtn">Estudios</a>
+			<div class="dropdown-content">
+      			<a href="nueva_orden_laboratorio.html">Nueva orden de laboratorio</a>
+      			<a href="consulta_orden_laboratorio.html">Consultar resultados</a>
+      			<a href="#">Modificar orden de laboratorio</a>
+				<a href="#">Eliminar orden de laboratorio</a>
+    		</div>
+  			</li>
+			
+			<li><a href="#estadisticas">Estadísticas</a></li>
+			<li><a href="#reportes">Reportes</a></li>
+			<li><a href="#catalogos">Catálogos</a></li>
+		</ul>
+	</nav>
+
+		<h1>Detalle de estadísticas</h1>
+		<hr></hr>
+
+
+
+
+			    <!-- <div style="width: 500px;"><canvas id="dimensions"></canvas></div><br/> -->
+    <div style="width: 800px;"><canvas id="acquisitions"></canvas></div>
+
+    <!-- <script type="module" src="dimensions.js"></script> -->
+    <script type="module" src="acquisitions.js"></script>
+
+				
+	
+		
+
+		<footer class="bottombar">© 2026 ITZAM</footer>
+	</body>
+</html>
