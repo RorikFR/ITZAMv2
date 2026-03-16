@@ -8,7 +8,6 @@ if (isset($_SESSION['idUsuario'])) {
 }
 ?>
 <!doctype html>
-<!doctype html>
 <html lang="es">
 	<head>
 		<meta charset="utf-8" />
@@ -16,46 +15,50 @@ if (isset($_SESSION['idUsuario'])) {
 		<title>Sistema ITZAM — Login</title>
 		<link rel="stylesheet" href="styles.css" />
 		<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
 	</head>
 	<body>
 
 	<header>
-		<div class="topbar-container">
-			<div>
-				<img class ="logo"src="Assets/itzam_logoV2.png" alt="LOGO" />
-			</div>
+		<div class="topbar-container-login">
 			
 			<div class="topbar-header">Sistema web consulta de información clínica ITZAM</div>
 			
-			<div>
-				<img class ="logo"src="Assets/itzam_logoV2.png" alt="LOGO" />
-			</div>
 		</div>
-
 	</header>
 
-		<div class="page-center">
-			<div class="page">
-				<main class="card" role="main">
-					<h2 class="form-title">Iniciar sesión</h2>
+		<div class="split-container">
+			
+			<div class="left-side">
+				<img src="Assets/itzam_logoV2.png" alt="ITZAM Logo Central" />
+			</div>
 
-					<form id="login-form" novalidate>
-						<label class="login" for="username">Usuario</label>
-						<input class="login" id="username" name="username" type="text" autocomplete="username" required>
+			<div class="right-side">
+				
+				<div class="page-center">
+					<div class="page">
+						<main class="card" role="main">
+							<h2 class="form-title">Iniciar sesión</h2>
 
-						<label class="login" for="password">Contraseña</label>
-						<input class="login" id="password" name="password" type="password" autocomplete="current-password" required>
+							<form id="login-form" novalidate>
+								<label class="login" for="username">Usuario</label>
+								<input class="login" id="username" name="username" type="text" autocomplete="username" required>
 
-						<div class="recaptcha-wrap">
-							<!-- Replace YOUR_RECAPTCHA_SITE_KEY with your site key -->
-							<div class="g-recaptcha" data-sitekey="6LcjXlcsAAAAAGtjbpH31zpJXCUnxY5I8PxnW_Gi"></div>
-						</div>
-						<div id="error" class="err" aria-live="polite"></div>
+								<label class="login" for="password">Contraseña</label>
+								<input class="login" id="password" name="password" type="password" autocomplete="current-password" required>
 
-						<button class="btn" type="submit">Iniciar sesión</button>
-					</form>
-					<span class="forgot" id="forgot">Olvide mi contraseña y/o usuario</span>
-				</main>
+								<div class="recaptcha-wrap">
+									<div class="g-recaptcha" data-sitekey="6LcjXlcsAAAAAGtjbpH31zpJXCUnxY5I8PxnW_Gi"></div>
+								</div>
+								<div id="error" class="err" aria-live="polite"></div>
+
+								<button class="btn" type="submit">Iniciar sesión</button>
+							</form>
+							<span class="forgot" id="forgot">Olvide mi contraseña y/o usuario</span>
+						</main>
+					</div>
+				</div>
+
 			</div>
 		</div>
 
@@ -86,11 +89,10 @@ if (isset($_SESSION['idUsuario'])) {
         const msgEl = document.getElementById('recover-message');
         const btn = document.getElementById('btn-recover');
 
-        // Validación de formato de correo en el navegador
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!email || !emailRegex.test(email)) {
             msgEl.style.display = 'block';
-            msgEl.style.color = '#d9534f'; // Rojo
+            msgEl.style.color = '#d9534f'; 
             msgEl.textContent = 'Por favor, ingresa un correo electrónico válido.';
             return;
         }
@@ -103,7 +105,6 @@ if (isset($_SESSION['idUsuario'])) {
             const res = await fetch('backend_recuperar.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // Ahora enviamos la variable 'email'
                 body: JSON.stringify({ email: email }) 
             });
             const data = await res.json();
@@ -111,10 +112,9 @@ if (isset($_SESSION['idUsuario'])) {
             msgEl.style.display = 'block';
             
             if (data.estatus === 'exito') {
-                msgEl.style.color = '#5cb85c'; // Verde
+                msgEl.style.color = '#5cb85c'; 
                 msgEl.textContent = '✅ ' + data.mensaje;
                 
-                // Ocultamos la interfaz porque ya se logró
                 document.getElementById('recover-email').style.display = 'none';
                 btn.style.display = 'none';
                 document.getElementById('recover-instructions').style.display = 'none';
@@ -136,30 +136,21 @@ if (isset($_SESSION['idUsuario'])) {
     }
 </script>
 
-
-		<footer class="bottombar">© 2026 ITZAM</footer>
+	<footer class="bottombar">© 2026 ITZAM</footer>
 
 <script>
-	// Get the modal
 	var modal = document.getElementById("myModal");
-
-	// Get the button that opens the modal
 	var btn = document.getElementById("forgot");
-
-	// Get the <span> element that closes the modal
 	var span = document.getElementsByClassName("close")[0];
 
-	// When the user clicks the button, open the modal 
 	btn.onclick = function() {
 	  modal.style.display = "block";
 	}
 
-	// When the user clicks on <span> (x), close the modal
 	span.onclick = function() {
 	  modal.style.display = "none";
 	}
 
-	// When the user clicks anywhere outside of the modal, close it
 	window.onclick = function(event) {
 	  if (event.target == modal) {
 	    modal.style.display = "none";

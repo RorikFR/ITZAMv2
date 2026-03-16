@@ -35,18 +35,20 @@ if ($metodo === 'GET') {
     } else {
         // Si no hay búsqueda, traemos los últimos 20 registros
         $stmt = $pdo->query("SELECT 
-                    a.idAsesoria, 
-                    a.fecha_solicitud, 
-                    p.curp, 
-                    p.nombre, 
-                    p.apellido_p, 
-                    p.apellido_m, 
-                    a.motivo, 
-                    a.comentarios 
-                FROM registro_asesorias a
-                INNER JOIN registro_paciente p ON a.idPaciente = p.idPaciente
-                ORDER BY a.idAsesoria DESC 
-                LIMIT 20");
+                                a.idAsesoria, 
+                                p.curp, 
+                                p.nombre, 
+                                p.apellido_p,
+                                p.apellido_m,
+                                m.nombre_motivo AS motivo, -- Traemos el texto del catálogo y lo renombramos
+                                a.comentarios, 
+                                a.fecha_solicitud
+                            FROM registro_asesorias a
+                            -- Unimos con la tabla de pacientes para traer los datos personales
+                            LEFT JOIN registro_paciente p ON a.idPaciente = p.idPaciente 
+                            -- Unimos con el nuevo catálogo para traer el motivo
+                            LEFT JOIN cat_motivos_asesoria m ON a.idMotivo = m.idMotivo
+                            ORDER BY a.idAsesoria DESC");
     }
     
     echo json_encode($stmt->fetchAll());
@@ -72,10 +74,11 @@ if ($metodo === 'POST') {
         exit; // Detenemos la ejecución para no procesar más abajo
     }
 
-    // --- LÓGICA DE EDICIÓN ---
+// --- LÓGICA DE EDICIÓN ---
     if ($accion === 'editar' && $idAsesoria > 0) {
-        // Usamos strings vacíos como fallback en lugar de 0
-        $motivo = $input['motivo'] ?? '';
+        
+        // 🔥 CAMBIO CLAVE 3FN: Ahora esperamos el ID del motivo, no el texto
+        $idMotivo = $input['idMotivo'] ?? null; 
         $curp = $input['curp'] ?? '';
         $comentarios = $input['comentarios'] ?? '';
         
@@ -93,27 +96,36 @@ if ($metodo === 'POST') {
             exit; // Crucial para detener el script aquí
         }
         
-        // PASO 2: El paciente existe, extraemos su ID real y actualizamos
+        // PASO 2: El paciente existe, extraemos su ID real
         $idPacienteEncontrado = $paciente['idPaciente'];
         
-        $stmt = $pdo->prepare("UPDATE registro_asesorias 
-            SET 
-                idPaciente = :idPaciente, 
-                motivo = :motivo, 
-                comentarios = :comentarios 
-            WHERE idAsesoria = :idAsesoria");
-        
-        $stmt->execute([
-            'idPaciente'  => $idPacienteEncontrado, 
-            'motivo'      => $motivo, 
-            'comentarios' => $comentarios,
-            'idAsesoria'  => $idAsesoria
-        ]);
-        
-        echo json_encode([
-            "estatus" => "exito", 
-            "mensaje" => "Registro actualizado correctamente."
-        ]);
+        // PASO 3: Actualizamos la asesoría utilizando las llaves foráneas correctas
+        try {
+            $stmt = $pdo->prepare("UPDATE registro_asesorias 
+                SET 
+                    idPaciente = :idPaciente, 
+                    idMotivo = :idMotivo, 
+                    comentarios = :comentarios 
+                WHERE idAsesoria = :idAsesoria");
+            
+            $stmt->execute([
+                'idPaciente'  => $idPacienteEncontrado, 
+                'idMotivo'    => $idMotivo, 
+                'comentarios' => $comentarios,
+                'idAsesoria'  => $idAsesoria
+            ]);
+            
+            echo json_encode([
+                "estatus" => "exito", 
+                "mensaje" => "Registro actualizado correctamente."
+            ]);
+        } catch (PDOException $e) {
+            // Si hay un error SQL (ej. el idMotivo no existe en el catálogo), lo atrapamos
+            echo json_encode([
+                "estatus" => "error", 
+                "mensaje" => "Error en la base de datos al intentar actualizar el registro."
+            ]);
+        }
         exit;
     }
 }

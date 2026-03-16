@@ -21,6 +21,67 @@ html,body{
 }
 
 
+/* LOGIN PAGE STYLES */
+      /* ESTILOS PARA LA DISPOSICIÓN 25% / 75% */
+      .split-container {
+        display: flex;
+        /* 🔥 Calcula el alto de la pantalla restando tu header y footer */
+        min-height: calc(100vh - 90px); 
+        width: 100%;
+        /* 🔥 ESTA ES LA MAGIA: Obliga a ambas columnas a estirarse al máximo alto disponible */
+        align-items: stretch; 
+      }
+
+      /* 25% Izquierdo: Logo */
+      .left-side {
+        flex: 0 0 25%; 
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f8f9fa; 
+        border-right: 1px solid #eaeaea; 
+        /* Quitamos el padding vertical para que el fondo toque los bordes al 100% */
+        padding: 0 20px; 
+      }
+
+      .left-side img {
+        max-width: 80%;
+        height: auto;
+        filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.05));
+      }
+
+      /* 75% Derecho: Contenedor del Login */
+      .right-side {
+        flex: 0 0 75%; 
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #ffffff;
+      }
+
+      .right-side .page-center {
+        min-height: auto !important; 
+        width: 100%;
+        display: flex;
+        justify-content: center;
+      }
+
+      /* Responsivo */
+      @media (max-width: 768px) {
+        .split-container {
+          flex-direction: column;
+        }
+        .left-side {
+          display: none; 
+        }
+        .right-side {
+          flex: 1 1 100%;
+          padding: 40px 0;
+        }
+      }
+
+/* END LOGIN PAGE STYLES */
+
 .page-center{
   min-height: 70vh;
   display:flex;
@@ -41,6 +102,15 @@ html,body{
   text-align:center;
 }
 
+.topbar-container-login {
+  display: flex;
+  flex-direction: row;
+  width:100%;
+  background: var(--wine);
+  justify-content: space-between;
+  padding: 10px;
+}
+
 
 .topbar-container{
   display: flex;
@@ -49,6 +119,14 @@ html,body{
   background: var(--wine);
   justify-content: space-between;
 }
+
+.topbar-container-login div {
+  font-size: 18px;
+  color: #fff;
+  margin: auto;
+  padding: 5px;
+}
+
 
 .topbar-container div {
   font-size: 18px;
@@ -60,6 +138,13 @@ html,body{
 .dropdown-item:hover {
   font-weight: bold;
   cursor: pointer;
+}
+
+.topbar-header-login {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+  margin-left: 10px;
 }
 
 .topbar-header {
@@ -646,8 +731,8 @@ li.dropdown {
 
 .tabla-container { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; min-width: 900px; }
-th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
-th { background-color: #f8fafc; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; }
+th, td { padding: 12px 15px; text-align: center; border-bottom: 1px solid #eee; }
+th { background-color: #f8fafc; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; text-align: center; }
         
 .badge-urgencia { background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
 .badge-general { background: #dbeafe; color: #1e40af; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }

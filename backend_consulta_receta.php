@@ -53,8 +53,7 @@ if ($metodo === 'GET') {
                             INNER JOIN registro_personal m ON c.idPersonal = m.idPersonal
                             INNER JOIN receta_detalle d ON r.idReceta = d.idReceta
                             INNER JOIN inventario_medicamentos i ON d.idMed = i.idMed
-                            ORDER BY r.idReceta DESC 
-                            LIMIT 20");
+                            ORDER BY r.idReceta DESC");
     }
     
     echo json_encode($stmt->fetchAll());

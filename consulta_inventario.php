@@ -15,6 +15,8 @@ if (!isset($_SESSION['idUsuario'])) {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <title>Sistema ITZAM — Consultar inventario</title>
         <link rel="stylesheet" href="styles.css" />
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
     </head>
     <body>
         <header>
@@ -125,35 +127,23 @@ if (!isset($_SESSION['idUsuario'])) {
         </ul>
     </nav>
 
-        <div class="search-box">
-            <label for="filtro_categoria" style="font-weight: bold; margin-right: 10px;">Filtrar inventario por:</label>
-            
-            <select class="search-box" id="filtro_categoria" onchange="buscarDatos()" style="padding: 8px; border-radius: 4px;">
-                <option value="Todos">Mostrar Todo</option>
-                <option value="Medicamento">💊 Medicamentos</option>
-                <option value="Insumo">🩹 Material e Insumos</option>
-                <option value="Equipo Médico">🩺 Equipo Médico</option>
-            </select>
+    <br>
+
+        <div class="tabla-container">
+            <table id="tablaInventario" class="display" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Piezas en stock</th>
+                        <th>Proveedor</th>
+                        <th>Categoría</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoTabla"></tbody>
+            </table>
         </div>
-
-
-        <h1>Últimos registros en inventario</h1>
-
-            <div class="tabla-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Piezas en stock</th>
-                    <th>Proveedor</th>
-                    <th>Categoría</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="cuerpoTabla"></tbody>
-        </table>
-    </div>
 
     <div id="modalEdicion" class="modal-overlay">
         <div class="modal-box">
@@ -186,21 +176,29 @@ if (!isset($_SESSION['idUsuario'])) {
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+
     <script>
         const cuerpoTabla = document.getElementById("cuerpoTabla");
         const modal = document.getElementById("modalEdicion");
         
-        // Mapeo de los nuevos inputs del modal
+        // Mapeo de los inputs del modal
         const inputModalId = document.getElementById("inputModalId");
         const inputModalCategoria = document.getElementById("inputModalCategoria");
         const inputModalNombre = document.getElementById("inputModalNombre");
         const inputModalStock = document.getElementById("inputModalStock");
         const inputModalProveedor = document.getElementById("inputModalProveedor");
 
+        // Variable global para la instancia de DataTables
+        let tablaInstancia = null; 
+
         // --- 0. CARGAR CATÁLOGOS (PROVEEDORES) ---
         async function cargarProveedoresModal() {
             try {
-                // Asegúrate de que tu backend tenga este endpoint preparado
                 const response = await fetch('backend_consulta_inventario.php?accion=cargar_proveedores');
                 const datos = await response.json();
                 
@@ -217,17 +215,18 @@ if (!isset($_SESSION['idUsuario'])) {
             }
         }
 
-// --- 1. CARGAR DATOS (GET) ---
-        async function buscarDatos() {
-            // Ahora solo leemos la categoría seleccionada
-            const categoria = document.getElementById("filtro_categoria").value; 
-            
-            cuerpoTabla.innerHTML = "<tr><td colspan='6' style='text-align:center'>Cargando...</td></tr>";
+        // --- 1. CARGAR DATOS INICIALES (GET TODO) ---
+        async function cargarDatosIniciales() {
+            if (tablaInstancia !== null) {
+                tablaInstancia.destroy();
+                tablaInstancia = null;
+            }
+
+            cuerpoTabla.innerHTML = "<tr><td colspan='6' style='text-align:center'>Cargando base de datos...</td></tr>";
 
             try {
-                // Enviamos únicamente la variable 'cat' al backend
-                const url = `backend_consulta_inventario.php?cat=${encodeURIComponent(categoria)}`;
-                const response = await fetch(url);
+                // Pasamos 'Todos' por defecto para que el backend traiga el inventario completo
+                const response = await fetch('backend_consulta_inventario.php?cat=Todos');
                 const datos = await response.json();
                 
                 if(datos.error) { alert(datos.error); return; }
@@ -239,24 +238,29 @@ if (!isset($_SESSION['idUsuario'])) {
             }
         }
 
+        // --- RENDERIZAR E INICIALIZAR DATATABLES ---
         function renderizar(datos) {
             cuerpoTabla.innerHTML = "";
+            
             if(datos.length === 0){
                 cuerpoTabla.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 20px;'>No se encontraron resultados</td></tr>";
                 return;
             }
 
             datos.forEach(item => {
-                // Si viene nulo del LEFT JOIN, mostramos un mensaje bonito
-                const nombreProveedor = item.Proveedor ? item.Proveedor : '<span style="color:gray">Sin proveedor</span>';
+                // Validación visual de Proveedor
+                const nombreProveedor = item.Proveedor ? item.Proveedor : '<span style="color:gray; font-style: italic;">Sin proveedor</span>';
+                
+                // 🔥 ALERTA VISUAL: Si el stock es menor a 10, lo pintamos de rojo
+                const stockColor = item.Cantidad < 10 ? 'color: #dc3545; font-weight: bold;' : 'font-weight: bold; color: #198754;';
 
                 cuerpoTabla.innerHTML += `
                     <tr>
                         <td><b>${item.id}</b></td>
-                        <td>${item.Nombre}</td>
-                        <td>${item.Cantidad}</td>
+                        <td style="font-weight: 500;">${item.Nombre}</td>
+                        <td style="${stockColor}">${item.Cantidad}</td>
                         <td>${nombreProveedor}</td>
-                        <td><b>${item.Categoria}</b></td>
+                        <td><span style="background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 0.9em; border: 1px solid #ced4da;">${item.Categoria}</span></td>
                         <td>
                             <button class="btn-edit" onclick="abrirModal(${item.id}, '${item.Categoria}', '${item.Nombre}', ${item.Cantidad}, ${item.idProveedor || 'null'})">Editar</button>
                             <button class="btn-del" onclick="eliminarRegistro(${item.id}, '${item.Categoria}')">Borrar</button>
@@ -264,12 +268,47 @@ if (!isset($_SESSION['idUsuario'])) {
                     </tr>
                 `;
             });
+
+            // Inicializamos DataTables con diccionario en español
+            tablaInstancia = $('#tablaInventario').DataTable({
+                language: {
+                    "decimal": "",
+                    "emptyTable": "No hay información en el inventario",
+                    "info": "Mostrando _START_ a _END_ de _TOTAL_ artículos",
+                    "infoEmpty": "Mostrando 0 a 0 de 0 artículos",
+                    "infoFiltered": "(Filtrado de _MAX_ artículos totales)",
+                    "infoPostFix": "",
+                    "thousands": ",",
+                    "lengthMenu": "Mostrar _MENU_ artículos por página",
+                    "loadingRecords": "Cargando...",
+                    "processing": "Procesando...",
+                    "search": "Buscar:",
+                    "zeroRecords": "No se encontraron coincidencias",
+                    "paginate": {
+                        "first": "Primero",
+                        "last": "Último",
+                        "next": "Siguiente",
+                        "previous": "Anterior"
+                    },
+                    "aria": {
+                        "sortAscending": ": Activar para ordenar la columna de manera ascendente",
+                        "sortDescending": ": Activar para ordenar la columna de manera descendente"
+                    }
+                },
+                dom: 'Bfrtip',
+                buttons: [
+                    { extend: 'excelHtml5', text: '📊 Exportar Inventario', className: 'btn-exportar' },
+                    { extend: 'csvHtml5', text: '📄 Exportar CSV', className: 'btn-exportar' }
+                ],
+                pageLength: 15, // Aumenté un poco la paginación porque los inventarios suelen verse mejor con más filas
+                ordering: true,
+                order: [[2, "asc"]] // 🔥 Opcional: Ordena por cantidad ascendente por defecto (los que tienen menos stock salen primero)
+            });
         }
 
         // --- 2. ELIMINAR (POST) ---
-        // Agregamos el parámetro "categoria" para que el backend sepa a qué tabla apuntar
         async function eliminarRegistro(id, categoria) {
-            if(!confirm("¿Confirma que desea eliminar este registro permanentemente?")) return;
+            if(!confirm("¿Confirma que desea eliminar este artículo permanentemente del inventario?")) return;
 
             try {
                 const response = await fetch('backend_consulta_inventario.php', {
@@ -278,14 +317,14 @@ if (!isset($_SESSION['idUsuario'])) {
                     body: JSON.stringify({ 
                         accion: 'eliminar', 
                         id: id, 
-                        categoria: categoria // <-- ¡Dato vital para el switch del PHP!
+                        categoria: categoria 
                     })
                 });
                 const res = await response.json();
                 
                 if(res.estatus === 'exito') {
                     alert("✅ " + res.mensaje);
-                    buscarDatos(); 
+                    cargarDatosIniciales(); // Recargar tabla usando la nueva función
                 } else {
                     alert("⚠️ " + res.mensaje);
                 }
@@ -299,7 +338,6 @@ if (!isset($_SESSION['idUsuario'])) {
             inputModalNombre.value = nombre;
             inputModalStock.value = cantidad;
             
-            // Asignamos el proveedor; si era null, lo regresamos a la opción por defecto ("")
             inputModalProveedor.value = idProveedor ? idProveedor : "";
             
             modal.classList.add("show");
@@ -314,7 +352,7 @@ if (!isset($_SESSION['idUsuario'])) {
             const cantidad = inputModalStock.value;
             const idProveedor = inputModalProveedor.value;
 
-            // --- ESCUDO DE VALIDACIÓN FRONTEND ---
+            // Escudo de validación Frontend
             if (nombre.trim() === "" || idProveedor === "") {
                 alert("⚠️ Por favor, ingresa el nombre del artículo y selecciona un proveedor.");
                 return; 
@@ -341,21 +379,19 @@ if (!isset($_SESSION['idUsuario'])) {
                 else if (res.estatus === 'exito') {
                     alert("✅ " + res.mensaje);
                     cerrarModal();
-                    buscarDatos(); 
+                    cargarDatosIniciales(); // Recargar tabla usando la nueva función
                 }
             } catch (error) { alert("Error al guardar cambios"); }
         }
 
         // Cargas iniciales
         cargarProveedoresModal();
-        buscarDatos();
+        cargarDatosIniciales();
 
         // Cerrar modal click fuera
         window.onclick = function(ev) { if (ev.target == modal) cerrarModal(); }
     </script>
 
-
-        <footer class="bottombar">© 2026 ITZAM</footer>
-
+    <footer class="bottombar">© 2026 ITZAM</footer>
     </body>
 </html>

@@ -2,8 +2,6 @@
 session_start();
 header('Content-Type: application/json');
 
-
-
 require 'db_conn.php';
 
 // Estructura maestra que devolveremos al frontend
@@ -15,12 +13,11 @@ $respuesta = [
     "edades"     => ["labels" => [], "valores" => []],
     "inventario" => ["labels" => [], "valores" => []],
     "insumos"    => ["labels" => [], "valores" => []],
-    "equipo"     => ["labels" => [], "valores" => []] // <-- Nuevo arreglo para equipo médico
+    "equipo"     => ["labels" => [], "valores" => []]
 ];
 
 try {
     // 1. Consultas por unidad médica
-    // CORRECCIÓN: Agregamos "AS nombre_unidad" para que el alias coincida con el $row
     $stmt1 = $pdo->query("
         SELECT u.nombre AS nombre_unidad, COUNT(c.idConsulta) as total
         FROM registro_consultas c
@@ -33,11 +30,12 @@ try {
     }
 
     // 2. Consultas por categoría (tipo) de atención
-    // CORRECCIÓN: Cambiamos $row['categoria'] por $row['tipo_consulta']
+    // 🔥 CORRECCIÓN 3FN: Hacemos JOIN con el catálogo de tipos de consulta
     $stmt2 = $pdo->query("
-        SELECT tipo_consulta, COUNT(idConsulta) as total
-        FROM registro_consultas
-        GROUP BY tipo_consulta
+        SELECT tc.nombre_tipo AS tipo_consulta, COUNT(c.idConsulta) as total
+        FROM registro_consultas c
+        INNER JOIN cat_tipo_consulta tc ON c.idTipoConsulta = tc.idTipoConsulta
+        GROUP BY tc.nombre_tipo
     ");
     while ($row = $stmt2->fetch(PDO::FETCH_ASSOC)) {
         $respuesta["categorias"]["labels"][] = $row['tipo_consulta'];
@@ -45,7 +43,6 @@ try {
     }
 
     // 3. Top 5 Incidencias (Diagnósticos)
-    // CORRECCIÓN: Cambiamos $row['diagnostico_principal'] por $row['diagnostico']
     $stmt3 = $pdo->query("
         SELECT diagnostico, COUNT(idConsulta) as total
         FROM registro_consultas
@@ -74,7 +71,7 @@ try {
         $respuesta["personal"]["valores"][] = $row['total'];
     }
 
-    // 5. Distribución de edades (Calculando edad redondeada al momento de la consulta)
+    // 5. Distribución de edades
     $stmt5 = $pdo->query("
         SELECT 
             CASE 
@@ -95,7 +92,7 @@ try {
         $respuesta["edades"]["valores"][] = $row['total'];
     }
 
-// 6. Top 10 Medicamentos con mayor stock por Unidad
+    // 6. Top 10 Medicamentos
     $stmt6 = $pdo->query("
         SELECT 
             CONCAT(m.nombre, ' (', u.nombre, ')') AS etiqueta_inventario, 
@@ -112,7 +109,7 @@ try {
         $respuesta["inventario"]["valores"][] = $row['volumen'];
     }
 
-    // 7. Top 10 Insumos con mayor stock por Unidad
+    // 7. Top 10 Insumos
     $stmt7 = $pdo->query("
         SELECT 
             CONCAT(i.nombre, ' (', u.nombre, ')') AS etiqueta_insumo, 
@@ -129,7 +126,7 @@ try {
         $respuesta["insumos"]["valores"][] = $row['volumen'];
     }
 
-    // 8. Top 10 Equipo Médico por Unidad
+    // 8. Top 10 Equipo Médico
     $stmt8 = $pdo->query("
         SELECT 
             CONCAT(e.nombre, ' (', u.nombre, ')') AS etiqueta_equipo, 
@@ -150,7 +147,6 @@ try {
     echo json_encode($respuesta);
 
 } catch (PDOException $e) {
-    // Para ver el error real en la consola en caso de fallo, puedes concatenar $e->getMessage() temporalmente
     http_response_code(500);
     echo json_encode(["error" => "Error de BD: " . $e->getMessage()]);
 }

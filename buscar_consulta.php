@@ -14,6 +14,8 @@ if (!isset($_SESSION['idUsuario'])) {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <title>Sistema ITZAM — Buscar consulta médica</title>
         <link rel="stylesheet" href="styles.css" />
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
     </head>
     <body>
         <header>
@@ -127,33 +129,26 @@ if (!isset($_SESSION['idUsuario'])) {
 		</ul>
 	    </nav>
 
-        <div class="search-box">
-            <p class="search-box">Ingresa el CURP del paciente:</p>
-            <input class="search-box" type="text" id="buscar_curp" name="buscar_curp" maxlength="18" required/>
-            <button class="search" type="button" id="searchBtn" onclick="buscarDatos()">Buscar</button>
+<br>
+
+       <div class="tabla-container">
+            <table id="tablaConsultas" class="display" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Apellido paterno</th>
+                        <th>Apellido materno</th>
+                        <th>CURP</th>
+                        <th>Fecha de nacimiento</th>
+                        <th>Género</th>
+                        <th>Tipo de consulta</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoTabla"></tbody>
+            </table>
         </div>
-
-
-        <h1>Últimas consultas registradas </h1>
-
-            <div class="tabla-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Apellido paterno</th>
-                    <th>Apellido materno</th>
-                    <th>CURP</th>
-                    <th>Fecha de nacimiento</th>
-                    <th>Género</th>
-                    <th>Tipo de consulta</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="cuerpoTabla"></tbody>
-        </table>
-    </div>
 
     <div id="modalEdicion" class="modal-overlay">
         <div class="modal-box">
@@ -162,11 +157,7 @@ if (!isset($_SESSION['idUsuario'])) {
             <div class="form-group">
                 <label>Tipo de Consulta:</label>
                 <select id="inputModalTipo" required>
-                    <option value="#" selected disabled>Selecciona una opción:</option>
-                    <option value="General">General</option>
-                    <option value="Urgencia">Urgencia</option>
-                    <option value="Especialidad">Especialidad</option>
-                    <option value="Laboratorio">Laboratorio</option>
+                    <option value="" selected disabled>Cargando tipos de consulta...</option>
                 </select>
             </div>
             <div class="modal-actions">
@@ -176,20 +167,52 @@ if (!isset($_SESSION['idUsuario'])) {
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+
     <script>
         const cuerpoTabla = document.getElementById("cuerpoTabla");
         const modal = document.getElementById("modalEdicion");
         const inputModalId = document.getElementById("inputModalId");
         const inputModalTipo = document.getElementById("inputModalTipo");
 
-        // --- 1. CARGAR DATOS (GET) ---
-        async function buscarDatos() {
-            const texto = document.getElementById("buscar_curp").value;
-            cuerpoTabla.innerHTML = "<tr><td colspan='9' style='text-align:center'>Cargando...</td></tr>";
+        let tablaInstancia = null; 
+
+        // --- 0. CARGAR CATÁLOGOS DINÁMICOS ---
+        async function cargarCatalogosModal() {
+            try {
+                const response = await fetch('backend_catalogos.php?tabla=cat_tipo_consulta');
+                const datos = await response.json();
+
+                if (!datos.error) {
+                    inputModalTipo.innerHTML = '<option value="" disabled selected>Selecciona una opción:</option>';
+                    datos.forEach(item => {
+                        const opcion = document.createElement('option');
+                        opcion.value = item.id;
+                        opcion.textContent = item.valor;
+                        inputModalTipo.appendChild(opcion);
+                    });
+                }
+            } catch (error) {
+                console.error("Error al cargar catálogo de consultas:", error);
+                inputModalTipo.innerHTML = '<option value="" disabled selected>Error al cargar catálogo</option>';
+            }
+        }
+
+        // --- 1. CARGAR DATOS INICIALES (GET TODO) ---
+        async function cargarDatosIniciales() {
+            if (tablaInstancia !== null) {
+                tablaInstancia.destroy();
+                tablaInstancia = null;
+            }
+
+            cuerpoTabla.innerHTML = "<tr><td colspan='9' style='text-align:center'>Cargando base de datos...</td></tr>";
 
             try {
-                // Llamada real al backend
-                const response = await fetch(`backend_buscar-consulta.php?q=${texto}`);
+                const response = await fetch('backend_buscar-consulta.php');
                 const datos = await response.json();
                 
                 if(datos.error) { alert(datos.error); return; }
@@ -201,15 +224,16 @@ if (!isset($_SESSION['idUsuario'])) {
             }
         }
 
+        // --- RENDERIZAR E INICIALIZAR DATATABLES ---
         function renderizar(datos) {
             cuerpoTabla.innerHTML = "";
+            
             if(datos.length === 0){
                 cuerpoTabla.innerHTML = "<tr><td colspan='9' style='text-align:center; padding: 20px;'>No se encontraron resultados</td></tr>";
                 return;
             }
 
             datos.forEach(item => {
-
                 cuerpoTabla.innerHTML += `
                     <tr>
                         <td><b>${item.idConsulta}</b></td>
@@ -219,13 +243,48 @@ if (!isset($_SESSION['idUsuario'])) {
                         <td style="font-family: monospace;">${item.curp}</td>
                         <td>${item.fecha_nac}</td>
                         <td>${item.genero}</td>
-                        <td>${item.tipo_consulta}</td>
+                        <td><span style="background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 0.9em;">${item.tipo_consulta}</span></td>
                         <td>
-                            <button class="btn-edit" onclick="abrirModal(${item.idConsulta},'${item.tipo_consulta}')">Editar</button>
+                            <button class="btn-edit" onclick="abrirModal(${item.idConsulta}, ${item.idTipoConsulta || 'null'})">Editar</button>
                             <button class="btn-del" onclick="eliminarRegistro(${item.idConsulta})">Borrar</button>
                         </td>
                     </tr>
                 `;
+            });
+
+            tablaInstancia = $('#tablaConsultas').DataTable({
+                language: {
+                    "decimal": "",
+                    "emptyTable": "No hay información en la base de datos",
+                    "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                    "infoEmpty": "Mostrando 0 a 0 de 0 registros",
+                    "infoFiltered": "(Filtrado de _MAX_ registros totales)",
+                    "infoPostFix": "",
+                    "thousands": ",",
+                    "lengthMenu": "Mostrar _MENU_ registros por página",
+                    "loadingRecords": "Cargando...",
+                    "processing": "Procesando...",
+                    "search": "Buscar paciente o consulta:",
+                    "zeroRecords": "No se encontraron coincidencias",
+                    "paginate": {
+                        "first": "Primero",
+                        "last": "Último",
+                        "next": "Siguiente",
+                        "previous": "Anterior"
+                    },
+                    "aria": {
+                        "sortAscending": ": Activar para ordenar ascendente",
+                        "sortDescending": ": Activar para ordenar descendente"
+                    }
+                },
+                dom: 'Bfrtip',
+                buttons: [
+                    { extend: 'excelHtml5', text: '📊 Descargar Excel', className: 'btn-exportar' },
+                    { extend: 'csvHtml5', text: '📄 Descargar CSV', className: 'btn-exportar' }
+                ],
+                pageLength: 10,
+                ordering: true,
+                order: [[0, "desc"]]
             });
         }
 
@@ -241,22 +300,19 @@ if (!isset($_SESSION['idUsuario'])) {
                 });
                 const res = await response.json();
 
-                // Evaluamos el estatus de la respuesta
                 if(res.estatus === 'exito') {
                     alert("✅ " + res.mensaje);
-                    buscarDatos(); // Recargar tabla
+                    cargarDatosIniciales();
                 } else {
-                    // Si el backend mandó un error controlado
                     alert("⚠️ " + res.mensaje);
                 }
-                
             } catch (error) { alert("Error al eliminar"); }
         }
 
         // --- 3. EDITAR (POST) ---
-        function abrirModal(idConsulta, tipo_consulta) {
+        function abrirModal(idConsulta, idTipoConsulta) {
             inputModalId.value = idConsulta;
-            inputModalTipo.value = tipo_consulta;
+            inputModalTipo.value = idTipoConsulta; // Asignamos el ID, seleccionando la opción correcta dinámicamente
             modal.classList.add("show");
         }
 
@@ -264,7 +320,12 @@ if (!isset($_SESSION['idUsuario'])) {
 
         async function guardarCambios() {
             const idConsulta = inputModalId.value;
-            const tipo_consulta = inputModalTipo.value;
+            const idTipoConsulta = inputModalTipo.value; // Ya guardamos el ID
+
+            if(!idTipoConsulta) {
+                alert("Por favor, selecciona un tipo de consulta válido.");
+                return;
+            }
 
             try {
                 const response = await fetch('backend_buscar-consulta.php', {
@@ -273,36 +334,31 @@ if (!isset($_SESSION['idUsuario'])) {
                     body: JSON.stringify({ 
                         accion: 'editar', 
                         idConsulta: idConsulta, 
-                        tipo_consulta: tipo_consulta
+                        idTipoConsulta: idTipoConsulta // 👈 Nueva llave JSON
                     })
                 });
                 const res = await response.json();
 
-                // Evaluamos el estatus de la respuesta
                 if(res.estatus === 'error') {
-                    // Mostramos el error (ej. CURP no existe) pero NO cerramos el modal
                     alert("⚠️ Atención:\n\n" + res.mensaje);
-                    // Opcional: poner el foco en el input del CURP para que lo corrija
-                    // inputModalCURP.focus();
                 } 
                 else if (res.estatus === 'exito') {
-                    // Todo salió bien: avisamos, cerramos modal y recargamos tabla
                     alert("✅ " + res.mensaje);
                     cerrarModal();
-                    buscarDatos(); 
+                    cargarDatosIniciales();
                 }
             } catch (error) { alert("Error al guardar cambios"); }
         }
 
-        // Carga inicial
-        buscarDatos();
+        // Cargas iniciales
+        cargarCatalogosModal();
+        cargarDatosIniciales();
 
         // Cerrar modal click fuera
         window.onclick = function(ev) { if (ev.target == modal) cerrarModal(); }
     </script>
 
-
-        <footer class="bottombar">© 2026 ITZAM</footer>
+    <footer class="bottombar">© 2026 ITZAM</footer>
 
     </body>
 </html>

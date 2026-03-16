@@ -14,6 +14,8 @@ if (!isset($_SESSION['idUsuario'])) {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <title>Sistema ITZAM — Catálogos</title>
         <link rel="stylesheet" href="styles.css" />
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
     </head>
     <body>
         <header>
@@ -124,170 +126,296 @@ if (!isset($_SESSION['idUsuario'])) {
         </ul>
     </nav>
 
-        <div class="title-box">
+    <div class="title-box">
         <h1>Catálogos del sistema</h1>
-        </div>
-
-
-
-            <div class="tabla-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Nombre tabla</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="cuerpoTabla"></tbody>
-        </table>
+        <p style="text-align: center; color: #666;">Selecciona un diccionario de datos para gestionar sus registros.</p>
     </div>
 
-    <div id="modalEdicion" class="modal-overlay">
+    <div id="vista-tarjetas" style="display: flex; gap: 20px; flex-wrap: wrap; padding: 20px; justify-content: center; max-width: 1200px; margin: auto;">
+        
+       <div onclick="abrirCatalogo('cat_especialidades', 'Especialidades Médicas')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+                <h1 style="font-size: 3em; margin: 0; color: #007bff;">🩺</h1>
+                <h3 style="margin: 10px 0;">Especialidades</h3>
+                <p style="color: #666; font-size: 0.9em;">Pediatría, Cardiología, etc.</p>
+            </div>
+
+            <div onclick="abrirCatalogo('cat_puestos', 'Puestos de Personal')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+                <h1 style="font-size: 3em; margin: 0; color: #17a2b8;">👨‍⚕️</h1>
+                <h3 style="margin: 10px 0;">Puestos</h3>
+                <p style="color: #666; font-size: 0.9em;">Médico General, Enfermería, etc.</p>
+            </div>
+
+            <div onclick="abrirCatalogo('cat_tipo_consulta', 'Tipos de Consulta')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+                <h1 style="font-size: 3em; margin: 0; color: #6f42c1;">📋</h1>
+                <h3 style="margin: 10px 0;">Tipos de Consulta</h3>
+                <p style="color: #666; font-size: 0.9em;">General, Urgencias, Especialidad.</p>
+            </div>
+
+            <div onclick="abrirCatalogo('cat_motivos_asesoria', 'Motivos de Asesoría')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+                <h1 style="font-size: 3em; margin: 0; color: #e83e8c;">🗣️</h1>
+                <h3 style="margin: 10px 0;">Motivos de Asesoría</h3>
+                <p style="color: #666; font-size: 0.9em;">Vacunación, Tratamiento, etc.</p>
+            </div>
+
+            <div onclick="abrirCatalogo('cat_estudios_laboratorio', 'Estudios de Laboratorio')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+                <h1 style="font-size: 3em; margin: 0; color: #20c997;">🧪</h1>
+                <h3 style="margin: 10px 0;">Estudios Médicos</h3>
+                <p style="color: #666; font-size: 0.9em;">Biometría, Química Sanguínea, etc.</p>
+            </div>
+
+            <div onclick="abrirCatalogo('cat_prioridad_lab', 'Prioridades de Laboratorio')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+                <h1 style="font-size: 3em; margin: 0; color: #dc3545;">🚨</h1>
+                <h3 style="margin: 10px 0;">Prioridades Lab.</h3>
+                <p style="color: #666; font-size: 0.9em;">Urgente, Rutina, Programado.</p>
+            </div>
+
+            <div onclick="abrirCatalogo('proveedores', 'Proveedores Autorizados')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+                <h1 style="font-size: 3em; margin: 0; color: #fd7e14;">📦</h1>
+                <h3 style="margin: 10px 0;">Proveedores</h3>
+                <p style="color: #666; font-size: 0.9em;">Farmacéuticas, Material médico, etc.</p>
+            </div>
+
+        </div>
+
+    <div id="vista-tabla" style="display: none; max-width: 1200px; margin: auto; padding: 20px;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <button onclick="volverTarjetas()" class="btn-cancel" style="margin: 0;">⬅ Volver al menú</button>
+            <h2 id="titulo-catalogo-actual" style="margin: 0; color: #0056b3;">Nombre del Catálogo</h2>
+            <button onclick="abrirModalNuevo()" class="btn-save" style="margin: 0;">+ Nuevo Registro</button>
+        </div>
+
+        <div class="tabla-container">
+            <table id="tablaDetalleCatalogo" class="display" style="width:100%">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">ID</th>
+                        <th style="width: 60%;">Valor / Nombre</th>
+                        <th style="width: 25%;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoTablaDetalle"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modalEdicion" class="modal-overlay" style="display:none;">
         <div class="modal-box">
-            <div class="modal-header">Editar Registro</div>
+            <div class="modal-header" id="modal-titulo">Gestionar Registro</div>
+            
             <input type="hidden" id="inputModalId"> 
+            
             <div class="form-group">
-                <label>Nombre del Paciente:</label>
-                <input type="text" id="inputModalPaciente">
+                <label>Valor / Nombre del registro:</label>
+                <input type="text" id="inputModalValor" placeholder="Ej. Cardiología, A+, Oral..." autofocus>
             </div>
-            <div class="form-group">
-                <label>Tipo de Consulta:</label>
-                <select id="inputModalTipo">
-                    <option value="General">General</option>
-                    <option value="Urgencia">Urgencia</option>
-                    <option value="Especialidad">Especialidad</option>
-                    <option value="Laboratorio">Laboratorio</option>
-                </select>
-            </div>
+            
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
-                <button class="btn-save" onclick="guardarCambios()">Guardar Cambios</button>
+                <button class="btn-save" onclick="guardarCambios()">Guardar</button>
             </div>
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+
     <script>
-        const cuerpoTabla = document.getElementById("cuerpoTabla");
+        // Variables de Vistas
+        const vistaTarjetas = document.getElementById("vista-tarjetas");
+        const vistaTabla = document.getElementById("vista-tabla");
+        const tituloCatalogo = document.getElementById("titulo-catalogo-actual");
+        
+        // Variables de Tabla y Modal
+        const cuerpoTabla = document.getElementById("cuerpoTablaDetalle");
         const modal = document.getElementById("modalEdicion");
         const inputModalId = document.getElementById("inputModalId");
-        const inputModalPaciente = document.getElementById("inputModalPaciente");
-        const inputModalTipo = document.getElementById("inputModalTipo");
+        const inputModalValor = document.getElementById("inputModalValor");
 
-        // --- 1. CARGAR DATOS (GET) ---
-        async function buscarDatos() {
-            const texto = document.getElementById("buscar_curp").value;
-            cuerpoTabla.innerHTML = "<tr><td colspan='9' style='text-align:center'>Cargando...</td></tr>";
+        let tablaInstancia = null; 
+        
+        // Estado actual: ¿Qué catálogo estamos viendo?
+        let catalogoActualBD = ""; 
+        let catalogoActualNombre = "";
+
+        // --- NAVEGACIÓN ENTRE VISTAS ---
+        function abrirCatalogo(tabla_bd, nombre_amigable) {
+            catalogoActualBD = tabla_bd;
+            catalogoActualNombre = nombre_amigable;
+            
+            tituloCatalogo.innerText = nombre_amigable;
+            
+            vistaTarjetas.style.display = "none";
+            vistaTabla.style.display = "block";
+
+            cargarDatosCatalogo();
+        }
+
+        function volverTarjetas() {
+            vistaTabla.style.display = "none";
+            vistaTarjetas.style.display = "flex";
+            catalogoActualBD = "";
+        }
+
+        // --- 1. CARGAR DATOS DEL CATÁLOGO SELECCIONADO (GET) ---
+        async function cargarDatosCatalogo() {
+            if (tablaInstancia !== null) {
+                tablaInstancia.destroy();
+                tablaInstancia = null;
+            }
+
+            cuerpoTabla.innerHTML = "<tr><td colspan='3' style='text-align:center'>Cargando registros...</td></tr>";
 
             try {
-                // Llamada real al backend
-                const response = await fetch(`backend.php?q=${texto}`);
+                // Le decimos al backend QUÉ tabla queremos leer
+                const response = await fetch(`backend_catalogos.php?tabla=${catalogoActualBD}`);
                 const datos = await response.json();
                 
-                if(datos.error) { alert(datos.error); return; }
+                if(datos.error) { alert(datos.error); volverTarjetas(); return; }
                 renderizar(datos);
 
             } catch (error) {
                 console.error(error);
-                cuerpoTabla.innerHTML = "<tr><td colspan='9' style='text-align:center; color:red'>Error de conexión</td></tr>";
+                cuerpoTabla.innerHTML = "<tr><td colspan='3' style='text-align:center; color:red'>Error de conexión</td></tr>";
             }
         }
 
+        // --- RENDERIZAR E INICIALIZAR DATATABLES ---
         function renderizar(datos) {
             cuerpoTabla.innerHTML = "";
+            
             if(datos.length === 0){
-                cuerpoTabla.innerHTML = "<tr><td colspan='9' style='text-align:center; padding: 20px;'>No se encontraron resultados</td></tr>";
-                return;
+                cuerpoTabla.innerHTML = "<tr><td colspan='3' style='text-align:center; padding: 20px;'>El catálogo está vacío. ¡Agrega el primer registro!</td></tr>";
+                // Aún vacío, inicializamos DataTables para que la interfaz no se rompa
+            } else {
+                datos.forEach(item => {
+                    // Limpiamos comillas para evitar errores JS
+                    const valorSafe = item.valor.replace(/'/g, "\\'"); 
+
+                    cuerpoTabla.innerHTML += `
+                        <tr>
+                            <td><b>${item.id}</b></td>
+                            <td style="font-size: 1.1em;">${item.valor}</td>
+                            <td>
+                                <button class="btn-edit" onclick="abrirModalEditar(${item.id}, '${valorSafe}')">Editar</button>
+                                <button class="btn-del" onclick="eliminarRegistro(${item.id})">Borrar</button>
+                            </td>
+                        </tr>
+                    `;
+                });
             }
 
-            datos.forEach(item => {
-                let badgeClass = 'badge-general';
-                if(item.tipo === 'Urgencia') badgeClass = 'badge-urgencia';
-                if(item.tipo === 'Especialidad') badgeClass = 'badge-especialidad';
-
-                // Importante: Escapamos las comillas en los strings para evitar errores en onclick
-                const nombreSafe = item.paciente.replace(/'/g, "\\'"); 
-
-                cuerpoTabla.innerHTML += `
-                    <tr>
-                        <td><b>${item.id}</b></td>
-                        <td>${item.paciente}</td>
-                        <td style="font-family: monospace;">${item.curp}</td>
-                        <td>${item.unidad}</td>
-                        <td><span class="${badgeClass}">${item.tipo}</span></td>
-                        <td>${item.fecha}</td>
-                        <td>${item.medico}</td>
-                        <td>${item.cedula}</td>
-                        <td>
-                            <button class="btn-edit" onclick="abrirModal(${item.id}, '${nombreSafe}', '${item.tipo}')">Editar</button>
-                            <button class="btn-del" onclick="eliminarRegistro(${item.id})">Borrar</button>
-                        </td>
-                    </tr>
-                `;
+            tablaInstancia = $('#tablaDetalleCatalogo').DataTable({
+                language: {
+                    "decimal": "",
+                    "emptyTable": "No hay registros en este catálogo",
+                    "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                    "infoEmpty": "Mostrando 0 a 0 de 0 registros",
+                    "infoFiltered": "(Filtrado de _MAX_ registros totales)",
+                    "infoPostFix": "",
+                    "thousands": ",",
+                    "lengthMenu": "Mostrar _MENU_ registros por página",
+                    "loadingRecords": "Cargando...",
+                    "processing": "Procesando...",
+                    "search": "🔍 Buscar registro:",
+                    "zeroRecords": "No se encontraron coincidencias",
+                    "paginate": { "first": "Primero", "last": "Último", "next": "Siguiente", "previous": "Anterior" }
+                },
+                dom: 'Bfrtip',
+                buttons: [
+                    { extend: 'excelHtml5', text: '📊 Exportar', className: 'btn-exportar' }
+                ],
+                pageLength: 10,
+                ordering: true,
+                order: [[1, "asc"]], // Ordenar alfabéticamente por el valor
+                destroy: true // Vital para poder cambiar de catálogo sin recargar la página
             });
         }
 
         // --- 2. ELIMINAR (POST) ---
         async function eliminarRegistro(id) {
-            if(!confirm("¿Confirma que desea eliminar este registro permanentemente?")) return;
+            if(!confirm(`¿Confirma que desea eliminar este registro del catálogo de ${catalogoActualNombre}?`)) return;
 
             try {
-                const response = await fetch('backend.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ accion: 'eliminar', id: id })
-                });
-                const res = await response.json();
-                
-                if(res.mensaje) {
-                    buscarDatos(); // Recargar tabla
-                }
-            } catch (error) { alert("Error al eliminar"); }
-        }
-
-        // --- 3. EDITAR (POST) ---
-        function abrirModal(id, paciente, tipo) {
-            inputModalId.value = id;
-            inputModalPaciente.value = paciente;
-            inputModalTipo.value = tipo;
-            modal.classList.add("show");
-        }
-
-        function cerrarModal() { modal.classList.remove("show"); }
-
-        async function guardarCambios() {
-            const id = inputModalId.value;
-            const paciente = inputModalPaciente.value;
-            const tipo = inputModalTipo.value;
-
-            try {
-                const response = await fetch('backend.php', {
+                const response = await fetch('backend_catalogos.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        accion: 'editar', 
-                        id: id, 
-                        paciente: paciente, 
-                        tipo: tipo 
+                        accion: 'eliminar', 
+                        tabla: catalogoActualBD, 
+                        id: id 
                     })
                 });
                 const res = await response.json();
                 
-                if(res.mensaje) {
+                if(res.estatus === 'exito') {
+                    cargarDatosCatalogo(); 
+                } else {
+                    alert("⚠️ " + res.mensaje);
+                }
+            } catch (error) { alert("Error al eliminar"); }
+        }
+
+        // --- 3. GESTIÓN DEL MODAL (NUEVO / EDITAR) ---
+        function abrirModalNuevo() {
+            document.getElementById("modal-titulo").innerText = `Nuevo Registro - ${catalogoActualNombre}`;
+            inputModalId.value = ""; // ID vacío significa "Crear Nuevo"
+            inputModalValor.value = "";
+            modal.classList.add("show");
+        }
+
+        function abrirModalEditar(id, valor) {
+            document.getElementById("modal-titulo").innerText = `Editar Registro - ${catalogoActualNombre}`;
+            inputModalId.value = id;
+            inputModalValor.value = valor;
+            modal.classList.add("show");
+        }
+
+        function cerrarModal() { 
+            modal.classList.remove("show"); 
+        }
+
+        async function guardarCambios() {
+            const id = inputModalId.value;
+            const valor = inputModalValor.value.trim();
+            
+            // Si hay un ID es una edición, si está vacío es un INSERT
+            const accion = id === "" ? 'crear' : 'editar'; 
+
+            if (valor === "") {
+                alert("El valor no puede estar vacío.");
+                return;
+            }
+
+            try {
+                const response = await fetch('backend_catalogos.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        accion: accion, 
+                        tabla: catalogoActualBD,
+                        id: id, 
+                        valor: valor 
+                    })
+                });
+                const res = await response.json();
+                
+                if(res.estatus === 'exito') {
                     cerrarModal();
-                    buscarDatos(); // Recargar tabla
+                    cargarDatosCatalogo(); 
+                } else {
+                    alert("⚠️ " + res.mensaje);
                 }
             } catch (error) { alert("Error al guardar cambios"); }
         }
-
-        // Carga inicial
-        buscarDatos();
 
         // Cerrar modal click fuera
         window.onclick = function(ev) { if (ev.target == modal) cerrarModal(); }
     </script>
 
-
-        <footer class="bottombar">© 2026 ITZAM</footer>
-
+    <footer class="bottombar">© 2026 ITZAM</footer>
     </body>
 </html>

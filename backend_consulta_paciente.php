@@ -56,8 +56,7 @@ if ($metodo === 'GET') {
                     p.telefono, 
                     p.email AS correo_electronico
                 FROM registro_paciente p
-                ORDER BY p.idPaciente DESC 
-                LIMIT 20";
+                ORDER BY p.idPaciente DESC";
         
         // Como no hay variables dinámicas, podemos usar query() directo
         $stmt = $pdo->query($sql);

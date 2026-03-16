@@ -15,6 +15,8 @@ if (!isset($_SESSION['idUsuario'])) {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <title>Sistema ITZAM — Mis asesorías</title>
         <link rel="stylesheet" href="styles.css" />
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
     </head>
     <body>
         <header>
@@ -125,59 +127,57 @@ if (!isset($_SESSION['idUsuario'])) {
         </ul>
     </nav>
 
-        <!-- Busqueda CURP-->
-        <div class="search-box">
-            <p class="search-box">Ingresa el CURP del paciente:</p>
-            <input  class="search-box" type="text" id="buscar_curp" name="buscar_curp" maxlength="18" required/>
-            <button class="search" type="button" id="searchBtn" onclick="buscarDatos()">Buscar</button>
+    <br>
+
+        <div class="tabla-container">
+            <table id="tablaAsesorias" class="display" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>CURP</th>
+                        <th>Nombre</th>
+                        <th>Apellido paterno</th>
+                        <th>Apellido materno</th>
+                        <th>Motivo de la solicitud</th>
+                        <th>Comentarios</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoTabla"></tbody>
+            </table>
         </div>
 
-
-        <h1>Mis asesorías</h1>
-
-            <div class="tabla-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>CURP</th>
-                    <th>Nombre</th>
-                    <th>Apellido paterno</th>
-                    <th>Apellido materno</th>
-                    <th>Motivo de la solicitud</th>
-                    <th>Comentarios</th>
-                    <th>Fecha</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="cuerpoTabla"></tbody>
-        </table>
-    </div>
-
-    <div id="modalEdicion" class="modal-overlay">
+   <div id="modalEdicion" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">Editar Registro</div>
             <input type="hidden" id="inputModalId"> 
+            
             <div class="form-group">
                 <label>CURP:</label>
-                <input class="form" type="text" id="inputModalCURP">
+                <input class="form" type="text" id="inputModalCURP" readonly>
+                
                 <label>Motivo:</label>
                 <select id="inputModalMotivo" class="form">
-                  <option value="">Elige una opción:</option>
-                  <option value="Asesoría">Asesoría</option>
-                  <option value="Vacunación">Vacunación</option>
-                  <option value="Tratamiento">Tratamiento</option>
-                  <option value="Consulta">Consulta</option>
+                  <option value="" disabled selected>Cargando motivos...</option>
                 </select>
+                
                 <label>Comentarios:</label>
                 <textarea id="inputModalComentarios"></textarea>
             </div>
+            
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
                 <button class="btn-save" onclick="guardarCambios()">Guardar Cambios</button>
             </div>
         </div>
     </div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 
     <script>
         const cuerpoTabla = document.getElementById("cuerpoTabla");
@@ -187,14 +187,41 @@ if (!isset($_SESSION['idUsuario'])) {
         const inputModalMotivo = document.getElementById("inputModalMotivo");
         const inputModalComentarios = document.getElementById("inputModalComentarios");
 
-        // --- 1. CARGAR DATOS (GET) ---
-        async function buscarDatos() {
-            const texto = document.getElementById("buscar_curp").value;
-            cuerpoTabla.innerHTML = "<tr><td colspan='9' style='text-align:center'>Cargando...</td></tr>";
+        let tablaInstancia = null; 
+
+        // --- 0. CARGAR CATÁLOGO DE MOTIVOS ---
+        async function cargarCatalogosModal() {
+            try {
+                // Usamos nuestro backend dinámico para traer el catálogo de motivos
+                const response = await fetch('backend_catalogos.php?tabla=cat_motivos_asesoria');
+                const datos = await response.json();
+
+                if (!datos.error) {
+                    inputModalMotivo.innerHTML = '<option value="" disabled selected>Elige una opción:</option>';
+                    datos.forEach(item => {
+                        const opcion = document.createElement('option');
+                        opcion.value = item.id;
+                        opcion.textContent = item.valor;
+                        inputModalMotivo.appendChild(opcion);
+                    });
+                }
+            } catch (error) {
+                console.error("Error al cargar motivos:", error);
+                inputModalMotivo.innerHTML = '<option value="" disabled selected>Error al cargar</option>';
+            }
+        }
+
+        // --- 1. CARGAR DATOS INICIALES (GET TODO) ---
+        async function cargarDatosIniciales() {
+            if (tablaInstancia !== null) {
+                tablaInstancia.destroy();
+                tablaInstancia = null;
+            }
+            
+            cuerpoTabla.innerHTML = "<tr><td colspan='9' style='text-align:center'>Cargando base de datos...</td></tr>";
 
             try {
-                // Llamada real al backend
-                const response = await fetch(`backend_asesoria.php?q=${texto}`);
+                const response = await fetch('backend_asesoria.php');
                 const datos = await response.json();
                 
                 if(datos.error) { alert(datos.error); return; }
@@ -206,31 +233,64 @@ if (!isset($_SESSION['idUsuario'])) {
             }
         }
 
+        // --- RENDERIZAR E INICIALIZAR DATATABLES ---
         function renderizar(datos) {
             cuerpoTabla.innerHTML = "";
-            if(datos.length === 0){
-                cuerpoTabla.innerHTML = "<tr><td colspan='9' style='text-align:center; padding: 20px;'>No se encontraron resultados</td></tr>";
-                return;
+            
+            if(datos.length > 0) {
+                datos.forEach(item => {
+                    cuerpoTabla.innerHTML += `
+                        <tr>
+                            <td><b>${item.idAsesoria}</b></td>
+                            <td style="font-family: monospace;">${item.curp}</td>
+                            <td>${item.nombre}</td>
+                            <td>${item.apellido_p}</td>
+                            <td>${item.apellido_m}</td>
+                            <td>${item.motivo}</td>
+                            <td>${item.comentarios}</td>
+                            <td>${item.fecha_solicitud}</td>
+                            <td>
+                                <button class="btn-edit" onclick="abrirModal(${item.idAsesoria}, '${item.curp}', ${item.idMotivo}, '${item.comentarios}')">Editar</button>
+                                <button class="btn-del" onclick="eliminarRegistro(${item.idAsesoria})">Borrar</button>
+                            </td>
+                        </tr>
+                    `;
+                });
             }
 
-            datos.forEach(item => {
-
-                cuerpoTabla.innerHTML += `
-                    <tr>
-                        <td><b>${item.idAsesoria}</b></td>
-                        <td style="font-family: monospace;">${item.curp}</td>
-                        <td>${item.nombre}</td>
-                        <td>${item.apellido_p}</td>
-                        <td>${item.apellido_m}</td>
-                        <td>${item.motivo}</td>
-                        <td>${item.comentarios}</td>
-                        <td>${item.fecha_solicitud}</td>
-                        <td>
-                            <button class="btn-edit" onclick="abrirModal(${item.idAsesoria}, '${item.curp}', '${item.motivo}', '${item.comentarios}')">Editar</button>
-                            <button class="btn-del" onclick="eliminarRegistro(${item.idAsesoria})">Borrar</button>
-                        </td>
-                    </tr>
-                `;
+            tablaInstancia = $('#tablaAsesorias').DataTable({
+                language: {
+                    "decimal": "",
+                    "emptyTable": "No hay información en la base de datos",
+                    "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                    "infoEmpty": "Mostrando 0 a 0 de 0 registros",
+                    "infoFiltered": "(Filtrado de _MAX_ registros totales)",
+                    "infoPostFix": "",
+                    "thousands": ",",
+                    "lengthMenu": "Mostrar _MENU_ registros por página",
+                    "loadingRecords": "Cargando...",
+                    "processing": "Procesando...",
+                    "search": "Buscar:",
+                    "zeroRecords": "No se encontraron coincidencias",
+                    "paginate": {
+                        "first": "Primero",
+                        "last": "Último",
+                        "next": "Siguiente",
+                        "previous": "Anterior"
+                    },
+                    "aria": {
+                        "sortAscending": ": Activar para ordenar la columna de manera ascendente",
+                        "sortDescending": ": Activar para ordenar la columna de manera descendente"
+                    }
+                },
+                dom: 'Bfrtip',
+                buttons: [
+                    { extend: 'excelHtml5', text: '📊 Descargar Excel', className: 'btn-exportar' },
+                    { extend: 'csvHtml5', text: '📄 Descargar CSV', className: 'btn-exportar' }
+                ],
+                pageLength: 10,
+                ordering: true,
+                order: [[0, "desc"]]
             });
         }
 
@@ -247,12 +307,10 @@ if (!isset($_SESSION['idUsuario'])) {
                 
                 const res = await response.json();
                 
-                // Evaluamos el estatus de la respuesta
                 if(res.estatus === 'exito') {
                     alert("✅ " + res.mensaje);
-                    buscarDatos(); // Recargar tabla
+                    cargarDatosIniciales(); 
                 } else {
-                    // Si el backend mandó un error controlado
                     alert("⚠️ " + res.mensaje);
                 }
             } catch (error) { 
@@ -262,10 +320,10 @@ if (!isset($_SESSION['idUsuario'])) {
         }
 
         // --- 3. EDITAR (POST) ---
-        function abrirModal(idAsesoria, curp, motivo, comentarios) {
+        function abrirModal(idAsesoria, curp, idMotivo, comentarios) {
             inputModalId.value = idAsesoria;
             inputModalCURP.value = curp;
-            inputModalMotivo.value = motivo;
+            inputModalMotivo.value = idMotivo; // Ahora esto recibe un número y selecciona la opción correcta
             inputModalComentarios.value = comentarios;
             modal.classList.add("show");
         }
@@ -275,8 +333,13 @@ if (!isset($_SESSION['idUsuario'])) {
         async function guardarCambios() {
             const idAsesoria = inputModalId.value;
             const curp = inputModalCURP.value;
-            const motivo = inputModalMotivo.value;
+            const idMotivo = inputModalMotivo.value; 
             const comentarios = inputModalComentarios.value;
+
+            if(!idMotivo) {
+                alert("Por favor, selecciona un motivo.");
+                return;
+            }
 
             try {
                 const response = await fetch('backend_asesoria.php', {
@@ -286,25 +349,20 @@ if (!isset($_SESSION['idUsuario'])) {
                         accion: 'editar', 
                         idAsesoria: idAsesoria, 
                         curp: curp,
-                        motivo: motivo,
+                        idMotivo: idMotivo, // MANDAMOS EL ID PARA QUE PHP LO GUARDE
                         comentarios: comentarios,
                     })
                 });
                 
                 const res = await response.json();
                 
-                // Evaluamos el estatus de la respuesta
                 if(res.estatus === 'error') {
-                    // Mostramos el error (ej. CURP no existe) pero NO cerramos el modal
                     alert("⚠️ Atención:\n\n" + res.mensaje);
-                    // Opcional: poner el foco en el input del CURP para que lo corrija
-                    // inputModalCURP.focus();
                 } 
                 else if (res.estatus === 'exito') {
-                    // Todo salió bien: avisamos, cerramos modal y recargamos tabla
                     alert("✅ " + res.mensaje);
                     cerrarModal();
-                    buscarDatos(); 
+                    cargarDatosIniciales(); 
                 }
                 
             } catch (error) { 
@@ -313,15 +371,10 @@ if (!isset($_SESSION['idUsuario'])) {
             }
         }
 
-        // Carga inicial
-        buscarDatos();
+        // Cargas iniciales al abrir la página
+        cargarCatalogosModal();
+        cargarDatosIniciales();
 
         // Cerrar modal click fuera
         window.onclick = function(ev) { if (ev.target == modal) cerrarModal(); }
     </script>
-
-
-        <footer class="bottombar">© 2026 ITZAM</footer>
-
-    </body>
-</html>

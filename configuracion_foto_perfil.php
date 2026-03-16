@@ -26,7 +26,7 @@ if (!isset($_SESSION['idUsuario'])) {
                 
         <div class="user-menu">
             <div class="user-menu">
-                <img id="header-user-photo" class="user-photo user-icon" src="<?php echo isset($_SESSION['foto_perfil']) && $_SESSION['foto_perfil'] ? $_SESSION['foto_perfil'] : 'Assets/think.jpg'; ?>" onclick="toggleMenu()">
+                <img id="header-user-photo" class="user-photo user-icon" src="<?php echo isset($_SESSION['foto_perfil']) && $_SESSION['foto_perfil'] ? $_SESSION['foto_perfil'] : 'Assets/img_placeholder.png'; ?>" onclick="toggleMenu()">
             </div>
             
             <div class="dropdown-menu" id="userDropdown">
@@ -134,7 +134,7 @@ if (!isset($_SESSION['idUsuario'])) {
                 <form id="form-foto-perfil" action="" method="post" enctype="multipart/form-data">
                     
                     <div style="margin-bottom: 20px;">
-                        <img id="profile-picture" src="Assets/think.jpg" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 3px solid #0056b3; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                        <img id="profile-picture" src="Assets/img_placeholder.png" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 3px solid #0056b3; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
                     </div>
                     
                     <div class="form-group" style="margin-bottom: 20px;">

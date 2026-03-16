@@ -41,8 +41,7 @@ if ($metodo === 'GET') {
                                 email_inst AS email_institucional, 
                                 telefono AS telefono_celular
                             FROM registro_personal
-                            ORDER BY idPersonal DESC 
-                            LIMIT 20");
+                            ORDER BY idPersonal DESC");
     }
     
     echo json_encode($stmt->fetchAll());

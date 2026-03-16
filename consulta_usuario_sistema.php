@@ -15,7 +15,10 @@ if (!isset($_SESSION['idUsuario'])) {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <title>Sistema ITZAM — Consultar usuario del sistema</title>
         <link rel="stylesheet" href="styles.css" />
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
     </head>
+
     <body>
         <header>
             <div class="topbar-container">
@@ -125,17 +128,10 @@ if (!isset($_SESSION['idUsuario'])) {
         </ul>
     </nav>
 
-        <div class="search-box">
-            <p class="search-box">Ingresa el nombre de usuario:</p>
-            <input class="search-box" type="text" id="buscar_usuario" name="buscar_usuario" onkeyup="buscarDatos()" placeholder="Ej. jperez" required/>
-            <button class="search" type="button" id="searchBtn" onclick="buscarDatos()">Buscar</button>
-        </div>
-
-
-        <h1>Últimos registros</h1>
+<br>
 
     <div class="tabla-container">
-        <table>
+        <table id="tablaUsuarios" class="display" style="width:100%">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -194,6 +190,12 @@ if (!isset($_SESSION['idUsuario'])) {
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+
     <script>
         const cuerpoTabla = document.getElementById("cuerpoTabla");
         
@@ -205,15 +207,21 @@ if (!isset($_SESSION['idUsuario'])) {
         const inputModalRol = document.getElementById("inputModalRol");
         const inputModalEstatus = document.getElementById("inputModalEstatus");
 
-        // --- 1. CARGAR DATOS (GET) ---
-        async function buscarDatos() {
-            const inputBusqueda = document.getElementById("buscar_usuario");
-            const texto = inputBusqueda ? inputBusqueda.value : '';
-            
-            cuerpoTabla.innerHTML = "<tr><td colspan='8' style='text-align:center'>Cargando...</td></tr>";
+        // Variable global para la instancia de DataTables
+        let tablaInstancia = null; 
+
+        // --- 1. CARGAR DATOS INICIALES (GET TODO) ---
+        async function cargarDatosIniciales() {
+            if (tablaInstancia !== null) {
+                tablaInstancia.destroy();
+                tablaInstancia = null;
+            }
+
+            cuerpoTabla.innerHTML = "<tr><td colspan='8' style='text-align:center'>Cargando base de datos de usuarios...</td></tr>";
 
             try {
-                const response = await fetch(`backend_consulta_usuarios_admin.php?q=${encodeURIComponent(texto)}`);
+                // Fetch directo al backend sin parámetro de búsqueda
+                const response = await fetch('backend_consulta_usuarios_admin.php');
                 const datos = await response.json();
                 
                 if(datos.error) { alert(datos.error); return; }
@@ -225,28 +233,31 @@ if (!isset($_SESSION['idUsuario'])) {
             }
         }
 
-        // --- 2. RENDERIZAR TABLA ---
+        // --- 2. RENDERIZAR E INICIALIZAR DATATABLES ---
         function renderizar(datos) {
             cuerpoTabla.innerHTML = "";
+            
             if(datos.length === 0){
                 cuerpoTabla.innerHTML = "<tr><td colspan='8' style='text-align:center; padding: 20px;'>No se encontraron usuarios registrados</td></tr>";
                 return;
             }
 
             datos.forEach(item => {
+                // Color dinámico para el estatus (Mantenido de tu código original)
+                let colorEstatus = item['Estatus'] === 'Activo' ? '#198754' : '#dc3545';
                 
-                // Color dinámico para el estatus
-                let colorEstatus = item['Estatus'] === 'Activo' ? '#5cb85c' : '#d9534f';
+                // Si la fecha de suspensión es null o vacía, mostramos un guion
+                let fechaSuspension = item['Fecha de suspensión'] ? item['Fecha de suspensión'] : '<span style="color:gray;">-</span>';
 
                 cuerpoTabla.innerHTML += `
                     <tr>
                         <td><b>${item.idUsuario}</b></td>
-                        <td>${item['Nombre de usuario']}</td>
+                        <td style="font-family: monospace; font-weight: bold;">@${item['Nombre de usuario']}</td>
                         <td>${item.Email}</td>
                         <td style="color: ${colorEstatus}; font-weight: bold;">${item['Estatus']}</td>
-                        <td>${item['Rol']}</td>
+                        <td><span style="background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 0.9em; border: 1px solid #ced4da;">${item['Rol']}</span></td>
                         <td>${item['Fecha de creación']}</td>
-                        <td>${item['Fecha de suspensión']}</td>
+                        <td>${fechaSuspension}</td>
                         <td>
                             <button class="btn-edit" onclick="abrirModal(${item.idUsuario}, '${item['Nombre de usuario']}', '${item.Email}', '${item['Rol']}', '${item['Estatus']}')">Editar</button>
                             
@@ -254,6 +265,42 @@ if (!isset($_SESSION['idUsuario'])) {
                         </td>
                     </tr>
                 `;
+            });
+
+            // Inicializamos DataTables con diccionario en español
+            tablaInstancia = $('#tablaUsuarios').DataTable({
+                language: {
+                    "decimal": "",
+                    "emptyTable": "No hay información en la base de datos",
+                    "info": "Mostrando _START_ a _END_ de _TOTAL_ usuarios",
+                    "infoEmpty": "Mostrando 0 a 0 de 0 usuarios",
+                    "infoFiltered": "(Filtrado de _MAX_ usuarios totales)",
+                    "infoPostFix": "",
+                    "thousands": ",",
+                    "lengthMenu": "Mostrar _MENU_ usuarios por página",
+                    "loadingRecords": "Cargando...",
+                    "processing": "Procesando...",
+                    "search": "Buscar:",
+                    "zeroRecords": "No se encontraron coincidencias",
+                    "paginate": {
+                        "first": "Primero",
+                        "last": "Último",
+                        "next": "Siguiente",
+                        "previous": "Anterior"
+                    },
+                    "aria": {
+                        "sortAscending": ": Activar para ordenar la columna de manera ascendente",
+                        "sortDescending": ": Activar para ordenar la columna de manera descendente"
+                    }
+                },
+                dom: 'Bfrtip',
+                buttons: [
+                    { extend: 'excelHtml5', text: '📊 Exportar Auditoría', className: 'btn-exportar' },
+                    { extend: 'csvHtml5', text: '📄 Exportar CSV', className: 'btn-exportar' }
+                ],
+                pageLength: 10,
+                ordering: true,
+                order: [[0, "desc"]] // Ordena por ID descendente por defecto
             });
         }
 
@@ -271,14 +318,14 @@ if (!isset($_SESSION['idUsuario'])) {
                 const response = await fetch('backend_consulta_usuarios_admin.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    // Enviamos la acción 'suspender' al backend
                     body: JSON.stringify({ accion: 'suspender', idUsuario: idUsuario })
                 });
                 
                 const res = await response.json();
                 
                 if(res.estatus === 'exito') {
-                    buscarDatos(); // Recargar tabla para ver el cambio a color rojo
+                    alert("✅ Usuario suspendido correctamente.");
+                    cargarDatosIniciales(); // Recargar tabla usando la nueva función
                 } else {
                     alert("Error: " + res.mensaje);
                 }
@@ -333,7 +380,7 @@ if (!isset($_SESSION['idUsuario'])) {
                 if(res.estatus === 'exito') {
                     alert("✅ Cambios guardados correctamente.");
                     cerrarModal();
-                    buscarDatos(); // Recargar tabla
+                    cargarDatosIniciales(); // Recargar tabla usando la nueva función
                 } else {
                     alert("⚠️ Error: " + res.mensaje);
                 }
@@ -343,7 +390,7 @@ if (!isset($_SESSION['idUsuario'])) {
         }
 
         // Carga inicial al abrir la página
-        buscarDatos();
+        cargarDatosIniciales();
 
         // Cerrar modal al dar click fuera del recuadro
         window.onclick = function(ev) { 
@@ -351,8 +398,6 @@ if (!isset($_SESSION['idUsuario'])) {
         }
     </script>
 
-
-        <footer class="bottombar">© 2026 ITZAM</footer>
-
+    <footer class="bottombar">© 2026 ITZAM</footer>
     </body>
 </html>

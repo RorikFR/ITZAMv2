@@ -1,117 +1,111 @@
 <?php
 header('Content-Type: application/json');
 
-// FORZAR A PHP A MOSTRAR ERRORES (Quitar cuando ya funcione)
+// FORZAR A PHP A MOSTRAR ERRORES (Quitar en producción)
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 require 'db_conn.php';
 
-// 2. MANEJO DE SOLICITUDES
 $metodo = $_SERVER['REQUEST_METHOD'];
 
-// --- LEER DATOS (BÚSQUEDA) ---
+// ==========================================
+// --- LEER DATOS (BÚSQUEDA GENERAL PARA DATATABLES) ---
+// ==========================================
 if ($metodo === 'GET') {
-    $busqueda = isset($_GET['q']) ? $_GET['q'] : '';
     
-    // Si hay texto, buscamos por Paciente O Curp
-    if($busqueda) {
-        $sql = "SELECT 
-    c.idConsulta, 
-    p.nombre, 
-    p.apellido_p,
-    p.apellido_m,
-    p.curp, 
-    p.fecha_nac, 
-    p.genero, 
-    c.tipo_consulta
-FROM registro_consultas c
-INNER JOIN registro_paciente p ON c.idPaciente = p.idPaciente
-WHERE p.curp LIKE :q
-ORDER BY c.idConsulta DESC";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute(['q' => "%$busqueda%"]);
-    } else {
-        // Si no hay búsqueda, traemos los últimos 20 registros
-        $stmt = $pdo->query("SELECT 
-    c.idConsulta, 
-    p.nombre, 
-    p.apellido_p,
-    p.apellido_m,
-    p.curp, 
-    p.fecha_nac, 
-    p.genero, 
-    c.tipo_consulta
-FROM  registro_consultas c
-INNER JOIN registro_paciente p ON c.idPaciente = p.idPaciente
-ORDER BY c.idConsulta DESC 
-LIMIT 20");
+    // Consulta optimizada con JOIN al nuevo catálogo de Tipos de Consulta
+    $sql = "SELECT 
+                c.idConsulta, 
+                p.nombre, 
+                p.apellido_p,
+                p.apellido_m,
+                p.curp, 
+                p.fecha_nac, 
+                p.genero, 
+                tc.nombre_tipo AS tipo_consulta, -- Texto para mostrar en la tabla
+                c.idTipoConsulta                 -- ID numérico para el modal de edición
+            FROM registro_consultas c
+            INNER JOIN registro_paciente p ON c.idPaciente = p.idPaciente
+            LEFT JOIN cat_tipo_consulta tc ON c.idTipoConsulta = tc.idTipoConsulta
+            ORDER BY c.idConsulta DESC";
+            
+    try {
+        $stmt = $pdo->query($sql);
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    } catch (PDOException $e) {
+        echo json_encode(["error" => "Error en la base de datos al consultar."]);
     }
-    
-    echo json_encode($stmt->fetchAll());
+    exit;
 }
 
+// ==========================================
 // --- EDITAR O ELIMINAR ---
+// ==========================================
 if ($metodo === 'POST') {
+    
     // Recibimos los datos JSON del frontend
-    $input = json_decode(file_get_contents('php://input'), true);
+    $inputJSON = file_get_contents('php://input');
+    $input = json_decode($inputJSON, true);
     
     $accion = $input['accion'] ?? '';
-    $idConsulta = $input['idConsulta'] ?? 0; // Cambiado a idConsulta
+    $idConsulta = $input['idConsulta'] ?? 0;
 
     // --- LÓGICA DE ELIMINACIÓN ---
     if ($accion === 'eliminar' && $idConsulta > 0) {
-        $stmt = $pdo->prepare("DELETE FROM registro_consultas WHERE idConsulta = :idConsulta");
-        $stmt->execute(['idConsulta' => $idConsulta]);
-        
-        echo json_encode([
-            "estatus" => "exito", 
-            "mensaje" => "Registro eliminado exitosamente."
-        ]);
-        exit; // Detenemos la ejecución para no procesar más abajo
+        try {
+            $stmt = $pdo->prepare("DELETE FROM registro_consultas WHERE idConsulta = :idConsulta");
+            $stmt->execute(['idConsulta' => $idConsulta]);
+            
+            echo json_encode([
+                "estatus" => "exito", 
+                "mensaje" => "Registro eliminado permanentemente del sistema."
+            ]);
+        } catch (PDOException $e) {
+            echo json_encode([
+                "estatus" => "error", 
+                "mensaje" => "No se puede eliminar la consulta por restricciones en la base de datos."
+            ]);
+        }
+        exit;
     }
 
     // --- LÓGICA DE EDICIÓN ---
     if ($accion === 'editar' && $idConsulta > 0) {
-        // Recibimos los campos específicos para las consultas
-        $curp = $input['curp'] ?? '';
-        $tipo_consulta = $input['tipo_consulta'] ?? ''; 
         
-        $stmt = $pdo->prepare("UPDATE registro_consultas 
-            SET 
-                tipo_consulta = :tipo_consulta 
-            WHERE idConsulta = :idConsulta");
+        // 🔥 AHORA RECIBIMOS EL ID NUMÉRICO DEL TIPO DE CONSULTA
+        $idTipoConsulta = $input['idTipoConsulta'] ?? ''; 
         
-        $stmt->execute([
-            'tipo_consulta' => $tipo_consulta, 
-            'idConsulta'    => $idConsulta
-        ]);
+        if (empty($idTipoConsulta)) {
+            echo json_encode([
+                "estatus" => "error", 
+                "mensaje" => "Debe seleccionar un tipo de consulta válido."
+            ]);
+            exit;
+        }
         
-        // PASO 3: OBTENER la información actualizada para devolverla al frontend
-        $sqlObtener = "SELECT 
-                            c.idConsulta, 
-                            p.nombre, 
-                            p.apellido_p AS apellido_paterno, 
-                            p.apellido_m AS apellido_materno, 
-                            p.curp, 
-                            p.fecha_nac, 
-                            p.genero, 
-                            c.tipo_consulta 
-                       FROM registro_consultas c
-                       INNER JOIN registro_paciente p ON c.idPaciente = p.idPaciente
-                       WHERE c.idConsulta = :idConsulta";
-                       
-        $stmtObtener = $pdo->prepare($sqlObtener);
-        $stmtObtener->execute(['idConsulta' => $idConsulta]);
-        $datosActualizados = $stmtObtener->fetch(PDO::FETCH_ASSOC);
-        
-        // Devolvemos el mensaje de éxito y la fila completa con los datos frescos
-        echo json_encode([
-            "estatus" => "exito", 
-            "mensaje" => "Consulta médica actualizada correctamente.",
-            "datos"   => $datosActualizados
-        ]);
+        try {
+            $stmt = $pdo->prepare("UPDATE registro_consultas 
+                SET idTipoConsulta = :idTipoConsulta 
+                WHERE idConsulta = :idConsulta");
+            
+            $stmt->execute([
+                'idTipoConsulta' => $idTipoConsulta, 
+                'idConsulta'     => $idConsulta
+            ]);
+            
+            echo json_encode([
+                "estatus" => "exito", 
+                "mensaje" => "Tipo de consulta actualizado correctamente."
+            ]);
+            
+        } catch (PDOException $e) {
+            echo json_encode([
+                "estatus" => "error", 
+                "mensaje" => "Error de base de datos al actualizar la consulta."
+            ]);
+        }
         exit;
     }
 }

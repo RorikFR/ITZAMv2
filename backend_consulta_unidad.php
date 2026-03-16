@@ -50,8 +50,7 @@ if ($metodo === 'GET') {
                                 u.email AS correo_electronico
                             FROM registro_unidad u
                             INNER JOIN catalogo_ubicacion c ON u.idUbicacion = c.idUbicacion
-                            ORDER BY u.idUnidad DESC 
-                            LIMIT 20");
+                            ORDER BY u.idUnidad DESC");
     }
     
     echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));

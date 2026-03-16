@@ -1,3 +1,12 @@
+<?php
+session_start();
+
+// Opcional pero recomendado: El escudo de seguridad
+if (!isset($_SESSION['idUsuario'])) {
+    header("Location: index.php");
+    exit;
+}
+?>
 <!doctype html>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -119,79 +128,100 @@
         </ul>
     </nav>
 
-		<div class="title-box">
+		<div class="title-box" style="text-align: center; margin-bottom: 20px;">
             <h1>Estadísticas Operativas y Epidemiológicas</h1>
         </div>
 
-        <div class="graph-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; padding: 20px;">
+        <div style="text-align: center;">
+            <button class="btn-reporte-completo" onclick="descargarReporteCompleto()" style="margin-top: 10px; padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                📊 Descargar Reporte Completo
+            </button>
+        </div>
+
+        <div id="dashboard-completo" class="graph-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; padding: 20px;">
             
             <div id="tarjeta-unidad" class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                 <p class="card-subtitle" style="font-weight: bold; margin-bottom: 15px; color: #333;">Consultas médicas por unidad médica</p>
                 <div style="position: relative; height: 300px;">
                     <canvas id="chartUnidad"></canvas>
                 </div>
-                
-                <div style="text-align: right; margin-top: 15px;">
-                    <button class="btn-descarga" onclick="descargarPDF('tarjeta-unidad', 'Reporte_Consultas_Por_Unidad')" style="padding: 8px 15px; background-color: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                        📄 Descargar PDF
-                    </button>
+                <div class="botones-accion" style="text-align: right; margin-top: 15px;">
+                    <a href="detalle_estadistica.php?modulo=unidades" class="btn-detalle" style="display: inline-block; padding: 8px 15px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; margin-left: 10px;">🔍 Ver Detalles</a>
                 </div>
             </div>
             
-            <div class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div id="tarjeta-categoria" class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                 <p class="card-subtitle" style="font-weight: bold; margin-bottom: 15px; color: #333;">Consultas médicas por tipo de atención</p>
                 <div style="position: relative; height: 300px;">
                     <canvas id="chartCategoria"></canvas>
                 </div>
+                <div class="botones-accion" style="text-align: right; margin-top: 15px;">
+                    <a href="detalle_estadistica.php?modulo=categorias" class="btn-detalle" style="display: inline-block; padding: 8px 15px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; margin-left: 10px;">🔍 Ver Detalles</a>
+                </div>
             </div>
             
-            <div class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div id="tarjeta-incidencia" class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                 <p class="card-subtitle" style="font-weight: bold; margin-bottom: 15px; color: #333;">Top 5: Diagnósticos de mayor incidencia</p>
                 <div style="position: relative; height: 300px;">
                     <canvas id="chartIncidencia"></canvas>
                 </div>
+                <div class="botones-accion" style="text-align: right; margin-top: 15px;">
+                    <a href="detalle_estadistica.php?modulo=incidencia" class="btn-detalle" style="display: inline-block; padding: 8px 15px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; margin-left: 10px;">🔍 Ver Detalles</a>
+                </div>
             </div>
             
-            <div class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div id="tarjeta-personal" class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                 <p class="card-subtitle" style="font-weight: bold; margin-bottom: 15px; color: #333;">Productividad por personal médico</p>
                 <div style="position: relative; height: 300px;">
                     <canvas id="chartPersonal"></canvas>
                 </div>
+                <div class="botones-accion" style="text-align: right; margin-top: 15px;">
+                    <a href="detalle_estadistica.php?modulo=personal" class="btn-detalle" style="display: inline-block; padding: 8px 15px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; margin-left: 10px;">🔍 Ver Detalles</a>
+                </div>
             </div>
             
-            <div class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div id="tarjeta-edad" class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                 <p class="card-subtitle" style="font-weight: bold; margin-bottom: 15px; color: #333;">Distribución de edades en consulta</p>
                 <div style="position: relative; height: 300px;">
                     <canvas id="chartEdad"></canvas>
                 </div>
+                <div class="botones-accion" style="text-align: right; margin-top: 15px;">
+                    <a href="detalle_estadistica.php?modulo=edades" class="btn-detalle" style="display: inline-block; padding: 8px 15px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; margin-left: 10px;">🔍 Ver Detalles</a>
+                </div>
             </div>
             
-            <div class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div id="tarjeta-inventario" class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                 <p class="card-subtitle" style="font-weight: bold; margin-bottom: 15px; color: #333;">Top 10 Medicamentos en stock</p>
                 <div style="position: relative; height: 300px;">
                     <canvas id="chartInventario"></canvas>
                 </div>
+                <div class="botones-accion" style="text-align: right; margin-top: 15px;">
+                    <a href="detalle_estadistica.php?modulo=inventario" class="btn-detalle" style="display: inline-block; padding: 8px 15px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; margin-left: 10px;">🔍 Ver Detalles</a>
+                </div>
             </div>
 
-            <div class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div id="tarjeta-insumos" class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                 <p class="card-subtitle" style="font-weight: bold; margin-bottom: 15px; color: #333;">Top 10 Insumos médicos en stock</p>
                 <div style="position: relative; height: 300px;">
                     <canvas id="chartInsumos"></canvas>
                 </div>
+                <div class="botones-accion" style="text-align: right; margin-top: 15px;">
+                    <a href="detalle_estadistica.php?modulo=insumos" class="btn-detalle" style="display: inline-block; padding: 8px 15px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; margin-left: 10px;">🔍 Ver Detalles</a>
+                </div>
             </div>
 
-            <div class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div id="tarjeta-equipo" class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                 <p class="card-subtitle" style="font-weight: bold; margin-bottom: 15px; color: #333;">Top 10 Equipo médico asignado</p>
                 <div style="position: relative; height: 300px;">
                     <canvas id="chartEquipo"></canvas>
                 </div>
+                <div class="botones-accion" style="text-align: right; margin-top: 15px;">
+                    <a href="detalle_estadistica.php?modulo=equipo" class="btn-detalle" style="display: inline-block; padding: 8px 15px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; margin-left: 10px;">🔍 Ver Detalles</a>
+                </div>
             </div>
-
         </div>
         
         <footer class="bottombar">© 2026 ITZAM</footer>
-
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
         <script>
             document.addEventListener('DOMContentLoaded', async () => {
@@ -204,29 +234,18 @@
                         return;
                     }
 
-                    // Paleta de colores más institucional (Salud)
                     const colorAzul = 'rgba(0, 86, 179, 0.7)';
                     const colorVerde = 'rgba(40, 167, 69, 0.7)';
                     const colorRojo = 'rgba(220, 53, 69, 0.7)';
                     const paletaPastel = ['#0056b3', '#17a2b8', '#20c997', '#ffc107', '#fd7e14', '#dc3545'];
 
-// Opciones base para que no se deformen
-                    const opcionesComunes = {
-                        responsive: true,
-                        maintainAspectRatio: false
-                    };
+                    const opcionesComunes = { responsive: true, maintainAspectRatio: false };
 
-                    // --- NUEVO: OPCIONES SEPARADAS POR TIPO DE BARRA ---
-                    
-                    // Opciones para Barras VERTICALES (Inventario)
                     const opcionesVerticales = {
                         ...opcionesComunes,
                         plugins: { legend: { display: false } },
                         scales: {
-                            y: { 
-                                beginAtZero: true,
-                                ticks: { precision: 0 } // Números en Y
-                            },
+                            y: { beginAtZero: true, ticks: { precision: 0 } },
                             x: {
                                 ticks: {
                                     callback: function(value) {
@@ -238,194 +257,122 @@
                         }
                     };
 
-                    // Opciones para Barras HORIZONTALES (Unidades, Incidencias, Personal)
                     const opcionesHorizontales = {
                         ...opcionesComunes,
-                        indexAxis: 'y', // La instrucción que acuesta la gráfica
+                        indexAxis: 'y',
                         plugins: { legend: { display: false } },
                         scales: {
-                            x: { 
-                                beginAtZero: true,
-                                ticks: { precision: 0 } // Ahora los números van en X
-                            },
+                            x: { beginAtZero: true, ticks: { precision: 0 } },
                             y: {
                                 ticks: {
-                                    // Al estar horizontal hay más espacio, cortamos a los 25 caracteres
                                     callback: function(value) {
                                         const label = this.getLabelForValue(value);
-                                        return label.length > 35 ? label.substring(0, 25) + '...' : label;
+                                        return label.length > 35 ? label.substring(0, 35) + '...' : label;
                                     }
                                 }
                             }
                         }
                     };
 
-                    // ==========================================
-                    // 1. Consultas por Unidad (AHORA ES HORIZONTAL)
-                    // ==========================================
-                    new Chart(document.getElementById('chartUnidad'), {
-                        type: 'bar',
-                        data: {
-                            labels: data.unidades.labels,
-                            datasets: [{
-                                data: data.unidades.valores,
-                                backgroundColor: colorAzul,
-                                borderRadius: 4
-                            }]
-                        },
-                        options: opcionesHorizontales
-                    });
-
-                    // ==========================================
-                    // 2. Consultas por Categoría (Gráfica de Pastel)
-                    // ==========================================
-                    new Chart(document.getElementById('chartCategoria'), {
-                        type: 'pie',
-                        data: {
-                            labels: data.categorias.labels,
-                            datasets: [{
-                                data: data.categorias.valores,
-                                backgroundColor: paletaPastel,
-                                hoverOffset: 10
-                            }]
-                        },
-                        options: {
-                            ...opcionesComunes,
-                            plugins: {
-                                legend: { position: 'bottom' }
-                            }
-                        }
-                    });
-
-                    // ==========================================
-                    // 3. Top 5 Incidencias (Ranking - HORIZONTAL)
-                    // ==========================================
-                    new Chart(document.getElementById('chartIncidencia'), {
-                        type: 'bar',
-                        data: {
-                            labels: data.incidencia.labels,
-                            datasets: [{
-                                data: data.incidencia.valores,
-                                backgroundColor: colorRojo,
-                                borderRadius: 4
-                            }]
-                        },
-                        options: opcionesHorizontales
-                    });
-
-                    // ==========================================
-                    // 4. Productividad por personal (AHORA ES HORIZONTAL)
-                    // ==========================================
-                    new Chart(document.getElementById('chartPersonal'), {
-                        type: 'bar',
-                        data: {
-                            labels: data.personal.labels,
-                            datasets: [{
-                                data: data.personal.valores,
-                                backgroundColor: colorVerde,
-                                borderRadius: 4
-                            }]
-                        },
-                        options: opcionesHorizontales
-                    });
-
-                    // ==========================================
-                    // 5. Edades promedio (Gráfica de Dona)
-                    // ==========================================
-                    new Chart(document.getElementById('chartEdad'), {
-                        type: 'doughnut',
-                        data: {
-                            labels: data.edades.labels,
-                            datasets: [{
-                                data: data.edades.valores,
-                                backgroundColor: ['#6f42c1', '#20c997', '#fd7e14'],
-                                hoverOffset: 10
-                            }]
-                        },
-                        options: {
-                            ...opcionesComunes,
-                            plugins: {
-                                legend: { position: 'bottom' }
-                            },
-                            cutout: '65%'
-                        }
-                    });
-
-                    // ==========================================
-                    // 6. Top Medicamentos en Stock (AHORA ES HORIZONTAL)
-                    // ==========================================
-                    new Chart(document.getElementById('chartInventario'), {
-                        type: 'bar', // Sigue siendo bar, pero las opciones lo acuestan
-                        data: {
-                            labels: data.inventario.labels,
-                            datasets: [{
-                                data: data.inventario.valores,
-                                backgroundColor: '#17a2b8', // Color Cyan médico
-                                borderRadius: 4
-                            }]
-                        },
-                        options: opcionesHorizontales // ¡Usamos nuestra magia horizontal aquí!
-                    });
-
-                    // ==========================================
-                    // 7. Top Insumos en Stock (HORIZONTAL)
-                    // ==========================================
-                    new Chart(document.getElementById('chartInsumos'), {
-                        type: 'bar',
-                        data: {
-                            labels: data.insumos.labels,
-                            datasets: [{
-                                data: data.insumos.valores,
-                                backgroundColor: '#fd7e14', // Naranja clínico
-                                borderRadius: 4
-                            }]
-                        },
-                        options: opcionesHorizontales
-                    });
-
-                    // ==========================================
-                    // 8. Top Equipo Médico (HORIZONTAL)
-                    // ==========================================
-                    new Chart(document.getElementById('chartEquipo'), {
-                        type: 'bar',
-                        data: {
-                            labels: data.equipo.labels,
-                            datasets: [{
-                                data: data.equipo.valores,
-                                backgroundColor: '#6c757d', // Gris oscuro / metálico
-                                borderRadius: 4
-                            }]
-                        },
-                        options: opcionesHorizontales
-                    });
+                    new Chart(document.getElementById('chartUnidad'), { type: 'bar', data: { labels: data.unidades.labels, datasets: [{ data: data.unidades.valores, backgroundColor: colorAzul, borderRadius: 4 }] }, options: opcionesHorizontales });
+                    new Chart(document.getElementById('chartCategoria'), { type: 'pie', data: { labels: data.categorias.labels, datasets: [{ data: data.categorias.valores, backgroundColor: paletaPastel, hoverOffset: 10 }] }, options: { ...opcionesComunes, plugins: { legend: { position: 'bottom' } } } });
+                    new Chart(document.getElementById('chartIncidencia'), { type: 'bar', data: { labels: data.incidencia.labels, datasets: [{ data: data.incidencia.valores, backgroundColor: colorRojo, borderRadius: 4 }] }, options: opcionesHorizontales });
+                    new Chart(document.getElementById('chartPersonal'), { type: 'bar', data: { labels: data.personal.labels, datasets: [{ data: data.personal.valores, backgroundColor: colorVerde, borderRadius: 4 }] }, options: opcionesHorizontales });
+                    new Chart(document.getElementById('chartEdad'), { type: 'doughnut', data: { labels: data.edades.labels, datasets: [{ data: data.edades.valores, backgroundColor: ['#6f42c1', '#20c997', '#fd7e14'], hoverOffset: 10 }] }, options: { ...opcionesComunes, plugins: { legend: { position: 'bottom' } }, cutout: '65%' } });
+                    new Chart(document.getElementById('chartInventario'), { type: 'bar', data: { labels: data.inventario.labels, datasets: [{ data: data.inventario.valores, backgroundColor: '#17a2b8', borderRadius: 4 }] }, options: opcionesHorizontales });
+                    new Chart(document.getElementById('chartInsumos'), { type: 'bar', data: { labels: data.insumos.labels, datasets: [{ data: data.insumos.valores, backgroundColor: '#fd7e14', borderRadius: 4 }] }, options: opcionesHorizontales });
+                    new Chart(document.getElementById('chartEquipo'), { type: 'bar', data: { labels: data.equipo.labels, datasets: [{ data: data.equipo.valores, backgroundColor: '#6c757d', borderRadius: 4 }] }, options: opcionesHorizontales });
 
                 } catch (error) {
                     console.error("Error procesando los gráficos:", error);
                 }
             });
 
+// Función para descargar TODO el Dashboard (Solución Definitiva de Saltos)
+            function descargarReporteCompleto() {
+                const elemento = document.getElementById('dashboard-completo');
+                const botonesAccion = elemento.querySelectorAll('.botones-accion');
+                const botonMaestro = document.querySelector('.btn-reporte-completo');
+                const tarjetas = elemento.querySelectorAll('.chart-card'); 
 
-// Función para generar y descargar el PDF de una gráfica específica
-            function descargarPDF(idTarjeta, nombreArchivo) {
-                const elemento = document.getElementById(idTarjeta);
-                const boton = elemento.querySelector('.btn-descarga');
+                // 1. Ocultamos la botonera
+                botonesAccion.forEach(btn => btn.style.display = 'none');
+                botonMaestro.innerText = "⏳ Generando presentación ejecutiva...";
+                botonMaestro.disabled = true;
 
-                // 1. Ocultamos el botón para que no salga en la impresión
-                boton.style.display = 'none';
+                // 2. Forzamos una sola columna ancha
+                const estiloOriginal = elemento.getAttribute('style') || '';
+                elemento.style.display = 'block'; 
+                elemento.style.width = '1280px';  
+                elemento.style.margin = 'auto';
+                elemento.style.padding = '50px';
 
-                // 2. Configuramos la calidad y formato del PDF
-                const opciones = {
-                    margin:       10, // Margen en milímetros
-                    filename:     nombreArchivo + '.pdf',
-                    image:        { type: 'jpeg', quality: 1 }, // Máxima calidad de imagen
-                    html2canvas:  { scale: 2, useCORS: true }, // Escala 2 para que no se vea borroso al hacer zoom
-                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' } // Formato horizontal (ideal para gráficas)
-                };
+                // 🔥 NUEVO: Creamos e inyectamos el título dinámico para el PDF
+                const tituloPDF = document.createElement('h1');
+                tituloPDF.innerText = "Estadísticas Operativas y Epidemiológicas";
+                tituloPDF.style.textAlign = 'center';
+                tituloPDF.style.marginBottom = '30px';
+                tituloPDF.style.color = '#333';
+                tituloPDF.style.fontFamily = 'sans-serif';
+                tituloPDF.id = 'titulo-temporal-pdf'; 
+                elemento.prepend(tituloPDF); // Lo colocamos hasta arriba del contenedor
 
-                // 3. Generamos el PDF
-                html2pdf().set(opciones).from(elemento).save().then(() => {
-                    // 4. Volvemos a mostrar el botón una vez que la descarga termina
-                    boton.style.display = 'inline-block';
-                });
+                // 3. 🔥 EL TRUCO DEFINITIVO: Insertamos divisores nativos de html2pdf
+                for(let i = 0; i < tarjetas.length - 1; i++) {
+                    // Creamos un div vacío con la clase mágica
+                    let divisor = document.createElement('div');
+                    divisor.className = 'divisor-magico html2pdf__page-break';
+                    
+                    // Lo insertamos justo debajo de la tarjeta actual
+                    tarjetas[i].parentNode.insertBefore(divisor, tarjetas[i].nextSibling);
+                }
+
+                // 4. Forzamos el redibujado de Chart.js
+                for (let id in Chart.instances) {
+                    Chart.instances[id].resize();
+                }
+
+                // 5. Esperamos y disparamos la foto
+                setTimeout(() => {
+                    const opciones = {
+                        margin:       25, 
+                        filename:     'Presentacion_Directiva_ITZAM.pdf',
+                        image:        { type: 'jpeg', quality: 1 },
+                        html2canvas:  { 
+                            scale: 2, 
+                            useCORS: true,
+                            width: 1920,         
+                            windowWidth: 1920
+                        },
+                        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
+                        // Le decimos que obedezca a los divisores que acabamos de inyectar
+                        pagebreak:    { mode: ['legacy'] } 
+                    };
+
+                    html2pdf().set(opciones).from(elemento).save().then(() => {
+                        // 6. RESTAURAMOS LA WEB A LA NORMALIDAD
+                        elemento.setAttribute('style', estiloOriginal);
+                        
+                        // 🔥 NUEVO: Borramos el título temporal que inyectamos
+                        const tituloInsertado = document.getElementById('titulo-temporal-pdf');
+                        if (tituloInsertado) tituloInsertado.remove();
+                        
+                        // Borramos los divisores mágicos que inyectamos
+                        document.querySelectorAll('.divisor-magico').forEach(el => el.remove());
+
+                        // Quitamos el margen temporal
+                        tarjetas.forEach(t => t.style.marginTop = '');
+
+                        // Encogemos las gráficas de vuelta a su tamaño en el grid
+                        for (let id in Chart.instances) {
+                            Chart.instances[id].resize();
+                        }
+
+                        // Devolvemos los botones
+                        botonesAccion.forEach(btn => btn.style.display = '');
+                        botonMaestro.innerText = "📊 Descargar Reporte Completo";
+                        botonMaestro.disabled = false;
+                    });
+                }, 800); 
             }
         </script>
