@@ -1,10 +1,14 @@
 <?php
+// Obligamos al servidor a usar la hora de Ciudad de México
+date_default_timezone_set('America/Mexico_City');
+
 // 1. CONFIGURACIÓN DE CONEXIÓN
 $host = 'localhost';
 $db   = 'mydb';
 $user = 'root'; 
 $pass = 'root';    
 $charset = 'utf8mb4';
+
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
 $options = [

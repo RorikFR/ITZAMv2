@@ -331,17 +331,23 @@ if (!isset($_SESSION['idUsuario'])) {
             } catch (error) { alert("Error al eliminar"); }
         }
 
-        // --- 3. EDITAR (POST) ---
-        function abrirModal(id, categoria, nombre, cantidad, idProveedor) {
-            inputModalId.value = id;
-            inputModalCategoria.value = categoria;
-            inputModalNombre.value = nombre;
-            inputModalStock.value = cantidad;
-            
-            inputModalProveedor.value = idProveedor ? idProveedor : "";
-            
-            modal.classList.add("show");
-        }
+// --- 3. EDITAR (POST) ---
+function abrirModal(id, categoria, nombre, cantidad, idProveedor) {
+    inputModalId.value = id;
+    inputModalCategoria.value = categoria;
+    inputModalNombre.value = nombre;
+    inputModalStock.value = cantidad;
+    
+    inputModalProveedor.value = idProveedor ? idProveedor : "";
+
+    // 🛡️ REGLA DE NEGOCIO: Bloquear edición de nombre para TODO el inventario (3FN)
+    inputModalNombre.readOnly = true;
+    inputModalNombre.style.backgroundColor = '#e9ecef'; // Fondo gris visual
+    inputModalNombre.style.cursor = 'not-allowed';
+    inputModalNombre.title = "Este nombre pertenece al Catálogo Maestro y no puede modificarse desde aquí.";
+    
+    modal.classList.add("show");
+}
 
         function cerrarModal() { modal.classList.remove("show"); }
 

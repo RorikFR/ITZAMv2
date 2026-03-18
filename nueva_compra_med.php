@@ -128,154 +128,238 @@ if (!isset($_SESSION['idUsuario'])) {
       <h3>Formulario de registro de medicamentos en inventario</h3>
       </div>
 
-    <div class="grid-wrapper">
-      <div class="formulario-background-normal">
+<div class="grid-wrapper">
+    <div class="formulario-background-normal">
         <div class="tab-buttons" role="tablist" aria-label="Secciones del formulario">
             <button type="button" class="tab-btn active" data-step="0">Datos del medicamento</button>
-            <button type="button" class="tab-btn" data-step="1">Datos del proveedor</button>
+            <button type="button" class="tab-btn" data-step="1">Ingreso a inventario</button>
         </div>
         <span class="message">* Campos obligatorios</span>
         
-        <form id="multiStepForm" action="" method="post" novalidate>
-            <!-- Step 1 -->
+        <form class="multiform" id="multiStepForm" novalidate autocomplete="off">
             <div class="tab active" data-step="0" aria-hidden="false">
-              <fieldset id="inventario-datos-generales-med">
-                <label>*Nombre comercial:</label>
-                <input class="form" type="text" name="nombre" required>
-
-                <label>*Marca:</label>
-                <input class="form" type="text" name="marca" required>
-
-                <label>*Presentación:</label>
-                <input class="form" type="text" name="presentacion" required placeholder="Ej. Tabletas, Jarabe, Inyección">
                 
-                <label>*Via de administración:</label>
-                <input class="form" type="text" name="via_administracion" required>
-              </fieldset>
+                <fieldset style="background-color: #e8f4fd; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid #b6d4fe;">
+                    <label for="idCatalogoMed" style="color: #084298;">⚕️ <strong>Catálogo Oficial ITZAM:</strong></label>
+                    <select class="form" id="idCatalogoMed" name="idCatalogoMed" style="border-color: #0d6efd;">
+                        <option value="nuevo" selected>➕ Registrar un medicamento nuevo en el catálogo</option>
+                    </select>
+                </fieldset>
 
-              <fieldset id="inventario-datos-generales-med">
-                <label>*Principio activo:</label>
-                <input class="form" type="text" name="principio_activo" required>
-                
-                <label>*Concentración:</label>
-                <input class="form" type="text" name="concentracion" required>
-              </fieldset>
+                <fieldset id="inventario-datos-generales-med">
+                    <label for="nombre">*Nombre comercial:</label>
+                    <input class="form datos-med" type="text" id="nombre" name="nombre" maxlength="120" required>
+
+                    <label for="marca">*Marca / Laboratorio:</label>
+                    <input class="form datos-med" type="text" id="marca" name="marca" maxlength="120" required>
+
+                    <label for="presentacion">*Presentación:</label>
+                    <input class="form datos-med" type="text" id="presentacion" name="presentacion" maxlength="45" required placeholder="Ej. Caja con 30 Tabletas">
+                    
+                    <label for="via_adm">*Vía de administración:</label>
+                    <input class="form datos-med" type="text" id="via_adm" name="via_adm" maxlength="45" required placeholder="Ej. Oral">
+                </fieldset>
+
+                <fieldset id="inventario-datos-generales-med-2">
+                    <label for="principio_activo">*Principio activo:</label>
+                    <input class="form datos-med" type="text" id="principio_activo" name="principio_activo" maxlength="120" required placeholder="Ej. Paracetamol">
+                    
+                    <label for="concentracion">*Concentración:</label>
+                    <input class="form datos-med" type="text" id="concentracion" name="concentracion" maxlength="120" required placeholder="Ej. 500mg">
+
+                    <label for="refrigerado">*¿Requiere refrigeración?</label>
+                    <select class="form datos-med" id="refrigerado" name="refrigerado" required>
+                        <option value="" disabled selected>Selecciona una opción</option>
+                        <option value="1">Sí</option>
+                        <option value="0">No</option>
+                    </select>
+                </fieldset>
             </div>
 
-            <!-- Step 2 -->
             <div class="tab" data-step="1" aria-hidden="true">
-              <fieldset id="inventario-datos-proveedor-med">
-                <label>*Proveedor:</label>
-                <input class="form" type="text" name="proveedor" required>
+                <fieldset id="inventario-datos-proveedor-med">
+                    <label for="proveedor">*Proveedor:</label>
+                    <select class="form" id="proveedor" name="idProveedor" required>
+                        <option value="" disabled selected>Cargando opciones...</option>
+                    </select>
 
-                <label>*Cantidad:</label>
-                <input class="form" type="number" name="cantidad" required>
-                
-                <label>*Lote:</label>
-                <input class="form" type="text" name="lote" required>
-                
-                <label>*Fecha de caducidad:</label>
-                <input class="form" type="date" id="fecha_caducidad" name="fecha_caducidad" required>
-                
-                <label>*Requiere refrigeración:</label>
-                <select class="form" name="refrigeracion" required>
-                  <option value="">Selecciona una opción</option>
-                  <option value="sí">Sí</option>
-                  <option value="no">No</option>
-                </select>
-              </fieldset>
+                    <label for="cantidad">*Cantidad a ingresar (Cajas/Unidades):</label>
+                    <input class="form" type="number" id="cantidad" name="cantidad" min="1" max="10000" required>
+                    
+                    <label for="lote">*Lote (Código):</label>
+                    <input class="form" type="text" id="lote" name="lote" maxlength="45" required>
+                    
+                    <label for="fecha_caducidad">*Fecha de caducidad:</label>
+                    <input class="form" type="date" id="fecha_caducidad" name="fecha_caducidad" required>
+                </fieldset>
             </div>
         </form>
         
         <div class="step-controls">
             <button class="multi-btn" type="button" id="prevBtn">Anterior</button>
             <button class="multi-btn" type="button" id="nextBtn">Siguiente</button>
-            <button class="multi-btn-clear" type="button" id="clearBtn">Limpiar campos</button>             
-            <button class="multi-btn-submit" type="submit" id="submitBtn">Registrar medicamento</button>
+            <button class="multi-btn-clear" type="button" id="clearBtn" style="background-color: #6c757d;">Limpiar campos</button>             
+            <button class="multi-btn-submit" type="submit" id="submitBtn" form="multiStepForm" style="display: none;">Ingresar a inventario</button>
             <div class="step-indicator" id="stepIndicator">Paso 1 de 2</div>
         </div>
     </div>
-    </div>
+</div>
 
-        <script>
-            // Simple multi-step/tab form logic
-            (function(){
-                const form = document.getElementById('multiStepForm');
-                const tabs = Array.from(document.querySelectorAll('.tab'));
-                const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
-                const prevBtn = document.getElementById('prevBtn');
-                const nextBtn = document.getElementById('nextBtn');
-                const submitBtn = document.getElementById('submitBtn');
-                const stepIndicator = document.getElementById('stepIndicator');
-                let current = 0;
-                const total = tabs.length;
+<script>
+    (function(){
+        const form = document.getElementById('multiStepForm');
+        const tabs = Array.from(document.querySelectorAll('.tab'));
+        const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        const selectCatalogo = document.getElementById('idCatalogoMed');
+        const inputsMed = Array.from(document.querySelectorAll('.datos-med'));
+        let current = 0;
+        const total = tabs.length;
+        let catalogoMedicamentos = [];
 
-                function showStep(n){
-                    tabs.forEach((t,i)=>{
-                        const active = i===n;
-                        t.classList.toggle('active', active);
-                        t.setAttribute('aria-hidden', (!active).toString());
-                        tabButtons[i].classList.toggle('active', active);
+        // 🔥 BLOQUEO DE FECHA DE CADUCIDAD
+        const fechaInput = document.getElementById('fecha_caducidad');
+        const manana = new Date();
+        manana.setDate(manana.getDate() + 1);
+        fechaInput.min = manana.toISOString().split('T')[0];
+
+        // --- CARGA DINÁMICA ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // 1. Cargar Proveedores
+                const resProv = await fetch('backend_catalogos.php?tabla=proveedores');
+                const dataProv = await resProv.json();
+                const selectProveedor = document.getElementById('proveedor');
+                dataProv.forEach(item => {
+                    selectProveedor.innerHTML += `<option value="${item.id}">${item.valor}</option>`;
+                });
+
+                // 2. Cargar Catálogo de Medicamentos
+                const resMed = await fetch('backend_get_cat_meds.php');
+                catalogoMedicamentos = await resMed.json();
+                catalogoMedicamentos.forEach(med => {
+                    selectCatalogo.innerHTML += `<option value="${med.idCatalogoMed}">${med.nombre} - ${med.concentracion} (${med.marca})</option>`;
+                });
+            } catch (e) {
+                console.error("Error de carga:", e);
+            }
+        });
+
+        // 🔥 LÓGICA DE AUTO-COMPLETADO CON EL CATÁLOGO
+        selectCatalogo.addEventListener('change', (e) => {
+            const valor = e.target.value;
+            if (valor === 'nuevo') {
+                // Si es nuevo, vaciamos y desbloqueamos los campos
+                inputsMed.forEach(input => {
+                    input.value = '';
+                    input.style.pointerEvents = 'auto'; // Permitir clics
+                    input.style.backgroundColor = '';
+                    input.readOnly = false;
+                });
+            } else {
+                // Buscamos el medicamento en la memoria por su ID
+                const med = catalogoMedicamentos.find(m => m.idCatalogoMed == valor);
+                if (med) {
+                    document.getElementById('nombre').value = med.nombre;
+                    document.getElementById('marca').value = med.marca;
+                    document.getElementById('presentacion').value = med.presentacion;
+                    document.getElementById('via_adm').value = med.via_adm;
+                    document.getElementById('principio_activo').value = med.principio_activo;
+                    document.getElementById('concentracion').value = med.concentracion;
+                    document.getElementById('refrigerado').value = med.refrigerado;
+                    
+                    // Bloqueamos los campos visualmente para que el usuario sepa que no puede alterar el catálogo desde aquí
+                    inputsMed.forEach(input => {
+                        input.style.pointerEvents = 'none'; // Desactivar clics
+                        input.style.backgroundColor = '#e9ecef'; // Gris
+                        input.readOnly = true;
                     });
-                    prevBtn.style.display = n===0 ? 'none' : '';
-                    nextBtn.style.display = n===total-1 ? 'none' : '';
-                    submitBtn.style.display = n===total-1 ? '' : 'none';
-                    stepIndicator.textContent = `Paso ${n+1} de ${total}`;
-                    current = n;
                 }
+            }
+        });
 
-                function validateStep(n){
-                    const inputs = Array.from(tabs[n].querySelectorAll('input, select, textarea'));
-                    for (const el of inputs){
-                        if (!el.checkValidity()) {
-                            el.reportValidity();
-                            return false;
-                        }
-                    }
-                    return true;
+        // --- LÓGICA DE NAVEGACIÓN (TABS) ---
+        function showStep(n){
+            tabs.forEach((t, i) => {
+                const active = i === n;
+                t.classList.toggle('active', active);
+                t.setAttribute('aria-hidden', (!active).toString());
+                tabButtons[i].classList.toggle('active', active);
+            });
+            prevBtn.style.display = n === 0 ? 'none' : 'inline-block';
+            nextBtn.style.display = n === total - 1 ? 'none' : 'inline-block';
+            submitBtn.style.display = n === total - 1 ? 'inline-block' : 'none';
+            stepIndicator.textContent = `Paso ${n + 1} de ${total}`;
+            current = n;
+        }
+
+        function validateStep(n){
+            const inputs = Array.from(tabs[n].querySelectorAll('input, select, textarea'));
+            for (const el of inputs){
+                if (!el.checkValidity()) {
+                    el.reportValidity();
+                    return false;
                 }
+            }
+            return true;
+        }
 
-                nextBtn.addEventListener('click', ()=>{
-                    if (!validateStep(current)) return;
-                    showStep(Math.min(current+1, total-1));
+        nextBtn.addEventListener('click', () => {
+            if (!validateStep(current)) return;
+            showStep(Math.min(current + 1, total - 1));
+        });
+        prevBtn.addEventListener('click', () => showStep(Math.max(current - 1, 0)));
+
+        clearBtn.addEventListener('click', () => {
+            if(confirm("¿Deseas borrar los datos ingresados?")) {
+                form.reset();
+                selectCatalogo.dispatchEvent(new Event('change')); // Desbloquea inputs
+                showStep(0); 
+            }
+        });
+
+        // --- INTEGRACIÓN AJAX ---
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!validateStep(current)) return;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Guardando...";
+
+            const formData = new FormData(form);
+            const dataObj = Object.fromEntries(formData.entries());
+
+            try {
+                const res = await fetch('backend_nuevo_medicamento.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataObj)
                 });
+                const data = await res.json();
 
-                prevBtn.addEventListener('click', ()=> showStep(Math.max(current-1, 0)));
+                if(data.estatus === 'exito') {
+                    alert("✅ " + data.mensaje);
+                    form.reset();
+                    selectCatalogo.dispatchEvent(new Event('change'));
+                    showStep(0);
+                } else {
+                    alert("⚠️ " + data.mensaje);
+                }
+            } catch (error) {
+                alert("Error de conexión con el servidor.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Ingresar a inventario";
+            }
+        });
 
-                tabButtons.forEach(btn=>{
-                    btn.addEventListener('click', ()=> {
-                        const step = Number(btn.getAttribute('data-step'));
-                        // optional: validate current before jumping
-                        if (step > current && !validateStep(current)) return;
-                        showStep(step);
-                    });
-                });
-
-                // final submit: optionally revalidate last step and entire form
-                form.addEventListener('submit', (e)=>{
-                    if (!validateStep(current)) {
-                        e.preventDefault();
-                        return;
-                    }
-                    // full form validity check; if invalid, prevent submit and show first invalid field
-                    if (!form.checkValidity()){
-                        e.preventDefault();
-                        const firstInvalid = form.querySelector(':invalid');
-                        if (firstInvalid){
-                            const stepEl = firstInvalid.closest('.tab');
-                            const stepIndex = tabs.indexOf(stepEl);
-                            if (stepIndex >= 0) showStep(stepIndex);
-                            firstInvalid.focus();
-                            firstInvalid.reportValidity();
-                        }
-                    }
-                    // otherwise allow normal submit (or perform AJAX here)
-                });
-
-                // initialize
-                showStep(0);
-            })();
-        </script>
+        showStep(0);
+    })();
+</script>
 
         <footer class="bottombar">© 2026 ITZAM</footer>
     </body>

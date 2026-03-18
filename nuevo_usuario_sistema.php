@@ -130,33 +130,180 @@ if (!isset($_SESSION['idUsuario'])) {
         </div>
 
 <div class="grid-wrapper">
-        <div class="formulario-background-normal">
-                <span class="message">* Campos obligatorios</span>
-            <form id="multiStepForm" action="" method="post" novalidate>
+    <div class="formulario-background-normal">
+        <span class="message">* Campos obligatorios</span>
+        
+        <form id="formUsuario" novalidate autocomplete="off">
+            <div class="tab active" data-step="0" aria-hidden="false">
+                <fieldset id="admin-usuario">
+                    <legend>Datos de la Cuenta</legend>
 
-                <!-- Step 1 -->
-                <div class="tab active" data-step="0" aria-hidden="false">
-					<fieldset id="admin-usuario">
-                    <label>*Nombre de usuario</label>
-                    <input class="form" type="text" id="nom-usuario" name="nom-usuario" required />
+                    <label for="idPersonal">*Asignar a Personal (Empleado):</label>
+                    <select class="form" id="idPersonal" name="idPersonal" required>
+                        <option value="" disabled selected>Cargando personal disponible...</option>
+                    </select>
 
-                    <label>*Email:</label>
-                    <input class="form" type="email" id="email-usuario" name="email-usuario" required />
+                    <label for="rol">*Rol en el sistema:</label>
+                    <select class="form" id="rol" name="rol" required>
+                        <option value="" disabled selected>Seleccione un rol...</option>
+                        <option value="Administrador">Administrador</option>
+                        <option value="Médico">Médico</option>
+                        <option value="Enfermería">Enfermería</option>
+                        <option value="Recepción">Recepción</option>
+                        <option value="Farmacia">Farmacia</option>
+                    </select>
 
-                    <label>*Contraseña:</label>
-                    <input class="form" type="password" id="pass-usuario" name="pass-usuario" required />
+                    <label for="nom-usuario">*Nombre de usuario:</label>
+                    <input class="form" type="text" id="nom-usuario" name="nombre_usuario" required placeholder="Ej. dr_ramos" maxlength="50" />
 
-                    <label>*Verificar contraseña:</label>
-                    <input class="form" type="password" id="pass-usuario-verify" name="pass-usuario-verify" required />
-                    </fieldset>
-                </div>
-            </form>
-                <div class="step-controls">
-                    <button class="multi-btn-clear" type="button" id="clearBtn">Limpiar campos</button>
-                    <button class="multi-btn-submit" type="submit" id="submitBtn">Crear usuario</button>
-                </div>
+                    <label for="email-usuario">*Email:</label>
+                    <input class="form" type="email" id="email-usuario" name="email" required placeholder="correo@clinica.com" maxlength="100" />
+
+                    <label for="pass-usuario">*Contraseña:</label>
+                    <input class="form" type="password" id="pass-usuario" name="contrasena" required placeholder="Mínimo 8 caracteres" minlength="8" />
+
+                    <label for="pass-usuario-verify">*Verificar contraseña:</label>
+                    <input class="form" type="password" id="pass-usuario-verify" required placeholder="Repita la contraseña" />
+                </fieldset>
+            </div>
+        </form>
+        
+        <div class="step-controls">
+            <button class="multi-btn-clear" type="button" id="clearBtn" style="background-color: #6c757d;">Limpiar campos</button>
+            <button class="multi-btn-submit" type="submit" id="submitBtn" form="formUsuario">Crear usuario</button>
         </div>
+    </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const form = document.getElementById('formUsuario');
+    const pass1 = document.getElementById('pass-usuario');
+    const pass2 = document.getElementById('pass-usuario-verify');
+    const selectPersonal = document.getElementById('idPersonal');
+    const inputEmail = document.getElementById('email-usuario'); // Añadimos el input del correo
+    const submitBtn = document.getElementById('submitBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    let listaPersonal = []; // Guardamos la lista a nivel global para accederla fácilmente
+
+    // --- CARGAR PERSONAL DISPONIBLE ---
+    try {
+        const res = await fetch('backend_get_personal_sin_usuario.php');
+        listaPersonal = await res.json();
+        
+        if (listaPersonal.length === 0) {
+            selectPersonal.innerHTML = '<option value="" disabled selected>No hay personal sin usuario asignado</option>';
+        } else {
+            selectPersonal.innerHTML = '<option value="" disabled selected>Seleccione un empleado...</option>';
+            listaPersonal.forEach(p => {
+                selectPersonal.innerHTML += `<option value="${p.idPersonal}">${p.nombre_completo} (${p.puesto})</option>`;
+            });
+        }
+    } catch (e) {
+        selectPersonal.innerHTML = '<option value="" disabled selected>Error al cargar personal</option>';
+    }
+
+    // 🔥 MAGIA DE AUTOCOMPLETADO DE CORREO 🔥
+    selectPersonal.addEventListener('change', (e) => {
+        const idSeleccionado = e.target.value;
+        const empleado = listaPersonal.find(p => p.idPersonal == idSeleccionado);
+        
+        if (empleado && empleado.email_heredado) {
+            inputEmail.value = empleado.email_heredado;
+            inputEmail.readOnly = true;
+            inputEmail.style.backgroundColor = '#e9ecef';
+            inputEmail.style.cursor = 'not-allowed';
+            inputEmail.title = "Correo heredado del perfil del empleado.";
+        } else {
+            // Si el empleado no tiene correo, abrimos el candado
+            inputEmail.value = '';
+            inputEmail.readOnly = false;
+            inputEmail.style.backgroundColor = '#ffffff';
+            inputEmail.style.cursor = 'text';
+            inputEmail.placeholder = "Este empleado no tiene correo. Escriba uno.";
+            inputEmail.title = "";
+        }
+    });
+
+    // --- VALIDACIÓN VISUAL DE CONTRASEÑAS ---
+    function validarPasswords() {
+        if (pass2.value === '') {
+            pass2.style.borderColor = '';
+            pass2.setCustomValidity('');
+        } else if (pass1.value !== pass2.value) {
+            pass2.style.borderColor = '#dc3545'; 
+            pass2.setCustomValidity('Las contraseñas no coinciden');
+        } else {
+            pass2.style.borderColor = '#198754'; 
+            pass2.setCustomValidity('');
+        }
+    }
+
+    pass1.addEventListener('input', validarPasswords);
+    pass2.addEventListener('input', validarPasswords);
+
+    // --- LIMPIAR FORMULARIO ---
+    clearBtn.addEventListener('click', () => {
+        if(confirm("¿Deseas borrar todos los datos del formulario?")) {
+            form.reset();
+            pass2.style.borderColor = '';
+            
+            // Devolvemos el campo de correo a su estado normal
+            inputEmail.readOnly = false;
+            inputEmail.style.backgroundColor = '#ffffff';
+            inputEmail.style.cursor = 'text';
+            inputEmail.placeholder = "correo@clinica.com";
+            inputEmail.title = "";
+        }
+    });
+
+    // --- ENVÍO DEL FORMULARIO (JSON) ---
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        if (pass1.value !== pass2.value) {
+            alert("⚠️ Las contraseñas no coinciden.");
+            pass2.focus();
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Creando usuario...";
+
+        const formData = new FormData(form);
+        const dataObj = Object.fromEntries(formData.entries());
+
+        try {
+            const res = await fetch('backend_nuevo_usuario.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataObj)
+            });
+            const data = await res.json();
+
+            if (data.estatus === 'exito') {
+                alert("✅ ¡Excelente!\n\n" + data.mensaje);
+                form.reset();
+                pass2.style.borderColor = '';
+                location.reload(); 
+            } else {
+                alert("⚠️ Atención:\n\n" + data.mensaje);
+            }
+        } catch (error) {
+            alert("❌ Error de conexión al servidor.");
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Crear usuario";
+        }
+    });
+});
+</script>
         
         <footer class="bottombar">© 2026 ITZAM</footer>
     </body>

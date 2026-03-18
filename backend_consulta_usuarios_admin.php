@@ -1,20 +1,18 @@
 <?php
+session_start();
 header('Content-Type: application/json');
 
-//DEV ONLY - quitar en prod.
+// DEV ONLY - quitar en prod.
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 require 'db_conn.php';
 
-// 2. MANEJO DE SOLICITUDES
 $metodo = $_SERVER['REQUEST_METHOD'];
 
-
-// --- LÓGICA DE LECTURA DE USUARIOS Y BÚSQUEDA (GET) ---
+// --- LÓGICA DE LECTURA (GET) ---
 if ($metodo === 'GET') {
-    
     $busqueda = $_GET['q'] ?? '';
     
     $sql = "SELECT 
@@ -24,10 +22,9 @@ if ($metodo === 'GET') {
                 estatus AS 'Estatus', 
                 rol AS 'Rol', 
                 fecha_creacion AS 'Fecha de creación', 
-                COALESCE(fecha_suspension, 'N/A') AS 'Fecha de suspensión' 
+                fecha_suspension AS 'Fecha de suspensión' 
             FROM usuarios_sistema "; 
 
-    // Búsqueda exclusiva por nombre de usuario
     if ($busqueda !== '') {
         $sql .= " WHERE nombre_usuario LIKE :busqueda ";
     }
@@ -36,136 +33,108 @@ if ($metodo === 'GET') {
 
     try {
         $stmt = $pdo->prepare($sql);
-        
-        // Ejecutamos con un solo parámetro limpio
         if ($busqueda !== '') {
             $stmt->execute(['busqueda' => '%' . $busqueda . '%']);
         } else {
             $stmt->execute();
         }
-        
-        $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        echo json_encode($datos);
-        
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode([
-            "error" => "Error al obtener la lista de usuarios.",
-            "detalle" => $e->getMessage() 
-        ]);
+        echo json_encode(["error" => "Error al obtener la lista de usuarios.", "detalle" => $e->getMessage()]);
     }
-    
     exit;
 }
- 
 
-// --- LÓGICA DE EDICIÓN Y SUSPENSIÓN (MÓDULO DE USUARIOS) ---
+// --- LÓGICA DE EDICIÓN Y SUSPENSIÓN (POST) ---
 if ($metodo === 'POST') {
-    // Recibimos los datos JSON del frontend
     $input = json_decode(file_get_contents('php://input'), true);
     
     $accion = $input['accion'] ?? '';
-    $idUsuario = $input['idUsuario'] ?? 0; 
+    $idUsuario = filter_var($input['idUsuario'] ?? 0, FILTER_VALIDATE_INT); 
 
-    // Verificación de seguridad básica
     if ($idUsuario <= 0) {
         echo json_encode(["estatus" => "error", "mensaje" => "ID de usuario no válido."]);
         exit;
     }
 
-    // --- 1. LÓGICA DE SUSPENSIÓN RÁPIDA (Botón Rojo) ---
+    // --- 1. SUSPENSIÓN RÁPIDA ---
     if ($accion === 'suspender') {
         try {
-            // Actualizamos el estatus y registramos la fecha. 
-            // COALESCE evita sobreescribir la fecha si el usuario ya estaba suspendido.
             $stmt = $pdo->prepare("UPDATE usuarios_sistema 
                                    SET estatus = 'Suspendido', 
                                        fecha_suspension = COALESCE(fecha_suspension, NOW()) 
                                    WHERE idUsuario = :id");
-            
             $stmt->execute(['id' => $idUsuario]);
-            
-            echo json_encode([
-                "estatus" => "exito", 
-                "mensaje" => "El usuario ha sido suspendido correctamente."
-            ]);
-            
+            echo json_encode(["estatus" => "exito", "mensaje" => "Usuario suspendido correctamente."]);
         } catch (PDOException $e) {
-            echo json_encode([
-                "estatus" => "error", 
-                "mensaje" => "Ocurrió un error al intentar suspender al usuario."
-            ]);
+            echo json_encode(["estatus" => "error", "mensaje" => "Error al suspender usuario."]);
         }
         exit; 
     }
 
-    // --- 2. LÓGICA DE EDICIÓN COMPLETA (Modal) ---
+    // --- 2. EDICIÓN COMPLETA (INCLUYE BCRYPT) ---
     if ($accion === 'editar') {
-        
-        $email = trim($input['email'] ?? '');
-        $rol = $input['rol'] ?? '';
-        $estatus = $input['estatus'] ?? '';
+        // --- PASO 1 Y 2: TIPOS Y SANITIZACIÓN ---
+        $email   = filter_var($input['email'] ?? '', FILTER_VALIDATE_EMAIL);
+        $rol     = strip_tags(trim($input['rol'] ?? ''));
+        $estatus = strip_tags(trim($input['estatus'] ?? ''));
+        $nuevaPass = $input['nueva_contrasena'] ?? ''; // La recibimos plana
 
-        // --- ESCUDO DE VALIDACIÓN ---
-        if ($email === '' || $rol === '' || $estatus === '') {
-            echo json_encode([
-                "estatus" => "error", 
-                "mensaje" => "El correo, el rol y el estatus son obligatorios."
-            ]);
+        if (!$email || empty($rol) || empty($estatus)) {
+            echo json_encode(["estatus" => "error", "mensaje" => "Datos obligatorios inválidos o incompletos."]);
             exit;
         }
 
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            echo json_encode([
-                "estatus" => "error", 
-                "mensaje" => "El formato del correo electrónico es inválido."
-            ]);
+        // --- PASO 3: VALIDACIÓN DE LONGITUDES ---
+        if (strlen($rol) > 50 || strlen($estatus) > 20) {
+            echo json_encode(["estatus" => "error", "mensaje" => "Longitud de campos excedida."]);
             exit;
         }
 
         try {
-            // Actualizamos los datos. 
-            // El CASE de SQL maneja automáticamente si debemos poner NULL o la fecha actual en la suspensión.
-            $sql = "UPDATE usuarios_sistema 
-                    SET 
-                        email = :email,
-                        rol = :rol,
-                        estatus = :estatus,
-                        fecha_suspension = CASE 
-                            WHEN :estatus_check1 = 'Activo' THEN NULL 
-                            WHEN :estatus_check2 = 'Suspendido' THEN COALESCE(fecha_suspension, NOW())
-                        END
-                    WHERE idUsuario = :id";
+            // Construcción dinámica del Query para no tocar la contraseña si no se envió una nueva
+            $sql = "UPDATE usuarios_sistema SET email = :email, rol = :rol, estatus = :estatus";
             
+            $params = [
+                'email'   => $email,
+                'rol'     => $rol,
+                'estatus' => $estatus,
+                'id'      => $idUsuario
+            ];
+
+            // ¿Hay nueva contraseña? Aplicamos BCrypt
+            if (!empty($nuevaPass)) {
+                if (strlen($nuevaPass) < 8) {
+                    echo json_encode(["estatus" => "error", "mensaje" => "La nueva contraseña debe tener al menos 8 caracteres."]);
+                    exit;
+                }
+                $sql .= ", contrasena = :pass";
+                $params['pass'] = password_hash($nuevaPass, PASSWORD_DEFAULT); // 🔥 BCrypt nativo
+            }
+
+            // Lógica de fecha de suspensión automática
+            $sql .= ", fecha_suspension = CASE 
+                        WHEN :est_check1 = 'Activo' THEN NULL 
+                        WHEN :est_check2 = 'Suspendido' THEN COALESCE(fecha_suspension, NOW()) 
+                        ELSE fecha_suspension 
+                      END";
+            
+            $params['est_check1'] = $estatus;
+            $params['est_check2'] = $estatus;
+
+            $sql .= " WHERE idUsuario = :id";
+
             $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
             
-            $stmt->execute([
-                'email'          => $email,
-                'rol'            => $rol,
-                'estatus'        => $estatus,
-                'estatus_check1' => $estatus, // Pasamos la variable para el CASE
-                'estatus_check2' => $estatus, // Pasamos la variable para el CASE
-                'id'             => $idUsuario
-            ]);
-            
-            echo json_encode([
-                "estatus" => "exito", 
-                "mensaje" => "Cuenta de usuario actualizada correctamente."
-            ]);
+            echo json_encode(["estatus" => "exito", "mensaje" => "Usuario actualizado correctamente."]);
             
         } catch (PDOException $e) {
-            // Protección por si intentan poner un correo que ya está en uso por otra persona
             if ($e->getCode() == 23000) { 
-                echo json_encode([
-                    "estatus" => "error", 
-                    "mensaje" => "Ese correo electrónico ya está registrado en otra cuenta."
-                ]);
+                echo json_encode(["estatus" => "error", "mensaje" => "Este correo ya está registrado en otra cuenta."]);
             } else {
-                echo json_encode([
-                    "estatus" => "error", 
-                    "mensaje" => "Error de base de datos al actualizar el usuario."
-                ]);
+                echo json_encode(["estatus" => "error", "mensaje" => "Error SQL: " . $e->getMessage()]);
             }
         }
         exit;

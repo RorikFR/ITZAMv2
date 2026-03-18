@@ -128,50 +128,60 @@ if (!isset($_SESSION['idUsuario'])) {
       <h3>Formulario de registro de insumos en inventario</h3>
       </div>
 
-    <div class="grid-wrapper">
-      <div class="formulario-background-normal">
+   <div class="grid-wrapper">
+    <div class="formulario-background-normal">
         <div class="tab-buttons" role="tablist" aria-label="Secciones del formulario">
             <button type="button" class="tab-btn active" data-step="0">Datos del insumo</button>
-            <button type="button" class="tab-btn" data-step="1">Datos del proveedor</button>
+            <button type="button" class="tab-btn" data-step="1">Ingreso a inventario</button>
         </div>
         <span class="message">* Campos obligatorios</span>
         
-        <form id="multiStepForm" action="" method="post" novalidate>
-            <!-- Step 1 -->
+        <form class="multiform" id="multiStepForm" novalidate autocomplete="off">
             <div class="tab active" data-step="0" aria-hidden="false">
-              <fieldset id="inventario-datos-generales-insumo">
-                <label>*Nombre del Insumo:</label>
-                <input class="form" type="text" name="nombre_comun" required placeholder="Ej. Guantes de Nitrilo">
                 
-                <label>*Material:</label>
-                <input class="form" type="text" name="material" placeholder="Ej. Látex, Plástico, Vidrio">
-                
-                <label>*Presentación:</label>
-                <input class="form" type="text" name="presentacion" required placeholder="Ej. Paquete, Caja, Unidad">
+                <fieldset style="background-color: #e8f4fd; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid #b6d4fe;">
+                    <label for="idCatalogoInsumo" style="color: #084298;">📦 <strong>Catálogo Oficial de Insumos:</strong></label>
+                    <select class="form" id="idCatalogoInsumo" name="idCatalogoInsumo" style="border-color: #0d6efd;">
+                        <option value="nuevo" selected>➕ Registrar un insumo nuevo en el catálogo</option>
+                    </select>
+                </fieldset>
 
-                <label>*Piezas por unidad:</label>
-                <input class="form" type="number" name="piezas_por_unidad" required>
+                <fieldset id="inventario-datos-generales-insumo">
+                <label for="nombre">*Nombre del Insumo:</label>
+                <input class="form datos-insumo" type="text" id="nombre" name="nombre" maxlength="120" required placeholder="Ej. Guantes Quirúrgicos">
                 
-                <label>Tamaño/Calibre:</label>
-                <input class="form" type="text" name="tamano_calibre" required placeholder="Ej. 10cm x 15cm">
+                <label for="material">Material:</label>
+                <input class="form datos-insumo" type="text" id="material" name="material" maxlength="65" placeholder="Ej. Látex, Plástico, Algodón">
                 
+                <label for="presentacion">Presentación:</label>
+                <input class="form datos-insumo" type="text" id="presentacion" name="presentacion" maxlength="65" placeholder="Ej. Caja, Bolsa, Unidad">
+
+                <label for="piezas_unidad">Piezas por paquete/unidad:</label>
+                <input class="form datos-insumo" type="number" id="piezas_unidad" name="piezas_unidad" min="1" placeholder="Ej. 100">
+                
+                <label for="tamano">Tamaño/Calibre:</label>
+                <input class="form datos-insumo" type="text" id="tamano" name="tamano" maxlength="45" placeholder="Ej. Mediano, Unisex">
               </fieldset>
             </div>
 
-            <!-- Step 2 -->
             <div class="tab" data-step="1" aria-hidden="true">
               <fieldset id="inventario-datos-proveedor-insumo">
-                <label>*Proveedor:</label>
-                <input class="form" type="text" name="proveedor" required>
+                <label for="proveedor">*Proveedor:</label>
+                <select class="form" id="proveedor" name="idProveedor" required>
+                    <option value="" disabled selected>Cargando opciones...</option>
+                </select>
                 
-                <label>*Lote:</label>
-                <input class="form" type="text" name="lote" required>
+                <label for="cantidad">*Cantidad a ingresar (Paquetes/Cajas):</label>
+                <input class="form" type="number" id="cantidad" name="cantidad" min="1" required>
+
+                <label for="marca">Marca (Opcional):</label>
+                <input class="form" type="text" id="marca" name="marca" maxlength="45" placeholder="Ej. MediGloves">
                 
-                <label>*Fecha de caducidad:</label>  
-                <input class="form" type="date" id="fecha_caducidad" name="fecha_caducidad" required>
+                <label for="lote">Lote (Opcional):</label>
+                <input class="form" type="text" id="lote" name="lote" maxlength="45">
                 
-                <label>*Cantidad:</label>
-                <input class="form" type="number" name="cantidad" required>
+                <label for="fecha_caducidad">Fecha de caducidad (Si aplica):</label>  
+                <input class="form" type="date" id="fecha_caducidad" name="fecha_caducidad">
               </fieldset>
             </div>
         </form>
@@ -179,92 +189,168 @@ if (!isset($_SESSION['idUsuario'])) {
         <div class="step-controls">
             <button class="multi-btn" type="button" id="prevBtn">Anterior</button>
             <button class="multi-btn" type="button" id="nextBtn">Siguiente</button>
-            <button class="multi-btn-clear" type="button" id="clearBtn">Limpiar campos</button>             
-            <button class="multi-btn-submit" type="submit" id="submitBtn">Registrar insumos</button>
+            <button class="multi-btn-clear" type="button" id="clearBtn" style="background-color: #6c757d;">Limpiar campos</button>             
+            <button class="multi-btn-submit" type="submit" id="submitBtn" form="multiStepForm" style="display: none;">Registrar insumos</button>
             <div class="step-indicator" id="stepIndicator">Paso 1 de 2</div>
         </div>
     </div>
-    </div>
+</div>
 
-    <script>
-            // Simple multi-step/tab form logic
-            (function(){
-                const form = document.getElementById('multiStepForm');
-                const tabs = Array.from(document.querySelectorAll('.tab'));
-                const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
-                const prevBtn = document.getElementById('prevBtn');
-                const nextBtn = document.getElementById('nextBtn');
-                const submitBtn = document.getElementById('submitBtn');
-                const stepIndicator = document.getElementById('stepIndicator');
-                let current = 0;
-                const total = tabs.length;
+<script>
+    (function(){
+        const form = document.getElementById('multiStepForm');
+        const tabs = Array.from(document.querySelectorAll('.tab'));
+        const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        const selectCatalogo = document.getElementById('idCatalogoInsumo');
+        const inputsInsumo = Array.from(document.querySelectorAll('.datos-insumo'));
+        let current = 0;
+        const total = tabs.length;
+        let catalogoInsumos = [];
 
-                function showStep(n){
-                    tabs.forEach((t,i)=>{
-                        const active = i===n;
-                        t.classList.toggle('active', active);
-                        t.setAttribute('aria-hidden', (!active).toString());
-                        tabButtons[i].classList.toggle('active', active);
+        // BLOQUEO DE FECHA DE CADUCIDAD
+        const fechaInput = document.getElementById('fecha_caducidad');
+        const manana = new Date();
+        manana.setDate(manana.getDate() + 1);
+        fechaInput.min = manana.toISOString().split('T')[0];
+
+        // --- CARGA DINÁMICA DE PROVEEDORES Y CATÁLOGO ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // 1. Cargar Proveedores
+                const resProv = await fetch('backend_catalogos.php?tabla=proveedores');
+                const dataProv = await resProv.json();
+                const selectProveedor = document.getElementById('proveedor');
+                dataProv.forEach(item => {
+                    selectProveedor.innerHTML += `<option value="${item.id}">${item.valor}</option>`;
+                });
+
+                // 2. Cargar Catálogo de Insumos
+                const resCat = await fetch('backend_get_cat_insumos.php');
+                catalogoInsumos = await resCat.json();
+                catalogoInsumos.forEach(ins => {
+                    const extraInfo = ins.tamano ? ` (${ins.tamano})` : '';
+                    selectCatalogo.innerHTML += `<option value="${ins.idCatalogoInsumo}">${ins.nombre}${extraInfo} - ${ins.presentacion}</option>`;
+                });
+            } catch (e) {
+                console.error("Error cargando datos dinámicos:", e);
+            }
+        });
+
+        // 🔥 LÓGICA DE AUTO-COMPLETADO CON EL CATÁLOGO
+        selectCatalogo.addEventListener('change', (e) => {
+            const valor = e.target.value;
+            if (valor === 'nuevo') {
+                // Si es nuevo, vaciamos y desbloqueamos los campos
+                inputsInsumo.forEach(input => {
+                    input.value = '';
+                    input.style.pointerEvents = 'auto'; // Permitir clics
+                    input.style.backgroundColor = '';
+                    input.readOnly = false;
+                });
+            } else {
+                // Buscamos el insumo en memoria por su ID
+                const ins = catalogoInsumos.find(i => i.idCatalogoInsumo == valor);
+                if (ins) {
+                    document.getElementById('nombre').value = ins.nombre;
+                    document.getElementById('material').value = ins.material || '';
+                    document.getElementById('presentacion').value = ins.presentacion || '';
+                    document.getElementById('piezas_unidad').value = ins.piezas_unidad || '';
+                    document.getElementById('tamano').value = ins.tamano || '';
+                    
+                    // Bloqueamos los campos visualmente
+                    inputsInsumo.forEach(input => {
+                        input.style.pointerEvents = 'none'; // Desactivar clics
+                        input.style.backgroundColor = '#e9ecef'; // Gris
+                        input.readOnly = true;
                     });
-                    prevBtn.style.display = n===0 ? 'none' : '';
-                    nextBtn.style.display = n===total-1 ? 'none' : '';
-                    submitBtn.style.display = n===total-1 ? '' : 'none';
-                    stepIndicator.textContent = `Paso ${n+1} de ${total}`;
-                    current = n;
                 }
+            }
+        });
 
-                function validateStep(n){
-                    const inputs = Array.from(tabs[n].querySelectorAll('input, select, textarea'));
-                    for (const el of inputs){
-                        if (!el.checkValidity()) {
-                            el.reportValidity();
-                            return false;
-                        }
-                    }
-                    return true;
+        // --- LÓGICA DE TABS ---
+        function showStep(n){
+            tabs.forEach((t, i) => {
+                const active = i === n;
+                t.classList.toggle('active', active);
+                t.setAttribute('aria-hidden', (!active).toString());
+                tabButtons[i].classList.toggle('active', active);
+            });
+            prevBtn.style.display = n === 0 ? 'none' : 'inline-block';
+            nextBtn.style.display = n === total - 1 ? 'none' : 'inline-block';
+            submitBtn.style.display = n === total - 1 ? 'inline-block' : 'none';
+            stepIndicator.textContent = `Paso ${n + 1} de ${total}`;
+            current = n;
+        }
+
+        function validateStep(n){
+            const inputs = Array.from(tabs[n].querySelectorAll('input, select, textarea'));
+            for (const el of inputs){
+                if (!el.checkValidity()) {
+                    el.reportValidity();
+                    return false;
                 }
+            }
+            return true;
+        }
 
-                nextBtn.addEventListener('click', ()=>{
-                    if (!validateStep(current)) return;
-                    showStep(Math.min(current+1, total-1));
+        nextBtn.addEventListener('click', () => {
+            if (!validateStep(current)) return;
+            showStep(Math.min(current + 1, total - 1));
+        });
+
+        prevBtn.addEventListener('click', () => showStep(Math.max(current - 1, 0)));
+
+        clearBtn.addEventListener('click', () => {
+            if(confirm("¿Deseas borrar los datos ingresados?")) {
+                form.reset();
+                selectCatalogo.dispatchEvent(new Event('change')); // Desbloquea inputs
+                showStep(0); 
+            }
+        });
+
+        // --- INTEGRACIÓN AJAX ---
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!validateStep(current)) return;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Guardando...";
+
+            const formData = new FormData(form);
+            const dataObj = Object.fromEntries(formData.entries());
+
+            try {
+                const res = await fetch('backend_nuevo_insumo.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataObj)
                 });
+                const data = await res.json();
 
-                prevBtn.addEventListener('click', ()=> showStep(Math.max(current-1, 0)));
+                if(data.estatus === 'exito') {
+                    alert("✅ " + data.mensaje);
+                    form.reset();
+                    selectCatalogo.dispatchEvent(new Event('change'));
+                    showStep(0);
+                } else {
+                    alert("⚠️ " + data.mensaje);
+                }
+            } catch (error) {
+                alert("Error de conexión con el servidor.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Registrar insumos";
+            }
+        });
 
-                tabButtons.forEach(btn=>{
-                    btn.addEventListener('click', ()=> {
-                        const step = Number(btn.getAttribute('data-step'));
-                        // optional: validate current before jumping
-                        if (step > current && !validateStep(current)) return;
-                        showStep(step);
-                    });
-                });
-
-                // final submit: optionally revalidate last step and entire form
-                form.addEventListener('submit', (e)=>{
-                    if (!validateStep(current)) {
-                        e.preventDefault();
-                        return;
-                    }
-                    // full form validity check; if invalid, prevent submit and show first invalid field
-                    if (!form.checkValidity()){
-                        e.preventDefault();
-                        const firstInvalid = form.querySelector(':invalid');
-                        if (firstInvalid){
-                            const stepEl = firstInvalid.closest('.tab');
-                            const stepIndex = tabs.indexOf(stepEl);
-                            if (stepIndex >= 0) showStep(stepIndex);
-                            firstInvalid.focus();
-                            firstInvalid.reportValidity();
-                        }
-                    }
-                    // otherwise allow normal submit (or perform AJAX here)
-                });
-
-                // initialize
-                showStep(0);
-            })();
-    </script>
+        showStep(0);
+    })();
+</script>
 
         <footer class="bottombar">© 2026 ITZAM</footer>
     </body>

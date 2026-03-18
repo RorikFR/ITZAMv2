@@ -129,173 +129,189 @@ if (!isset($_SESSION['idUsuario'])) {
         </div>
 
 <div class="grid-wrapper">
-        <div class="formulario-background-normal">
-                <div class="tab-buttons" role="tablist" aria-label="Secciones del formulario">
-                    <button type="button" class="tab-btn active" data-step="0">Datos generales</button>
-                    <button type="button" class="tab-btn" data-step="1">Dirección</button>
-                    <button type="button" class="tab-btn" data-step="2">Contacto</button>
-                </div>
-                <span class="message">* Campos obligatorios</span>
-            <form class="multiform" id="multiStepForm" action="" method="post" novalidate autocomplete="off">
+    <div class="formulario-background-normal">
+        <div class="tab-buttons" role="tablist" aria-label="Secciones del formulario">
+            <button type="button" class="tab-btn active" data-step="0">Datos generales</button>
+            <button type="button" class="tab-btn" data-step="1">Dirección</button>
+            <button type="button" class="tab-btn" data-step="2">Contacto</button>
+        </div>
+        <span class="message">* Campos obligatorios</span>
 
-
-                <!-- Step 1 -->
-                <div class="tab active" data-step="0" aria-hidden="false">
-
-                    <fieldset id="unidad-datos">
+        <form class="multiform" id="multiStepForm" novalidate autocomplete="off">
+            <div class="tab active" data-step="0" aria-hidden="false">
+                <fieldset id="unidad-datos">
                     <label for="nombre_unidad">*Nombre de la unidad:</label>
-                    <input class="form" type="text" id="nombre_unidad" name="nombre_unidad" required />
+                    <input class="form" type="text" id="nombre_unidad" name="nombre_unidad" placeholder="Ej. Hospital Central ITZAM" required />
 
-                    <label for="afiliacion">*Afiliacion:</label>
-                    <select class="form" id="afiliacion" name="afiliacion" required>
-                        <option value="" disabled selected>Selecciona una afiliación</option>
-                        <option value="publica">Pública</option>
-                        <option value="privada">Privada</option>
-                        <option value="otro">Otro</option>
+                    <label for="afiliacion">*Afiliación:</label>
+                    <select class="form" id="afiliacion" name="idAfiliacion" required>
+                        <option value="" disabled selected>Cargando opciones...</option>
                     </select> 
 
-                    <label for="categoria">*Categoría</label>
-                    <select class="form" id="categoria" name="categoria" required>
-                        <option value="" disabled selected>Selecciona una categoría</option>
-                        <option value="hospital">Hospital</option>
-                        <option value="clinica">Clínica</option>
-                        <option value="laboratorio">Laboratorio</option>
-                        <option value="otro">Otro</option>
-                    </select> 
+                    <label for="categoria">*Categoría:</label>
+                    <select class="form" id="categoria" name="idCategoria" required>
+                        <option value="" disabled selected>Cargando opciones...</option>
+                    </select>
 
-                    <label for="Es prioritaria?">*Es prioritaria?</label>
+                    <label for="prioritaria">*¿Es prioritaria?</label>
                     <select class="form" id="prioritaria" name="prioritaria" required>
                         <option value="" disabled selected>Selecciona una opción</option>
-                        <option value="si">Sí</option>
-                        <option value="no">No</option>
-                    </select> 
-                    </fieldset>
+                        <option value="1">Sí</option> 
+                        <option value="0">No</option> 
+                    </select>
+                </fieldset>
+            </div>
 
-                </div>
+            <div class="tab" data-step="1" aria-hidden="true">
+                <fieldset id="unidad-datos-direccion">
+                    <label for="calle">*Calle y número:</label>
+                    <input class="form" type="text" id="calle" name="calle" placeholder="Ej. Av. Lázaro Cárdenas 123" required />
 
-                <!-- Step 2 -->
-                <div class="tab" data-step="1" aria-hidden="true">
-                    
-                    <fieldset id="unidad-datos-direccion">
-                    <label for="calle">*Calle:</label>
-                    <input class="form" type="text" id="calle" name="calle" required />
+                    <label for="ubicacion">*Ubicación (CP - Colonia, Ciudad):</label>
+                    <select class="form" id="ubicacion" name="idUbicacion" required>
+                        <option value="" disabled selected>Cargando opciones...</option>
+                    </select>
+                </fieldset>
+            </div>
 
-                    <label for="colonia">*Colonia:</label>
-                    <input class="form" type="text" id="colonia" name="colonia" required />
-
-                    <label for="codigo_postal">*Código postal:</label>
-                    <input class="form" type="text" id="codigo_postal" name="codigo_postal" required />
-
-                    <label for="ciudad">*Ciudad:</label>
-                    <input class="form" type="text" id="ciudad" name="ciudad" required />  
-
-                    <label for="estado">*Estado:</label>
-                    <input class="form" type="text" id="estado" name="estado" required />
-                    </fieldset>
-                </div>
-
-                <!-- Step 3-->
-                <div class="tab" data-step="2" aria-hidden="true">
-                    <fieldset id="unidad-datos-contacto">
-                    <label for="telefono">*Teléfono:</label>
-                    <input class="form" type="tel" id="telefono" name="telefono" required />  
+            <div class="tab" data-step="2" aria-hidden="true">
+                <fieldset id="unidad-datos-contacto">
+                    <label for="telefono">*Teléfono de contacto:</label>
+                    <input class="form" type="tel" id="telefono" name="telefono" placeholder="10 dígitos" required />  
 
                     <label for="email">*Correo electrónico:</label>
-                    <input class="form" type="email" id="email" name="email" required /> 
-                    </fieldset>
-                </div>
-            </form>
-                <div class="step-controls">
-                    <button class="multi-btn" type="button" id="prevBtn">Anterior</button>
-                    <button class="multi-btn" type="button" id="nextBtn">Siguiente</button>
-                    <button class="multi-btn-clear" type="button" id="clearBtn">Limpiar campos</button>
-                    <button class="multi-btn-submit" type="submit" id="submitBtn">Registrar unidad</button>
-                    <div class="step-indicator" id="stepIndicator">Paso 1 de 3</div>
-                </div>
+                    <input class="form" type="email" id="email" name="email" placeholder="contacto@unidad.com" required /> 
+                </fieldset>
+            </div>
+        </form>
+
+        <div class="step-controls">
+            <button class="multi-btn" type="button" id="prevBtn">Anterior</button>
+            <button class="multi-btn" type="button" id="nextBtn">Siguiente</button>
+            <button class="multi-btn-clear" type="button" id="clearBtn" style="background-color: #6c757d;">Limpiar campos</button>
+            <button class="multi-btn-submit" type="submit" id="submitBtn" form="multiStepForm" style="display: none;">Registrar unidad</button>
+            <div class="step-indicator" id="stepIndicator">Paso 1 de 3</div>
         </div>
+    </div>
 </div>
 
+<script>
+    (function(){
+        const form = document.getElementById('multiStepForm');
+        const tabs = Array.from(document.querySelectorAll('.tab'));
+        const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        let current = 0;
+        const total = tabs.length;
 
-        <script>
-            // Simple multi-step/tab form logic
-            (function(){
-                const form = document.getElementById('multiStepForm');
-                const tabs = Array.from(document.querySelectorAll('.tab'));
-                const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
-                const prevBtn = document.getElementById('prevBtn');
-                const nextBtn = document.getElementById('nextBtn');
-                const submitBtn = document.getElementById('submitBtn');
-                const stepIndicator = document.getElementById('stepIndicator');
-                let current = 0;
-                const total = tabs.length;
+        // --- CARGA DINÁMICA DE CATÁLOGOS ---
+        async function cargarCatalogos() {
+            // 🔥 Añadimos nuestro catálogo de ubicación a la lista
+            const catalogos = [
+                { id: 'afiliacion', tabla: 'cat_afiliacion', msg: 'Selecciona una afiliación' },
+                { id: 'categoria', tabla: 'cat_categoria', msg: 'Selecciona una categoría' },
+                { id: 'ubicacion', tabla: 'catalogo_ubicacion', msg: 'Selecciona una ubicación' } 
+            ];
 
-                function showStep(n){
-                    tabs.forEach((t,i)=>{
-                        const active = i===n;
-                        t.classList.toggle('active', active);
-                        t.setAttribute('aria-hidden', (!active).toString());
-                        tabButtons[i].classList.toggle('active', active);
+            for (const cat of catalogos) {
+                try {
+                    const res = await fetch(`backend_catalogos.php?tabla=${cat.tabla}`);
+                    const data = await res.json();
+                    const select = document.getElementById(cat.id);
+                    
+                    select.innerHTML = `<option value="" disabled selected>${cat.msg}</option>`;
+                    data.forEach(item => {
+                        select.innerHTML += `<option value="${item.id}">${item.valor}</option>`;
                     });
-                    prevBtn.style.display = n===0 ? 'none' : '';
-                    nextBtn.style.display = n===total-1 ? 'none' : '';
-                    submitBtn.style.display = n===total-1 ? '' : 'none';
-                    stepIndicator.textContent = `Paso ${n+1} de ${total}`;
-                    current = n;
+                } catch (e) {
+                    console.error(`Error cargando el catálogo ${cat.tabla}:`, e);
                 }
+            }
+        }
 
-                function validateStep(n){
-                    const inputs = Array.from(tabs[n].querySelectorAll('input, select, textarea'));
-                    for (const el of inputs){
-                        if (!el.checkValidity()) {
-                            el.reportValidity();
-                            return false;
-                        }
-                    }
-                    return true;
+        document.addEventListener('DOMContentLoaded', cargarCatalogos);
+
+        // --- LÓGICA DEL FORMULARIO ---
+        function showStep(n){
+            tabs.forEach((t, i) => {
+                const active = i === n;
+                t.classList.toggle('active', active);
+                t.setAttribute('aria-hidden', (!active).toString());
+                tabButtons[i].classList.toggle('active', active);
+            });
+            prevBtn.style.display = n === 0 ? 'none' : 'inline-block';
+            nextBtn.style.display = n === total - 1 ? 'none' : 'inline-block';
+            submitBtn.style.display = n === total - 1 ? 'inline-block' : 'none';
+            stepIndicator.textContent = `Paso ${n + 1} de ${total}`;
+            current = n;
+        }
+
+        function validateStep(n){
+            const inputs = Array.from(tabs[n].querySelectorAll('input, select, textarea'));
+            for (const el of inputs){
+                if (!el.checkValidity()) {
+                    el.reportValidity();
+                    return false;
                 }
+            }
+            return true;
+        }
 
-                nextBtn.addEventListener('click', ()=>{
-                    if (!validateStep(current)) return;
-                    showStep(Math.min(current+1, total-1));
+        nextBtn.addEventListener('click', () => {
+            if (!validateStep(current)) return;
+            showStep(Math.min(current + 1, total - 1));
+        });
+
+        prevBtn.addEventListener('click', () => showStep(Math.max(current - 1, 0)));
+
+        clearBtn.addEventListener('click', () => {
+            if(confirm("¿Deseas borrar los datos ingresados?")) {
+                form.reset();
+                showStep(0); 
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!validateStep(current)) return;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Procesando...";
+
+            const formData = new FormData(form);
+            const dataObj = Object.fromEntries(formData.entries());
+
+            try {
+                const res = await fetch('backend_nueva_unidad.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataObj)
                 });
+                const data = await res.json();
 
-                prevBtn.addEventListener('click', ()=> showStep(Math.max(current-1, 0)));
+                if(data.estatus === 'exito') {
+                    alert("✅ " + data.mensaje);
+                    form.reset();
+                    showStep(0);
+                } else {
+                    alert("⚠️ " + data.mensaje);
+                }
+            } catch (error) {
+                alert("Error de conexión al servidor.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Registrar unidad";
+            }
+        });
 
-                tabButtons.forEach(btn=>{
-                    btn.addEventListener('click', ()=> {
-                        const step = Number(btn.getAttribute('data-step'));
-                        // optional: validate current before jumping
-                        if (step > current && !validateStep(current)) return;
-                        showStep(step);
-                    });
-                });
+        showStep(0);
+    })();
+</script>
 
-                // final submit: optionally revalidate last step and entire form
-                form.addEventListener('submit', (e)=>{
-                    if (!validateStep(current)) {
-                        e.preventDefault();
-                        return;
-                    }
-                    // full form validity check; if invalid, prevent submit and show first invalid field
-                    if (!form.checkValidity()){
-                        e.preventDefault();
-                        const firstInvalid = form.querySelector(':invalid');
-                        if (firstInvalid){
-                            const stepEl = firstInvalid.closest('.tab');
-                            const stepIndex = tabs.indexOf(stepEl);
-                            if (stepIndex >= 0) showStep(stepIndex);
-                            firstInvalid.focus();
-                            firstInvalid.reportValidity();
-                        }
-                    }
-                    // otherwise allow normal submit (or perform AJAX here)
-                });
-
-                // initialize
-                showStep(0);
-            })();
-        </script>
-        
         <footer class="bottombar">© 2026 ITZAM</footer>
 
     </body>

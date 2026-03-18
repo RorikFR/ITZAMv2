@@ -148,7 +148,7 @@ if (!isset($_SESSION['idUsuario'])) {
         </table>
     </div>
 
-  <div id="modalEdicion" class="modal-overlay" style="display:none;">
+<div id="modalEdicion" class="modal-overlay" style="display:none;">
         <div class="modal-box">
             <div class="modal-header">Administrar Usuario</div>
             
@@ -161,7 +161,7 @@ if (!isset($_SESSION['idUsuario'])) {
             
             <div class="form-group">
                 <label>Correo Electrónico:</label>
-                <input type="email" id="inputModalEmail">
+                <input type="email" id="inputModalEmail" required>
             </div>
             
             <div class="form-group">
@@ -170,7 +170,7 @@ if (!isset($_SESSION['idUsuario'])) {
                     <option value="Administrador">Administrador</option>
                     <option value="Médico">Médico</option>
                     <option value="Enfermería">Enfermería</option>
-                    <option value="Almacén">Almacén</option>
+                    <option value="Farmacia">Farmacia</option>
                     <option value="Recepción">Recepción</option>
                 </select>
             </div>
@@ -182,8 +182,23 @@ if (!isset($_SESSION['idUsuario'])) {
                     <option value="Suspendido">Suspendido</option>
                 </select>
             </div>
+
+            <fieldset style="border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-top: 15px;">
+                <legend style="font-size: 0.9em; color: #6c757d; font-weight: bold;">Restablecer Contraseña (Opcional)</legend>
+                <p style="font-size: 0.8em; color: #0dcaf0; margin-top: 0; margin-bottom: 10px;">Deje los campos en blanco si no desea cambiarla.</p>
+                
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label>Nueva Contraseña:</label>
+                    <input type="password" id="inputModalNuevaPass" placeholder="Mínimo 8 caracteres">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Confirmar Contraseña:</label>
+                    <input type="password" id="inputModalConfirmaPass" placeholder="Repita la nueva contraseña">
+                </div>
+            </fieldset>
             
-            <div class="modal-actions">
+            <div class="modal-actions" style="margin-top: 20px;">
                 <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
                 <button class="btn-save" onclick="guardarCambiosUsuario()">Guardar Cambios</button>
             </div>
@@ -206,9 +221,26 @@ if (!isset($_SESSION['idUsuario'])) {
         const inputModalEmail = document.getElementById("inputModalEmail"); 
         const inputModalRol = document.getElementById("inputModalRol");
         const inputModalEstatus = document.getElementById("inputModalEstatus");
+        
+        // Variables de Contraseña
+        const inputNuevaPass = document.getElementById("inputModalNuevaPass");
+        const inputConfirmaPass = document.getElementById("inputModalConfirmaPass");
 
-        // Variable global para la instancia de DataTables
         let tablaInstancia = null; 
+
+        // --- VALIDACIÓN VISUAL DE CONTRASEÑAS EN EL MODAL ---
+        function validarPasswordsModal() {
+            if (inputConfirmaPass.value === '') {
+                inputConfirmaPass.style.borderColor = '';
+            } else if (inputNuevaPass.value !== inputConfirmaPass.value) {
+                inputConfirmaPass.style.borderColor = '#dc3545'; // Rojo si no coinciden
+            } else {
+                inputConfirmaPass.style.borderColor = '#198754'; // Verde si coinciden
+            }
+        }
+        inputNuevaPass.addEventListener('input', validarPasswordsModal);
+        inputConfirmaPass.addEventListener('input', validarPasswordsModal);
+
 
         // --- 1. CARGAR DATOS INICIALES (GET TODO) ---
         async function cargarDatosIniciales() {
@@ -220,7 +252,6 @@ if (!isset($_SESSION['idUsuario'])) {
             cuerpoTabla.innerHTML = "<tr><td colspan='8' style='text-align:center'>Cargando base de datos de usuarios...</td></tr>";
 
             try {
-                // Fetch directo al backend sin parámetro de búsqueda
                 const response = await fetch('backend_consulta_usuarios_admin.php');
                 const datos = await response.json();
                 
@@ -243,10 +274,7 @@ if (!isset($_SESSION['idUsuario'])) {
             }
 
             datos.forEach(item => {
-                // Color dinámico para el estatus (Mantenido de tu código original)
                 let colorEstatus = item['Estatus'] === 'Activo' ? '#198754' : '#dc3545';
-                
-                // Si la fecha de suspensión es null o vacía, mostramos un guion
                 let fechaSuspension = item['Fecha de suspensión'] ? item['Fecha de suspensión'] : '<span style="color:gray;">-</span>';
 
                 cuerpoTabla.innerHTML += `
@@ -260,14 +288,12 @@ if (!isset($_SESSION['idUsuario'])) {
                         <td>${fechaSuspension}</td>
                         <td>
                             <button class="btn-edit" onclick="abrirModal(${item.idUsuario}, '${item['Nombre de usuario']}', '${item.Email}', '${item['Rol']}', '${item['Estatus']}')">Editar</button>
-                            
                             <button class="btn-del" onclick="suspenderUsuario(${item.idUsuario}, '${item['Estatus']}')">Suspender</button>
                         </td>
                     </tr>
                 `;
             });
 
-            // Inicializamos DataTables con diccionario en español
             tablaInstancia = $('#tablaUsuarios').DataTable({
                 language: {
                     "decimal": "",
@@ -275,23 +301,9 @@ if (!isset($_SESSION['idUsuario'])) {
                     "info": "Mostrando _START_ a _END_ de _TOTAL_ usuarios",
                     "infoEmpty": "Mostrando 0 a 0 de 0 usuarios",
                     "infoFiltered": "(Filtrado de _MAX_ usuarios totales)",
-                    "infoPostFix": "",
-                    "thousands": ",",
-                    "lengthMenu": "Mostrar _MENU_ usuarios por página",
-                    "loadingRecords": "Cargando...",
-                    "processing": "Procesando...",
                     "search": "Buscar:",
                     "zeroRecords": "No se encontraron coincidencias",
-                    "paginate": {
-                        "first": "Primero",
-                        "last": "Último",
-                        "next": "Siguiente",
-                        "previous": "Anterior"
-                    },
-                    "aria": {
-                        "sortAscending": ": Activar para ordenar la columna de manera ascendente",
-                        "sortDescending": ": Activar para ordenar la columna de manera descendente"
-                    }
+                    "paginate": { "first": "Primero", "last": "Último", "next": "Siguiente", "previous": "Anterior" }
                 },
                 dom: 'Bfrtip',
                 buttons: [
@@ -300,13 +312,12 @@ if (!isset($_SESSION['idUsuario'])) {
                 ],
                 pageLength: 10,
                 ordering: true,
-                order: [[0, "desc"]] // Ordena por ID descendente por defecto
+                order: [[0, "desc"]] 
             });
         }
 
         // --- 3. SUSPENDER USUARIO (POST) ---
         async function suspenderUsuario(idUsuario, estatus) {
-            // Si ya está suspendido, no tiene caso volver a suspenderlo
             if(estatus === 'Suspendido') {
                 alert("Este usuario ya se encuentra suspendido.");
                 return;
@@ -315,6 +326,7 @@ if (!isset($_SESSION['idUsuario'])) {
             if(!confirm("¿Confirma que desea suspender el acceso a este usuario? Ya no podrá iniciar sesión.")) return;
 
             try {
+                // Notar que la petición se envia al mismo archivo usando un cuerpo JSON
                 const response = await fetch('backend_consulta_usuarios_admin.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -325,7 +337,7 @@ if (!isset($_SESSION['idUsuario'])) {
                 
                 if(res.estatus === 'exito') {
                     alert("✅ Usuario suspendido correctamente.");
-                    cargarDatosIniciales(); // Recargar tabla usando la nueva función
+                    cargarDatosIniciales(); 
                 } else {
                     alert("Error: " + res.mensaje);
                 }
@@ -342,6 +354,11 @@ if (!isset($_SESSION['idUsuario'])) {
             inputModalRol.value = rol;
             inputModalEstatus.value = estatus;
             
+            // Limpiamos los campos de contraseña al abrir el modal
+            inputNuevaPass.value = "";
+            inputConfirmaPass.value = "";
+            inputConfirmaPass.style.borderColor = "";
+            
             modal.classList.add("show");
         }
 
@@ -354,6 +371,8 @@ if (!isset($_SESSION['idUsuario'])) {
             const email = inputModalEmail.value.trim();
             const rol = inputModalRol.value;
             const estatus = inputModalEstatus.value;
+            const nuevaPass = inputNuevaPass.value;
+            const confirmaPass = inputConfirmaPass.value;
 
             // Validación de formato de correo
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -362,17 +381,39 @@ if (!isset($_SESSION['idUsuario'])) {
                 return;
             }
 
+            // Validación de contraseñas (Si decidió escribir una nueva)
+            if (nuevaPass !== "") {
+                if (nuevaPass.length < 8) {
+                    alert("La nueva contraseña debe tener al menos 8 caracteres.");
+                    inputNuevaPass.focus();
+                    return;
+                }
+                if (nuevaPass !== confirmaPass) {
+                    alert("Las contraseñas no coinciden. Por favor, verifícalas.");
+                    inputConfirmaPass.focus();
+                    return;
+                }
+            }
+
+            // Armamos el objeto de datos a enviar
+            const datosAEnviar = { 
+                accion: 'editar', 
+                idUsuario: idUsuario, 
+                email: email, 
+                rol: rol,
+                estatus: estatus
+            };
+
+            // Si escribió una contraseña válida, la agregamos al paquete
+            if (nuevaPass !== "") {
+                datosAEnviar.nueva_contrasena = nuevaPass;
+            }
+
             try {
                 const response = await fetch('backend_consulta_usuarios_admin.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        accion: 'editar', 
-                        idUsuario: idUsuario, 
-                        email: email, 
-                        rol: rol,
-                        estatus: estatus
-                    })
+                    body: JSON.stringify(datosAEnviar)
                 });
                 
                 const res = await response.json();
@@ -380,7 +421,7 @@ if (!isset($_SESSION['idUsuario'])) {
                 if(res.estatus === 'exito') {
                     alert("✅ Cambios guardados correctamente.");
                     cerrarModal();
-                    cargarDatosIniciales(); // Recargar tabla usando la nueva función
+                    cargarDatosIniciales(); 
                 } else {
                     alert("⚠️ Error: " + res.mensaje);
                 }
@@ -389,10 +430,10 @@ if (!isset($_SESSION['idUsuario'])) {
             }
         }
 
-        // Carga inicial al abrir la página
+        // Carga inicial
         cargarDatosIniciales();
 
-        // Cerrar modal al dar click fuera del recuadro
+        // Cerrar modal al dar click fuera
         window.onclick = function(ev) { 
             if (ev.target == modal) cerrarModal(); 
         }

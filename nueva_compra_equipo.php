@@ -128,134 +128,218 @@ if (!isset($_SESSION['idUsuario'])) {
       </div>
 
     <div class="grid-wrapper">
-      <div class="formulario-background-normal">
+    <div class="formulario-background-normal">
         <div class="tab-buttons" role="tablist" aria-label="Secciones del formulario">
             <button type="button" class="tab-btn active" data-step="0">Datos del equipo médico</button>
-            <button type="button" class="tab-btn" data-step="1">Datos del proveedor</button>
+            <button type="button" class="tab-btn" data-step="1">Ingreso a inventario</button>
         </div>
         <span class="message">* Campos obligatorios</span>
         
-        <form id="multiStepForm" action="" method="post" novalidate>
-            <!-- Step 1 -->
+        <form class="multiform" id="multiStepForm" novalidate autocomplete="off">
             <div class="tab active" data-step="0" aria-hidden="false">
-              <fieldset id="inventario-datos-generales-equipo">
-                <label>*Nombre del Equipo:</label>
-                <input class="form" type="text" name="nombre_comun" required placeholder="Ej. Monitor de Signos Vitales">
                 
-                <label>*Marca:</label>
-                <input class="form" type="text" name="marca" required>
-                
-                <label>*Modelo:</label>
-                <input class="form" type="text" name="modelo" required>
-                
-                <label>*Fabricante:</label>
-                <input class="form" type="text" name="fabricante" required>
-              </fieldset>
+                <fieldset style="background-color: #e8f4fd; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid #b6d4fe;">
+                    <label for="idCatalogoEquipo" style="color: #084298;">🩺 <strong>Catálogo Oficial de Equipos:</strong></label>
+                    <select class="form" id="idCatalogoEquipo" name="idCatalogoEquipo" style="border-color: #0d6efd;">
+                        <option value="nuevo" selected>➕ Registrar un equipo nuevo en el catálogo</option>
+                    </select>
+                </fieldset>
+
+                <fieldset id="inventario-datos-generales-equipo">
+                    <label for="nombre">*Nombre del Equipo:</label>
+                    <input class="form datos-equipo" type="text" id="nombre" name="nombre" maxlength="120" required placeholder="Ej. Monitor de Signos Vitales">
+                    
+                    <label for="marca">Marca:</label>
+                    <input class="form datos-equipo" type="text" id="marca" name="marca" maxlength="65" placeholder="Ej. Philips, GE Healthcare">
+                    
+                    <label for="modelo">Modelo:</label>
+                    <input class="form datos-equipo" type="text" id="modelo" name="modelo" maxlength="65" placeholder="Ej. IntelliVue X3">
+                    
+                    <label for="fabricante">Fabricante:</label>
+                    <input class="form datos-equipo" type="text" id="fabricante" name="fabricante" maxlength="120" placeholder="Ej. Philips Medical Systems">
+                </fieldset>
             </div>
 
-            <!-- Step 2 -->
             <div class="tab" data-step="1" aria-hidden="true">
-              <fieldset id="inventario-datos-proveedor-equipo">
-                <label>*Proveedor:</label>
-                <input class="form" type="text" name="proveedor" required>
+                <fieldset id="inventario-datos-proveedor-equipo">
+                    <label for="proveedor">*Proveedor:</label>
+                    <select class="form" id="proveedor" name="idProveedor" required>
+                        <option value="" disabled selected>Cargando opciones...</option>
+                    </select>
 
-                <label for="fecha_compra">*Fecha de compra:</label>
-                <input class="form" type="date" id="fecha_compra" name="fecha_compra" required>  
-                
-                <label>*Cantidad:</label>
-                <input class="form" type="number" name="cantidad" required>
+                    <label for="fecha_compra">*Fecha de compra:</label>
+                    <input class="form" type="date" id="fecha_compra" name="fecha_compra" required>  
+                    
+                    <label for="cantidad">*Cantidad a ingresar:</label>
+                    <input class="form" type="number" id="cantidad" name="cantidad" min="1" required>
+                </fieldset>
             </div>
         </form>
         
         <div class="step-controls">
             <button class="multi-btn" type="button" id="prevBtn">Anterior</button>
             <button class="multi-btn" type="button" id="nextBtn">Siguiente</button>
-            <button class="multi-btn-clear" type="button" id="clearBtn">Limpiar campos</button>             
-            <button class="multi-btn-submit" type="submit" id="submitBtn">Registrar equipo</button>
+            <button class="multi-btn-clear" type="button" id="clearBtn" style="background-color: #6c757d;">Limpiar campos</button>             
+            <button class="multi-btn-submit" type="submit" id="submitBtn" form="multiStepForm" style="display: none;">Registrar equipo</button>
             <div class="step-indicator" id="stepIndicator">Paso 1 de 2</div>
         </div>
     </div>
-    </div>
+</div>
 
-    <script>
-            // Simple multi-step/tab form logic
-            (function(){
-                const form = document.getElementById('multiStepForm');
-                const tabs = Array.from(document.querySelectorAll('.tab'));
-                const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
-                const prevBtn = document.getElementById('prevBtn');
-                const nextBtn = document.getElementById('nextBtn');
-                const submitBtn = document.getElementById('submitBtn');
-                const stepIndicator = document.getElementById('stepIndicator');
-                let current = 0;
-                const total = tabs.length;
+<script>
+    (function(){
+        const form = document.getElementById('multiStepForm');
+        const tabs = Array.from(document.querySelectorAll('.tab'));
+        const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const stepIndicator = document.getElementById('stepIndicator');
+        const selectCatalogo = document.getElementById('idCatalogoEquipo');
+        const inputsEquipo = Array.from(document.querySelectorAll('.datos-equipo'));
+        
+        let current = 0;
+        const total = tabs.length;
+        let catalogoEquipos = [];
 
-                function showStep(n){
-                    tabs.forEach((t,i)=>{
-                        const active = i===n;
-                        t.classList.toggle('active', active);
-                        t.setAttribute('aria-hidden', (!active).toString());
-                        tabButtons[i].classList.toggle('active', active);
+        // Límite de fecha de compra (No puede ser en el futuro)
+        const fechaCompra = document.getElementById('fecha_compra');
+        fechaCompra.max = new Date().toISOString().split('T')[0];
+
+        // --- CARGA DINÁMICA DE PROVEEDORES Y CATÁLOGO ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // 1. Cargar Proveedores
+                const resProv = await fetch('backend_catalogos.php?tabla=proveedores');
+                const dataProv = await resProv.json();
+                const selectProveedor = document.getElementById('proveedor');
+                selectProveedor.innerHTML = '<option value="" disabled selected>Selecciona un proveedor</option>';
+                dataProv.forEach(item => {
+                    selectProveedor.innerHTML += `<option value="${item.id}">${item.valor}</option>`;
+                });
+
+                // 2. Cargar Catálogo de Equipos
+                const resCat = await fetch('backend_get_cat_equipo.php');
+                catalogoEquipos = await resCat.json();
+                catalogoEquipos.forEach(eq => {
+                    const extraInfo = eq.modelo ? ` (Mod: ${eq.modelo})` : '';
+                    selectCatalogo.innerHTML += `<option value="${eq.idCatalogoEquipo}">${eq.nombre} - ${eq.marca}${extraInfo}</option>`;
+                });
+            } catch (e) {
+                console.error("Error cargando datos dinámicos:", e);
+            }
+        });
+
+        // 🔥 LÓGICA DE AUTO-COMPLETADO CON EL CATÁLOGO
+        selectCatalogo.addEventListener('change', (e) => {
+            const valor = e.target.value;
+            if (valor === 'nuevo') {
+                // Desbloqueamos los campos
+                inputsEquipo.forEach(input => {
+                    input.value = '';
+                    input.style.pointerEvents = 'auto';
+                    input.style.backgroundColor = '';
+                    input.readOnly = false;
+                });
+            } else {
+                // Buscamos el equipo y bloqueamos
+                const eq = catalogoEquipos.find(i => i.idCatalogoEquipo == valor);
+                if (eq) {
+                    document.getElementById('nombre').value = eq.nombre;
+                    document.getElementById('marca').value = eq.marca || '';
+                    document.getElementById('modelo').value = eq.modelo || '';
+                    document.getElementById('fabricante').value = eq.fabricante || '';
+                    
+                    inputsEquipo.forEach(input => {
+                        input.style.pointerEvents = 'none';
+                        input.style.backgroundColor = '#e9ecef';
+                        input.readOnly = true;
                     });
-                    prevBtn.style.display = n===0 ? 'none' : '';
-                    nextBtn.style.display = n===total-1 ? 'none' : '';
-                    submitBtn.style.display = n===total-1 ? '' : 'none';
-                    stepIndicator.textContent = `Paso ${n+1} de ${total}`;
-                    current = n;
                 }
+            }
+        });
 
-                function validateStep(n){
-                    const inputs = Array.from(tabs[n].querySelectorAll('input, select, textarea'));
-                    for (const el of inputs){
-                        if (!el.checkValidity()) {
-                            el.reportValidity();
-                            return false;
-                        }
-                    }
-                    return true;
+        // --- LÓGICA DE TABS ---
+        function showStep(n){
+            tabs.forEach((t, i) => {
+                const active = i === n;
+                t.classList.toggle('active', active);
+                t.setAttribute('aria-hidden', (!active).toString());
+                tabButtons[i].classList.toggle('active', active);
+            });
+            prevBtn.style.display = n === 0 ? 'none' : 'inline-block';
+            nextBtn.style.display = n === total - 1 ? 'none' : 'inline-block';
+            submitBtn.style.display = n === total - 1 ? 'inline-block' : 'none';
+            stepIndicator.textContent = `Paso ${n + 1} de ${total}`;
+            current = n;
+        }
+
+        function validateStep(n){
+            const inputs = Array.from(tabs[n].querySelectorAll('input, select, textarea'));
+            for (const el of inputs){
+                if (!el.checkValidity()) {
+                    el.reportValidity();
+                    return false;
                 }
+            }
+            return true;
+        }
 
-                nextBtn.addEventListener('click', ()=>{
-                    if (!validateStep(current)) return;
-                    showStep(Math.min(current+1, total-1));
+        nextBtn.addEventListener('click', () => {
+            if (!validateStep(current)) return;
+            showStep(Math.min(current + 1, total - 1));
+        });
+
+        prevBtn.addEventListener('click', () => showStep(Math.max(current - 1, 0)));
+
+        clearBtn.addEventListener('click', () => {
+            if(confirm("¿Deseas borrar los datos ingresados?")) {
+                form.reset();
+                selectCatalogo.dispatchEvent(new Event('change')); // Desbloquea inputs
+                showStep(0); 
+            }
+        });
+
+        // --- INTEGRACIÓN AJAX ---
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!validateStep(current)) return;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Guardando...";
+
+            const formData = new FormData(form);
+            const dataObj = Object.fromEntries(formData.entries());
+
+            try {
+                const res = await fetch('backend_nuevo_equipo.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataObj)
                 });
+                const data = await res.json();
 
-                prevBtn.addEventListener('click', ()=> showStep(Math.max(current-1, 0)));
+                if(data.estatus === 'exito') {
+                    alert("✅ ¡Excelente!\n\n" + data.mensaje);
+                    form.reset();
+                    selectCatalogo.dispatchEvent(new Event('change'));
+                    showStep(0);
+                } else {
+                    alert("⚠️ Atención:\n\n" + data.mensaje);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("❌ Error de conexión:\nNo se pudo contactar con el servidor. Intenta más tarde.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Registrar equipo";
+            }
+        });
 
-                tabButtons.forEach(btn=>{
-                    btn.addEventListener('click', ()=> {
-                        const step = Number(btn.getAttribute('data-step'));
-                        // optional: validate current before jumping
-                        if (step > current && !validateStep(current)) return;
-                        showStep(step);
-                    });
-                });
-
-                // final submit: optionally revalidate last step and entire form
-                form.addEventListener('submit', (e)=>{
-                    if (!validateStep(current)) {
-                        e.preventDefault();
-                        return;
-                    }
-                    // full form validity check; if invalid, prevent submit and show first invalid field
-                    if (!form.checkValidity()){
-                        e.preventDefault();
-                        const firstInvalid = form.querySelector(':invalid');
-                        if (firstInvalid){
-                            const stepEl = firstInvalid.closest('.tab');
-                            const stepIndex = tabs.indexOf(stepEl);
-                            if (stepIndex >= 0) showStep(stepIndex);
-                            firstInvalid.focus();
-                            firstInvalid.reportValidity();
-                        }
-                    }
-                    // otherwise allow normal submit (or perform AJAX here)
-                });
-
-                // initialize
-                showStep(0);
-            })();
-    </script>
+        showStep(0);
+    })();
+</script>
 
         <footer class="bottombar">© 2026 ITZAM</footer>
     </body>

@@ -12,7 +12,7 @@ if (isset($_SESSION['idUsuario'])) {
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
-		<title>Sistema ITZAM — Login</title>
+		<title>Login</title>
 		<link rel="stylesheet" href="styles.css" />
 		<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
@@ -22,7 +22,7 @@ if (isset($_SESSION['idUsuario'])) {
 	<header>
 		<div class="topbar-container-login">
 			
-			<div class="topbar-header">Sistema web consulta de información clínica ITZAM</div>
+			<div class="topbar-header-login">Sistema web de consulta de información clínica ITZAM</div>
 			
 		</div>
 	</header>

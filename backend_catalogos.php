@@ -6,8 +6,6 @@ header('Content-Type: application/json; charset=utf-8');
 require 'db_conn.php';
 
 // --- 2. EL ESCUDO DE SEGURIDAD: LA LISTA BLANCA ---
-// Aquí mapeamos las tablas permitidas con sus respectivas columnas reales en la BD.
-// ¡IMPORTANTE!: Ajusta los nombres de las columnas 'id' y 'valor' para que coincidan con tu BD.
 $catalogos_permitidos = [
     'cat_motivos_asesoria' => [
         'col_id'    => 'idMotivo', 
@@ -36,6 +34,23 @@ $catalogos_permitidos = [
     'proveedores' => [
         'col_id'    => 'idProveedor', 
         'col_valor' => 'nombre'
+    ],
+    'registro_unidad' => [
+        'col_id'    => 'idUnidad', 
+        // Usamos una subconsulta SQL para extraer el nombre de la otra tabla en tiempo real
+        'col_valor' => "CONCAT(nombre, ' (', (SELECT nombre_afiliacion FROM cat_afiliacion WHERE cat_afiliacion.idAfiliacion = registro_unidad.idAfiliacion), ')')"
+    ],
+    'cat_afiliacion' => [
+        'col_id'    => 'idAfiliacion', 
+        'col_valor' => 'nombre_afiliacion'
+    ],
+    'cat_categoria' => [
+        'col_id'    => 'idCategoria', 
+        'col_valor' => 'nombre_categoria'
+    ],
+    'catalogo_ubicacion' => [
+        'col_id'    => 'idUbicacion',
+        'col_valor' => "CONCAT(codigo_postal, ' - ', colonia, ', ', ciudad)" 
     ]
 ];
 
@@ -45,6 +60,45 @@ $method = $_SERVER['REQUEST_METHOD'];
 // 🔵 PETICIONES GET: LECTURA DE DATOS
 // ==========================================
 if ($method === 'GET') {
+    
+    // 🔥 1. ACCIONES ESPECIALES PRIMERO (Antes de la Lista Blanca) 🔥
+    if (isset($_GET['accion']) && $_GET['accion'] === 'buscar_cp') {
+        
+        // Sanitización extrema: Forzamos que solo lleguen números
+        $cp = preg_replace('/\D/', '', $_GET['cp'] ?? '');
+
+        // Validación de longitud
+        if (strlen($cp) !== 5) {
+            echo json_encode(["estatus" => "error", "mensaje" => "El código postal debe ser de 5 dígitos."]);
+            exit;
+        }
+
+        try {
+            // Traemos todas las colonias que compartan este CP, junto con su ciudad y estado
+            $stmt = $pdo->prepare("
+                SELECT idUbicacion, colonia, ciudad, estado 
+                FROM catalogo_ubicacion 
+                WHERE codigo_postal = :cp 
+                ORDER BY colonia ASC
+            ");
+            $stmt->execute(['cp' => $cp]);
+            $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Respuesta al Frontend
+            if (count($resultados) > 0) {
+                echo json_encode(["estatus" => "exito", "data" => $resultados]);
+            } else {
+                echo json_encode(["estatus" => "error", "mensaje" => "CP no encontrado."]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode(["estatus" => "error", "mensaje" => "Error de base de datos."]);
+        }
+        
+        // Matamos el proceso aquí para que no intente validar la Lista Blanca
+        exit;
+    }
+
+    // 🛡️ 2. LÓGICA NORMAL DE CATÁLOGOS (La Lista Blanca) 🛡️
     $tabla_solicitada = $_GET['tabla'] ?? '';
 
     // Verificamos que la tabla exista en nuestra Lista Blanca
@@ -61,7 +115,7 @@ if ($method === 'GET') {
         $sql = "SELECT $col_id AS id, $col_valor AS valor FROM $tabla_solicitada ORDER BY $col_valor ASC";
         $stmt = $pdo->query($sql);
         
-        echo json_encode($stmt->fetchAll());
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
     } catch (Exception $e) {
         echo json_encode(["error" => "Error al consultar el catálogo."]);
     }
@@ -108,7 +162,7 @@ elseif ($method === 'POST') {
     
     // --- ACCIÓN: EDITAR ---
     elseif ($accion === 'editar') {
-        $id = $input['id'] ?? '';
+        $id = filter_var($input['id'] ?? '', FILTER_VALIDATE_INT);
         $valor = trim($input['valor'] ?? '');
 
         if (empty($id) || empty($valor)) {
@@ -128,7 +182,7 @@ elseif ($method === 'POST') {
     
     // --- ACCIÓN: ELIMINAR ---
     elseif ($accion === 'eliminar') {
-        $id = $input['id'] ?? '';
+        $id = filter_var($input['id'] ?? '', FILTER_VALIDATE_INT);
 
         if (empty($id)) {
             echo json_encode(["estatus" => "error", "mensaje" => "ID no proporcionado para eliminar."]); exit;

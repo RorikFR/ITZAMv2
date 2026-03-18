@@ -60,15 +60,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // --- ESCUDO 3: BÚSQUEDA Y BCRYPT (SOLO USUARIO) ---
     try {
-        // Buscamos estrictamente por la columna nombre_usuario
-        $sql = "SELECT idUsuario, idPersonal, nombre_usuario, rol, contrasena, estatus, foto_perfil
-                FROM usuarios_sistema 
-                WHERE nombre_usuario = :usuario 
+        // 🔥 CAMBIO: Hacemos un LEFT JOIN para traer el idUnidad sin romper a los SuperAdmins
+        $sql = "SELECT u.idUsuario, u.idPersonal, u.nombre_usuario, u.rol, u.contrasena, u.estatus, u.foto_perfil, p.idUnidad
+                FROM usuarios_sistema u
+                LEFT JOIN registro_personal p ON u.idPersonal = p.idPersonal
+                WHERE u.nombre_usuario = :usuario 
                 LIMIT 1";
                 
         $stmt = $pdo->prepare($sql);
         
-        // Pasamos el parámetro una sola vez. ¡Problema resuelto!
         $stmt->execute([
             'usuario' => $identificador 
         ]);
@@ -86,15 +86,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // ¡LOGIN EXITOSO!
-            // Regeneramos el ID de sesión para prevenir robos de sesión (Session Fixation)
             session_regenerate_id(true);
             
-            // Guardamos las credenciales en la memoria del servidor para validar las demás páginas
             $_SESSION['idUsuario'] = $usuarioDb['idUsuario'];
             $_SESSION['idPersonal'] = $usuarioDb['idPersonal']; // Si es SuperAdmin, esto será NULL
             $_SESSION['nombre_usuario'] = $usuarioDb['nombre_usuario'];
             $_SESSION['rol'] = $usuarioDb['rol']; 
             $_SESSION['foto_perfil'] = $usuarioDb['foto_perfil'];
+            
+            // 🔥 CAMBIO: Guardamos la Unidad en la sesión para blindar el inventario de la Farmacia
+            $_SESSION['idUnidad'] = $usuarioDb['idUnidad'];
             
             // Devolvemos la ruta a la que JavaScript debe redirigir al usuario
             http_response_code(200); // 200 OK
@@ -103,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
             
         } else {
-            // Error genérico. No revelamos si falló el usuario o la contraseña por seguridad.
+            // Error genérico.
             http_response_code(401);
             echo json_encode(["error" => "Usuario o contraseña incorrectos."]);
         }

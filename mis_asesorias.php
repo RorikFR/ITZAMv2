@@ -378,3 +378,8 @@ if (!isset($_SESSION['idUsuario'])) {
         // Cerrar modal click fuera
         window.onclick = function(ev) { if (ev.target == modal) cerrarModal(); }
     </script>
+
+            <footer class="bottombar">© 2026 ITZAM</footer>
+
+    </body>
+</html>

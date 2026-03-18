@@ -92,14 +92,15 @@ try {
         $respuesta["edades"]["valores"][] = $row['total'];
     }
 
-    // 6. Top 10 Medicamentos
+// 6. Top 10 Medicamentos (CORREGIDO PARA 3FN)
     $stmt6 = $pdo->query("
         SELECT 
-            CONCAT(m.nombre, ' (', u.nombre, ')') AS etiqueta_inventario, 
+            CONCAT(cat.nombre, ' (', u.nombre, ')') AS etiqueta_inventario, 
             SUM(m.cantidad) AS volumen
         FROM inventario_medicamentos m
+        INNER JOIN cat_medicamentos cat ON m.idCatalogoMed = cat.idCatalogoMed
         INNER JOIN registro_unidad u ON m.idUnidad = u.idUnidad
-        GROUP BY m.nombre, u.nombre
+        GROUP BY cat.nombre, u.nombre
         ORDER BY volumen DESC
         LIMIT 10
     ");
@@ -108,15 +109,16 @@ try {
         $respuesta["inventario"]["labels"][] = $row['etiqueta_inventario'];
         $respuesta["inventario"]["valores"][] = $row['volumen'];
     }
-
-    // 7. Top 10 Insumos
+    
+    // 7. Top 10 Insumos (CORREGIDO PARA 3FN)
     $stmt7 = $pdo->query("
         SELECT 
-            CONCAT(i.nombre, ' (', u.nombre, ')') AS etiqueta_insumo, 
+            CONCAT(ci.nombre, ' (', u.nombre, ')') AS etiqueta_insumo, 
             SUM(i.cantidad) AS volumen
         FROM inventario_insumos i
+        INNER JOIN cat_insumos ci ON i.idCatalogoInsumo = ci.idCatalogoInsumo
         INNER JOIN registro_unidad u ON i.idUnidad = u.idUnidad
-        GROUP BY i.nombre, u.nombre
+        GROUP BY ci.nombre, u.nombre
         ORDER BY volumen DESC
         LIMIT 10
     ");
@@ -126,14 +128,15 @@ try {
         $respuesta["insumos"]["valores"][] = $row['volumen'];
     }
 
-    // 8. Top 10 Equipo Médico
+    // 8. Top 10 Equipo Médico (CORREGIDO PARA 3FN)
     $stmt8 = $pdo->query("
         SELECT 
-            CONCAT(e.nombre, ' (', u.nombre, ')') AS etiqueta_equipo, 
+            CONCAT(ce.nombre, ' (', u.nombre, ')') AS etiqueta_equipo, 
             SUM(e.cantidad) AS volumen
         FROM inventario_equipo e
+        INNER JOIN cat_equipo ce ON e.idCatalogoEquipo = ce.idCatalogoEquipo
         INNER JOIN registro_unidad u ON e.idUnidad = u.idUnidad
-        GROUP BY e.nombre, u.nombre
+        GROUP BY ce.nombre, u.nombre
         ORDER BY volumen DESC
         LIMIT 10
     ");

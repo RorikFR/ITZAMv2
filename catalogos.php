@@ -133,49 +133,73 @@ if (!isset($_SESSION['idUsuario'])) {
 
     <div id="vista-tarjetas" style="display: flex; gap: 20px; flex-wrap: wrap; padding: 20px; justify-content: center; max-width: 1200px; margin: auto;">
         
-       <div onclick="abrirCatalogo('cat_especialidades', 'Especialidades Médicas')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-                <h1 style="font-size: 3em; margin: 0; color: #007bff;">🩺</h1>
-                <h3 style="margin: 10px 0;">Especialidades</h3>
-                <p style="color: #666; font-size: 0.9em;">Pediatría, Cardiología, etc.</p>
-            </div>
+    <div onclick="abrirCatalogo('cat_especialidades', 'Especialidades Médicas')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+        <h1 style="font-size: 3em; margin: 0; color: #007bff;">🩺</h1>
+        <h3 style="margin: 10px 0;">Especialidades</h3>
+        <p style="color: #666; font-size: 0.9em;">Pediatría, Cardiología, etc.</p>
+    </div>
 
-            <div onclick="abrirCatalogo('cat_puestos', 'Puestos de Personal')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-                <h1 style="font-size: 3em; margin: 0; color: #17a2b8;">👨‍⚕️</h1>
-                <h3 style="margin: 10px 0;">Puestos</h3>
-                <p style="color: #666; font-size: 0.9em;">Médico General, Enfermería, etc.</p>
-            </div>
+    <div onclick="abrirCatalogo('cat_puestos', 'Puestos de Personal')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+        <h1 style="font-size: 3em; margin: 0; color: #17a2b8;">👨‍⚕️</h1>
+        <h3 style="margin: 10px 0;">Puestos</h3>
+        <p style="color: #666; font-size: 0.9em;">Médico General, Enfermería, etc.</p>
+    </div>
 
-            <div onclick="abrirCatalogo('cat_tipo_consulta', 'Tipos de Consulta')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-                <h1 style="font-size: 3em; margin: 0; color: #6f42c1;">📋</h1>
-                <h3 style="margin: 10px 0;">Tipos de Consulta</h3>
-                <p style="color: #666; font-size: 0.9em;">General, Urgencias, Especialidad.</p>
-            </div>
+    <div onclick="abrirCatalogo('cat_tipo_consulta', 'Tipos de Consulta')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+        <h1 style="font-size: 3em; margin: 0; color: #6f42c1;">📋</h1>
+        <h3 style="margin: 10px 0;">Tipos de Consulta</h3>
+        <p style="color: #666; font-size: 0.9em;">General, Urgencias, Especialidad.</p>
+    </div>
 
-            <div onclick="abrirCatalogo('cat_motivos_asesoria', 'Motivos de Asesoría')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-                <h1 style="font-size: 3em; margin: 0; color: #e83e8c;">🗣️</h1>
-                <h3 style="margin: 10px 0;">Motivos de Asesoría</h3>
-                <p style="color: #666; font-size: 0.9em;">Vacunación, Tratamiento, etc.</p>
-            </div>
+    <div onclick="abrirCatalogo('cat_motivos_asesoria', 'Motivos de Asesoría')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+        <h1 style="font-size: 3em; margin: 0; color: #e83e8c;">🗣️</h1>
+        <h3 style="margin: 10px 0;">Motivos de Asesoría</h3>
+        <p style="color: #666; font-size: 0.9em;">Vacunación, Tratamiento, etc.</p>
+    </div>
 
-            <div onclick="abrirCatalogo('cat_estudios_laboratorio', 'Estudios de Laboratorio')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-                <h1 style="font-size: 3em; margin: 0; color: #20c997;">🧪</h1>
-                <h3 style="margin: 10px 0;">Estudios Médicos</h3>
-                <p style="color: #666; font-size: 0.9em;">Biometría, Química Sanguínea, etc.</p>
-            </div>
+    <div onclick="abrirCatalogo('cat_estudios_laboratorio', 'Estudios de Laboratorio')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+        <h1 style="font-size: 3em; margin: 0; color: #20c997;">🧪</h1>
+        <h3 style="margin: 10px 0;">Estudios Médicos</h3>
+        <p style="color: #666; font-size: 0.9em;">Biometría, Química Sanguínea, etc.</p>
+    </div>
 
-            <div onclick="abrirCatalogo('cat_prioridad_lab', 'Prioridades de Laboratorio')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-                <h1 style="font-size: 3em; margin: 0; color: #dc3545;">🚨</h1>
-                <h3 style="margin: 10px 0;">Prioridades Lab.</h3>
-                <p style="color: #666; font-size: 0.9em;">Urgente, Rutina, Programado.</p>
-            </div>
+    <div onclick="abrirCatalogo('cat_prioridad_lab', 'Prioridades de Laboratorio')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+        <h1 style="font-size: 3em; margin: 0; color: #dc3545;">🚨</h1>
+        <h3 style="margin: 10px 0;">Prioridades Lab.</h3>
+        <p style="color: #666; font-size: 0.9em;">Urgente, Rutina, Programado.</p>
+    </div>
 
-            <div onclick="abrirCatalogo('proveedores', 'Proveedores Autorizados')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-                <h1 style="font-size: 3em; margin: 0; color: #fd7e14;">📦</h1>
-                <h3 style="margin: 10px 0;">Proveedores</h3>
-                <p style="color: #666; font-size: 0.9em;">Farmacéuticas, Material médico, etc.</p>
-            </div>
+    <div onclick="abrirCatalogo('proveedores', 'Proveedores Autorizados')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+        <h1 style="font-size: 3em; margin: 0; color: #fd7e14;">📦</h1>
+        <h3 style="margin: 10px 0;">Proveedores</h3>
+        <p style="color: #666; font-size: 0.9em;">Farmacéuticas, Material médico.</p>
+    </div>
 
-        </div>
+    <div onclick="abrirCatalogo('cat_afiliacion', 'Tipos de Afiliación')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+        <h1 style="font-size: 3em; margin: 0; color: #198754;">🤝</h1>
+        <h3 style="margin: 10px 0;">Afiliaciones</h3>
+        <p style="color: #666; font-size: 0.9em;">IMSS, ISSSTE, INSABI, etc.</p>
+    </div>
+
+    <div onclick="abrirCatalogo('cat_categoria', 'Categorías de Unidad')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+        <h1 style="font-size: 3em; margin: 0; color: #ffc107;">🏢</h1>
+        <h3 style="margin: 10px 0;">Categorías</h3>
+        <p style="color: #666; font-size: 0.9em;">Clínica, Hospital General, etc.</p>
+    </div>
+
+    <div onclick="abrirCatalogo('registro_unidad', 'Unidades Médicas')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #f8f9fa; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+        <h1 style="font-size: 3em; margin: 0; color: #0dcaf0;">🏥</h1>
+        <h3 style="margin: 10px 0;">Unidades Médicas</h3>
+        <p style="color: #666; font-size: 0.9em;"><em>Vista de solo lectura</em></p>
+    </div>
+
+    <div onclick="abrirCatalogo('catalogo_ubicacion', 'Códigos Postales')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #f8f9fa; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+        <h1 style="font-size: 3em; margin: 0; color: #6c757d;">📍</h1>
+        <h3 style="margin: 10px 0;">Ubicaciones</h3>
+        <p style="color: #666; font-size: 0.9em;"><em>Vista de solo lectura</em></p>
+    </div>
+
+</div>
 
     <div id="vista-tabla" style="display: none; max-width: 1200px; margin: auto; padding: 20px;">
         
@@ -223,198 +247,210 @@ if (!isset($_SESSION['idUsuario'])) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 
-    <script>
-        // Variables de Vistas
-        const vistaTarjetas = document.getElementById("vista-tarjetas");
-        const vistaTabla = document.getElementById("vista-tabla");
-        const tituloCatalogo = document.getElementById("titulo-catalogo-actual");
+
+<script>
+    // Variables de Vistas
+    const vistaTarjetas = document.getElementById("vista-tarjetas");
+    const vistaTabla = document.getElementById("vista-tabla");
+    const tituloCatalogo = document.getElementById("titulo-catalogo-actual");
+    const btnNuevoRegistro = document.querySelector(".btn-save[onclick='abrirModalNuevo()']"); // Botón + Nuevo
+    
+    // Variables de Tabla y Modal
+    const cuerpoTabla = document.getElementById("cuerpoTablaDetalle");
+    const modal = document.getElementById("modalEdicion");
+    const inputModalId = document.getElementById("inputModalId");
+    const inputModalValor = document.getElementById("inputModalValor");
+
+    let tablaInstancia = null; 
+    
+    // Estado actual
+    let catalogoActualBD = ""; 
+    let catalogoActualNombre = "";
+    
+    // 🔥 LISTA DE CATÁLOGOS COMPLEJOS (No editables desde este modal simple)
+    const catalogosSoloLectura = ['registro_unidad', 'catalogo_ubicacion'];
+
+    // --- NAVEGACIÓN ENTRE VISTAS ---
+    function abrirCatalogo(tabla_bd, nombre_amigable) {
+        catalogoActualBD = tabla_bd;
+        catalogoActualNombre = nombre_amigable;
         
-        // Variables de Tabla y Modal
-        const cuerpoTabla = document.getElementById("cuerpoTablaDetalle");
-        const modal = document.getElementById("modalEdicion");
-        const inputModalId = document.getElementById("inputModalId");
-        const inputModalValor = document.getElementById("inputModalValor");
-
-        let tablaInstancia = null; 
+        tituloCatalogo.innerText = nombre_amigable;
         
-        // Estado actual: ¿Qué catálogo estamos viendo?
-        let catalogoActualBD = ""; 
-        let catalogoActualNombre = "";
+        // Configuramos la interfaz dependiendo del tipo de catálogo
+        if (catalogosSoloLectura.includes(tabla_bd)) {
+            btnNuevoRegistro.style.display = 'none'; // Ocultamos el botón de crear
+            tituloCatalogo.innerText += " (Solo Lectura)";
+        } else {
+            btnNuevoRegistro.style.display = 'inline-block';
+        }
+        
+        vistaTarjetas.style.display = "none";
+        vistaTabla.style.display = "block";
 
-        // --- NAVEGACIÓN ENTRE VISTAS ---
-        function abrirCatalogo(tabla_bd, nombre_amigable) {
-            catalogoActualBD = tabla_bd;
-            catalogoActualNombre = nombre_amigable;
-            
-            tituloCatalogo.innerText = nombre_amigable;
-            
-            vistaTarjetas.style.display = "none";
-            vistaTabla.style.display = "block";
+        cargarDatosCatalogo();
+    }
 
-            cargarDatosCatalogo();
+    function volverTarjetas() {
+        vistaTabla.style.display = "none";
+        vistaTarjetas.style.display = "flex";
+        catalogoActualBD = "";
+    }
+
+    // --- 1. CARGAR DATOS DEL CATÁLOGO SELECCIONADO (GET) ---
+    async function cargarDatosCatalogo() {
+        if (tablaInstancia !== null) {
+            tablaInstancia.destroy();
+            tablaInstancia = null;
         }
 
-        function volverTarjetas() {
-            vistaTabla.style.display = "none";
-            vistaTarjetas.style.display = "flex";
-            catalogoActualBD = "";
+        cuerpoTabla.innerHTML = "<tr><td colspan='3' style='text-align:center'>Cargando registros...</td></tr>";
+
+        try {
+            const response = await fetch(`backend_catalogos.php?tabla=${catalogoActualBD}`);
+            const datos = await response.json();
+            
+            if(datos.error) { alert(datos.error); volverTarjetas(); return; }
+            renderizar(datos);
+
+        } catch (error) {
+            console.error(error);
+            cuerpoTabla.innerHTML = "<tr><td colspan='3' style='text-align:center; color:red'>Error de conexión</td></tr>";
         }
+    }
 
-        // --- 1. CARGAR DATOS DEL CATÁLOGO SELECCIONADO (GET) ---
-        async function cargarDatosCatalogo() {
-            if (tablaInstancia !== null) {
-                tablaInstancia.destroy();
-                tablaInstancia = null;
-            }
+    // --- RENDERIZAR E INICIALIZAR DATATABLES ---
+    function renderizar(datos) {
+        cuerpoTabla.innerHTML = "";
+        
+        const esSoloLectura = catalogosSoloLectura.includes(catalogoActualBD);
+        
+        if(datos.length === 0){
+            cuerpoTabla.innerHTML = "<tr><td colspan='3' style='text-align:center; padding: 20px;'>El catálogo está vacío.</td></tr>";
+        } else {
+            datos.forEach(item => {
+                const valorSafe = item.valor ? item.valor.replace(/'/g, "\\'") : ''; 
 
-            cuerpoTabla.innerHTML = "<tr><td colspan='3' style='text-align:center'>Cargando registros...</td></tr>";
-
-            try {
-                // Le decimos al backend QUÉ tabla queremos leer
-                const response = await fetch(`backend_catalogos.php?tabla=${catalogoActualBD}`);
-                const datos = await response.json();
+                // Si es de solo lectura, ocultamos los botones de acción
+                let botonesAccion = `
+                    <button class="btn-edit" onclick="abrirModalEditar(${item.id}, '${valorSafe}')">Editar</button>
+                    <button class="btn-del" onclick="eliminarRegistro(${item.id})">Borrar</button>
+                `;
                 
-                if(datos.error) { alert(datos.error); volverTarjetas(); return; }
-                renderizar(datos);
+                if (esSoloLectura) {
+                    botonesAccion = `<span style="color: #6c757d; font-size: 0.9em;">Módulo especializado</span>`;
+                }
 
-            } catch (error) {
-                console.error(error);
-                cuerpoTabla.innerHTML = "<tr><td colspan='3' style='text-align:center; color:red'>Error de conexión</td></tr>";
-            }
-        }
-
-        // --- RENDERIZAR E INICIALIZAR DATATABLES ---
-        function renderizar(datos) {
-            cuerpoTabla.innerHTML = "";
-            
-            if(datos.length === 0){
-                cuerpoTabla.innerHTML = "<tr><td colspan='3' style='text-align:center; padding: 20px;'>El catálogo está vacío. ¡Agrega el primer registro!</td></tr>";
-                // Aún vacío, inicializamos DataTables para que la interfaz no se rompa
-            } else {
-                datos.forEach(item => {
-                    // Limpiamos comillas para evitar errores JS
-                    const valorSafe = item.valor.replace(/'/g, "\\'"); 
-
-                    cuerpoTabla.innerHTML += `
-                        <tr>
-                            <td><b>${item.id}</b></td>
-                            <td style="font-size: 1.1em;">${item.valor}</td>
-                            <td>
-                                <button class="btn-edit" onclick="abrirModalEditar(${item.id}, '${valorSafe}')">Editar</button>
-                                <button class="btn-del" onclick="eliminarRegistro(${item.id})">Borrar</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            }
-
-            tablaInstancia = $('#tablaDetalleCatalogo').DataTable({
-                language: {
-                    "decimal": "",
-                    "emptyTable": "No hay registros en este catálogo",
-                    "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                    "infoEmpty": "Mostrando 0 a 0 de 0 registros",
-                    "infoFiltered": "(Filtrado de _MAX_ registros totales)",
-                    "infoPostFix": "",
-                    "thousands": ",",
-                    "lengthMenu": "Mostrar _MENU_ registros por página",
-                    "loadingRecords": "Cargando...",
-                    "processing": "Procesando...",
-                    "search": "🔍 Buscar registro:",
-                    "zeroRecords": "No se encontraron coincidencias",
-                    "paginate": { "first": "Primero", "last": "Último", "next": "Siguiente", "previous": "Anterior" }
-                },
-                dom: 'Bfrtip',
-                buttons: [
-                    { extend: 'excelHtml5', text: '📊 Exportar', className: 'btn-exportar' }
-                ],
-                pageLength: 10,
-                ordering: true,
-                order: [[1, "asc"]], // Ordenar alfabéticamente por el valor
-                destroy: true // Vital para poder cambiar de catálogo sin recargar la página
+                cuerpoTabla.innerHTML += `
+                    <tr>
+                        <td><b>${item.id}</b></td>
+                        <td style="font-size: 1.1em;">${item.valor}</td>
+                        <td>${botonesAccion}</td>
+                    </tr>
+                `;
             });
         }
 
-        // --- 2. ELIMINAR (POST) ---
-        async function eliminarRegistro(id) {
-            if(!confirm(`¿Confirma que desea eliminar este registro del catálogo de ${catalogoActualNombre}?`)) return;
+        tablaInstancia = $('#tablaDetalleCatalogo').DataTable({
+            language: {
+                "decimal": "",
+                "emptyTable": "No hay registros en este catálogo",
+                "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                "infoEmpty": "Mostrando 0 a 0 de 0 registros",
+                "infoFiltered": "(Filtrado de _MAX_ registros totales)",
+                "search": "🔍 Buscar registro:",
+                "zeroRecords": "No se encontraron coincidencias",
+                "paginate": { "first": "Primero", "last": "Último", "next": "Siguiente", "previous": "Anterior" }
+            },
+            dom: 'Bfrtip',
+            buttons: [
+                { extend: 'excelHtml5', text: '📊 Exportar a Excel', className: 'btn-exportar' }
+            ],
+            pageLength: 10,
+            ordering: true,
+            order: [[1, "asc"]], 
+            destroy: true 
+        });
+    }
 
-            try {
-                const response = await fetch('backend_catalogos.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        accion: 'eliminar', 
-                        tabla: catalogoActualBD, 
-                        id: id 
-                    })
-                });
-                const res = await response.json();
-                
-                if(res.estatus === 'exito') {
-                    cargarDatosCatalogo(); 
-                } else {
-                    alert("⚠️ " + res.mensaje);
-                }
-            } catch (error) { alert("Error al eliminar"); }
-        }
+    // --- 2. ELIMINAR (POST) ---
+    async function eliminarRegistro(id) {
+        if(!confirm(`¿Confirma que desea eliminar este registro del catálogo de ${catalogoActualNombre}?`)) return;
 
-        // --- 3. GESTIÓN DEL MODAL (NUEVO / EDITAR) ---
-        function abrirModalNuevo() {
-            document.getElementById("modal-titulo").innerText = `Nuevo Registro - ${catalogoActualNombre}`;
-            inputModalId.value = ""; // ID vacío significa "Crear Nuevo"
-            inputModalValor.value = "";
-            modal.classList.add("show");
-        }
-
-        function abrirModalEditar(id, valor) {
-            document.getElementById("modal-titulo").innerText = `Editar Registro - ${catalogoActualNombre}`;
-            inputModalId.value = id;
-            inputModalValor.value = valor;
-            modal.classList.add("show");
-        }
-
-        function cerrarModal() { 
-            modal.classList.remove("show"); 
-        }
-
-        async function guardarCambios() {
-            const id = inputModalId.value;
-            const valor = inputModalValor.value.trim();
+        try {
+            const response = await fetch('backend_catalogos.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    accion: 'eliminar', 
+                    tabla: catalogoActualBD, 
+                    id: id 
+                })
+            });
+            const res = await response.json();
             
-            // Si hay un ID es una edición, si está vacío es un INSERT
-            const accion = id === "" ? 'crear' : 'editar'; 
-
-            if (valor === "") {
-                alert("El valor no puede estar vacío.");
-                return;
+            if(res.estatus === 'exito') {
+                cargarDatosCatalogo(); 
+            } else {
+                alert("⚠️ " + res.mensaje);
             }
+        } catch (error) { alert("Error al eliminar"); }
+    }
 
-            try {
-                const response = await fetch('backend_catalogos.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        accion: accion, 
-                        tabla: catalogoActualBD,
-                        id: id, 
-                        valor: valor 
-                    })
-                });
-                const res = await response.json();
-                
-                if(res.estatus === 'exito') {
-                    cerrarModal();
-                    cargarDatosCatalogo(); 
-                } else {
-                    alert("⚠️ " + res.mensaje);
-                }
-            } catch (error) { alert("Error al guardar cambios"); }
+    // --- 3. GESTIÓN DEL MODAL (NUEVO / EDITAR) ---
+    function abrirModalNuevo() {
+        document.getElementById("modal-titulo").innerText = `Nuevo Registro - ${catalogoActualNombre}`;
+        inputModalId.value = ""; 
+        inputModalValor.value = "";
+        modal.classList.add("show");
+    }
+
+    function abrirModalEditar(id, valor) {
+        document.getElementById("modal-titulo").innerText = `Editar Registro - ${catalogoActualNombre}`;
+        inputModalId.value = id;
+        inputModalValor.value = valor;
+        modal.classList.add("show");
+    }
+
+    function cerrarModal() { 
+        modal.classList.remove("show"); 
+    }
+
+    async function guardarCambios() {
+        const id = inputModalId.value;
+        const valor = inputModalValor.value.trim();
+        
+        const accion = id === "" ? 'crear' : 'editar'; 
+
+        if (valor === "") {
+            alert("El valor no puede estar vacío.");
+            return;
         }
 
-        // Cerrar modal click fuera
-        window.onclick = function(ev) { if (ev.target == modal) cerrarModal(); }
-    </script>
+        try {
+            const response = await fetch('backend_catalogos.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    accion: accion, 
+                    tabla: catalogoActualBD,
+                    id: id, 
+                    valor: valor 
+                })
+            });
+            const res = await response.json();
+            
+            if(res.estatus === 'exito') {
+                cerrarModal();
+                cargarDatosCatalogo(); 
+            } else {
+                alert("⚠️ " + res.mensaje);
+            }
+        } catch (error) { alert("Error al guardar cambios"); }
+    }
+
+    window.onclick = function(ev) { if (ev.target == modal) cerrarModal(); }
+</script>
 
     <footer class="bottombar">© 2026 ITZAM</footer>
     </body>
