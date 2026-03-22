@@ -1,46 +1,40 @@
 <?php
-session_start();
-header('Content-Type: application/json');
+//Validaciones de seguridad e inactividad
+require 'seguridad_backend.php'; 
+require 'autorizacion.php';      
 
-// DEV ONLY - quitar en prod.
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-// --- 1. ESCUDO DE SESIÓN ---
-if (!isset($_SESSION['idUsuario'])) {
-    http_response_code(401);
-    echo json_encode(["estatus" => "error", "mensaje" => "No tienes autorización."]);
-    exit;
-}
+//RBAC
+requerir_roles_api(['Administrador', 'Administrativo', 'Médico', 'Enfermería']);
 
 require 'db_conn.php';
-$idLogueado = $_SESSION['idUsuario'];
 
-// --- 2. RECEPCIÓN Y VALIDACIÓN DEL ARCHIVO ---
+//Obtener ID del usuario
+$idLogueado = filter_var($_SESSION['idUsuario'] ?? 0, FILTER_VALIDATE_INT);
+
+//Cargar y leer archivo
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['accion'] === 'subir_foto') {
     
-    // Verificamos si PHP recibió el archivo sin errores de red
+    // Validar si el archivo se recibio correctamente
     if (!isset($_FILES['foto_perfil']) || $_FILES['foto_perfil']['error'] !== UPLOAD_ERR_OK) {
-        echo json_encode(["estatus" => "error", "mensaje" => "Error de transferencia al recibir el archivo."]);
+        echo json_encode(["estatus" => "error", "mensaje" => "Error de transferencia al recibir el archivo en el servidor."]);
         exit;
     }
 
     $foto = $_FILES['foto_perfil'];
 
-    // REGLA 1: Tamaño máximo (2MB) - Escudo de servidor
+    //Tamaño maximo de archivo (2MB)
     $maxSizeMB = 2;
     if ($foto['size'] > ($maxSizeMB * 1024 * 1024)) {
-        echo json_encode(["estatus" => "error", "mensaje" => "El archivo supera el límite de 2MB."]);
+        echo json_encode(["estatus" => "error", "mensaje" => "El archivo supera el límite de 2MB permitidos."]);
         exit;
     }
 
-    // REGLA 2: Validación estricta del tipo de archivo (MIME Type real)
-    // Esto evita que alguien suba un virus.exe y le cambie el nombre a foto.jpg
+    // Validar tipo de archivo (MIME Type)
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
     $mimeTypeReal = finfo_file($finfo, $foto['tmp_name']);
     finfo_close($finfo);
 
+    //Formatos de imagenes permitidos
     $tiposPermitidos = [
         'image/jpeg' => 'jpg',
         'image/png'  => 'png',
@@ -48,49 +42,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
     ];
 
     if (!array_key_exists($mimeTypeReal, $tiposPermitidos)) {
-        echo json_encode(["estatus" => "error", "mensaje" => "Formato no válido. Sube un JPG, PNG o WEBP real."]);
+        echo json_encode(["estatus" => "error", "mensaje" => "Formato no válido. Por seguridad, solo se aceptan imágenes JPG, PNG o WEBP reales."]);
         exit;
     }
 
-    // --- 3. PREPARACIÓN DEL DIRECTORIO Y NOMBRE SEGURO ---
+    //Guardar en destino
     $directorioDestino = __DIR__ . '/profile-imgs/';
     
-    // Si la carpeta no existe, PHP la crea automáticamente con permisos seguros
+    // Si la carpeta no existe, se crea
     if (!is_dir($directorioDestino)) {
         mkdir($directorioDestino, 0755, true);
     }
 
-    // Renombramos el archivo. NUNCA confiamos en el nombre original del usuario.
-    // Usamos: perfil_ID_TIMESTAMP.ext (Ej. perfil_5_1710123456.jpg)
-    // El timestamp evita que el navegador guarde la imagen vieja en caché
+    // Renombramos el archivo
     $extensionSegura = $tiposPermitidos[$mimeTypeReal];
     $nombreNuevo = 'perfil_' . $idLogueado . '_' . time() . '.' . $extensionSegura;
     
-    $rutaAbsoluta = $directorioDestino . $nombreNuevo; // Para guardar el archivo en el disco
-    $rutaRelativa = 'profile-imgs/' . $nombreNuevo;    // Para guardar en la Base de Datos
+    $rutaAbsoluta = $directorioDestino . $nombreNuevo; 
+    $rutaRelativa = 'profile-imgs/' . $nombreNuevo;    
 
     try {
-        // --- 4. LIMPIEZA DE BASURA (BORRAR FOTO ANTERIOR) ---
+        //Borrar foto anterior
         $stmtBusqueda = $pdo->prepare("SELECT foto_perfil FROM usuarios_sistema WHERE idUsuario = :id");
         $stmtBusqueda->execute(['id' => $idLogueado]);
         $fotoAnterior = $stmtBusqueda->fetchColumn();
 
-        if ($fotoAnterior && file_exists(__DIR__ . '/' . $fotoAnterior)) {
-            unlink(__DIR__ . '/' . $fotoAnterior); // Eliminamos el archivo físico viejo
+        //Proteger imagen placeholder para evitar borrado
+        $imagenesProtegidas = ['Assets/img_placeholder.png', 'Assets/think.jpg'];
+        
+        if ($fotoAnterior && !in_array($fotoAnterior, $imagenesProtegidas)) {
+            $rutaFisicaAnterior = __DIR__ . '/' . $fotoAnterior;
+            if (file_exists($rutaFisicaAnterior)) {
+                unlink($rutaFisicaAnterior);
+            }
         }
 
-// Guardar la nueva foto
+        //Guardar nueva foto
         if (move_uploaded_file($foto['tmp_name'], $rutaAbsoluta)) {
             
             $stmtUpdate = $pdo->prepare("UPDATE usuarios_sistema SET foto_perfil = :ruta WHERE idUsuario = :id");
             $stmtUpdate->execute(['ruta' => $rutaRelativa, 'id' => $idLogueado]);
 
-            // ACTUALIZAMOS LA SESIÓN PARA QUE TODO EL SISTEMA LO SEPA
+            //Actualizar sesion para reflejar cambios
             $_SESSION['foto_perfil'] = $rutaRelativa;
 
             echo json_encode([
                 "estatus" => "exito", 
-                "mensaje" => "Foto de perfil guardada exitosamente.",
+                "mensaje" => "Foto de perfil actualizada exitosamente.",
                 "nueva_ruta" => $rutaRelativa
             ]);
 
@@ -99,8 +97,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         }
 
     } catch (PDOException $e) {
-        echo json_encode(["estatus" => "error", "mensaje" => "Error de base de datos al enlazar la imagen."]);
+        echo json_encode(["estatus" => "error", "mensaje" => "Error interno al enlazar la imagen con su perfil."]);
     }
+    exit;
+} else {
+    echo json_encode(["estatus" => "error", "mensaje" => "Petición inválida."]);
     exit;
 }
 ?>

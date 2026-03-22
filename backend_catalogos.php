@@ -1,6 +1,11 @@
 <?php
-// Configuramos encabezados para JSON y UTF-8
-header('Content-Type: application/json; charset=utf-8');
+// 1. ESCUDOS BASE
+require 'seguridad_backend.php'; // Valida la sesión, inactividad y formatea la salida a JSON
+require 'autorizacion.php';      // Carga el motor de permisos
+
+// 2. 🛑 LA BARRERA DE HIERRO (Nivel 3)
+// Usamos la función terminada en "_api" para que devuelva un error HTTP 403 en lugar de redirigir.
+requerir_roles_api(['Administrador']); 
 
 // --- 1. CONFIGURACIÓN DE LA BASE DE DATOS ---
 require 'db_conn.php';

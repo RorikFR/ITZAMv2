@@ -1,131 +1,20 @@
 <?php
-session_start();
+date_default_timezone_set('America/Mexico_City');
 
-// Opcional pero recomendado: El escudo de seguridad
-if (!isset($_SESSION['idUsuario'])) {
-    header("Location: index.php");
-    exit;
-}
+//Validaciones de seguridad e inactividad
+require 'inactive.php';      
+require 'autorizacion.php';   
+
+
+//RBAC
+requerir_roles(['Administrativo', 'Administrador']);
+
+//Menú dinámico
+require 'header.php';
 ?>
-<!doctype html>
-<html lang="es">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>Sistema ITZAM — Registro de inventario</title>
-        <link rel="stylesheet" href="styles.css" />
-    </head>
-    <body>
-      <header>
-        <div class="topbar-container">
-          <div>
-            <img class ="logo"src="Assets/itzam_logoV2.png" alt="LOGO" />
-          </div>
-          
-          <div class="topbar-header">Sistema web consulta de información clínica - ITZAM</div>
-          
-        <div class="user-menu">
-            <div class="user-menu">
-                <img id="header-user-photo" class="user-photo user-icon" src="<?php echo isset($_SESSION['foto_perfil']) && $_SESSION['foto_perfil'] ? $_SESSION['foto_perfil'] : 'Assets/think.jpg'; ?>" onclick="toggleMenu()">
-            </div>
-            
-            <div class="dropdown-menu" id="userDropdown">
-                <p class="user-menu-title" style="font-weight: bold;"><?= htmlspecialchars($_SESSION['nombre_usuario']) ?></p>
-                <hr></hr>
-                <a class="dropdown-item" href="administracion.php">Administración</a>
-                <a class="dropdown-item" href="catalogos.php">Catálogos</a>
-                <a class="dropdown-item" href="configuracion_cuenta.php">Configuración</a>
-                <a class="dropdown-item" href="logout.php">Cerrar sesión</a>
-            </div>
-        </div>
-    </header>
-    
-    <nav>   
-        <ul>
-            <li><a href="home.php" class="active">Inicio</a></li>
-
-            <!-- Dropdown menu for Asesorías -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Asesorías</a>
-            <div class="dropdown-content">
-                <a href="mis_asesorias.php">Mis asesorías</a>
-                <a href="nueva_asesoria.php">Registrar asesoría</a>
-            </div>  
-            </li>
-
-            <!-- Dropdown menu for Consultas médicas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Consultas médicas</a>
-            <div class="dropdown-content">
-                <a href="buscar_consulta.php">Buscar consulta</a>
-                <a href="nueva_consulta.php">Registrar consulta</a>
-            </div>
-            </li>
-
-            <li><a href="estadisticas.php">Estadísticas</a></li>
-
-            <!-- Dropdown menu for Estudios -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Laboratorios</a>
-            <div class="dropdown-content">
-                <a href="consulta_orden_laboratorio.php">Buscar orden de laboratorio</a>
-                <a href="nueva_orden_laboratorio.php">Crear orden de laboratorio</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Inventario -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Inventario</a>
-            <div class="dropdown-content">
-                <a href="consulta_inventario.php">Buscar en inventario</a>
-                <a href="nueva_compra_med.php">Registrar compra de medicamentos</a>
-                <a href="nueva_compra_insumo.php">Registrar compra de insumos</a>
-                <a href="nueva_compra_equipo.php">Registrar compra de equipo médico</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Pacientes -->
-            <li class="dropdown">
-                <a href="javascript:void(0)" class="dropbtn">Pacientes</a>
-                <div class="dropdown-content">
-                    <a href="consulta_expediente.php">Consultar historia clínica</a>
-                    <a href="consulta_paciente.php">Consultar paciente</a>
-                    <a href="nuevo_paciente.php">Registrar paciente</a>
-                </div>
-            </li>
-
-            <!-- Dropdown menu for Personal de salud -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Personal de salud</a>
-            <div class="dropdown-content">
-                <a href="consulta_personal.php">Consultar personal</a>
-                <a href="nuevo_personal.php">Registrar personal</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Recetas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Recetas</a>
-            <div class="dropdown-content">
-                <a href="consulta_receta.php">Consultar receta</a>
-                <a href="nueva_receta.php">Registrar receta</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Unidades médicas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Unidades médicas</a>
-            <div class="dropdown-content">
-                <a href="consulta_unidad.php">Consultar unidad médica</a>
-                <a href="nueva_unidad.php">Registrar unidad médica</a>
-            </div>
-            </li>
-
-        </ul>
-    </nav>
 
       <div class="title-box">
-      <h3>Formulario de registro de medicamentos en inventario</h3>
+        <h3>Formulario de registro de medicamentos en inventario</h3>
       </div>
 
 <div class="grid-wrapper">
@@ -148,24 +37,24 @@ if (!isset($_SESSION['idUsuario'])) {
 
                 <fieldset id="inventario-datos-generales-med">
                     <label for="nombre">*Nombre comercial:</label>
-                    <input class="form datos-med" type="text" id="nombre" name="nombre" maxlength="120" required>
+                    <input class="form datos-med" type="text" id="nombre" name="nombre" maxlength="120" pattern="^[\w\s.-]+$" required>
 
                     <label for="marca">*Marca / Laboratorio:</label>
-                    <input class="form datos-med" type="text" id="marca" name="marca" maxlength="120" required>
+                    <input class="form datos-med" type="text" id="marca" name="marca" maxlength="120" pattern="^[\w\s.-]+$" required>
 
                     <label for="presentacion">*Presentación:</label>
-                    <input class="form datos-med" type="text" id="presentacion" name="presentacion" maxlength="45" required placeholder="Ej. Caja con 30 Tabletas">
+                    <input class="form datos-med" type="text" id="presentacion" name="presentacion" maxlength="45" pattern="^[\w\s.-]+$" required placeholder="Ej. Caja con 30 Tabletas">
                     
                     <label for="via_adm">*Vía de administración:</label>
-                    <input class="form datos-med" type="text" id="via_adm" name="via_adm" maxlength="45" required placeholder="Ej. Oral">
+                    <input class="form datos-med" type="text" id="via_adm" name="via_adm" maxlength="45" pattern="^[\w\s.-]+$" required placeholder="Ej. Oral">
                 </fieldset>
 
                 <fieldset id="inventario-datos-generales-med-2">
                     <label for="principio_activo">*Principio activo:</label>
-                    <input class="form datos-med" type="text" id="principio_activo" name="principio_activo" maxlength="120" required placeholder="Ej. Paracetamol">
+                    <input class="form datos-med" type="text" id="principio_activo" name="principio_activo" maxlength="120" pattern="^[\w\s.-]+$" required placeholder="Ej. Paracetamol">
                     
                     <label for="concentracion">*Concentración:</label>
-                    <input class="form datos-med" type="text" id="concentracion" name="concentracion" maxlength="120" required placeholder="Ej. 500mg">
+                    <input class="form datos-med" type="text" id="concentracion" name="concentracion" maxlength="120" pattern="^[\w\s.-]+$" required placeholder="Ej. 500mg">
 
                     <label for="refrigerado">*¿Requiere refrigeración?</label>
                     <select class="form datos-med" id="refrigerado" name="refrigerado" required>
@@ -180,14 +69,21 @@ if (!isset($_SESSION['idUsuario'])) {
                 <fieldset id="inventario-datos-proveedor-med">
                     <label for="proveedor">*Proveedor:</label>
                     <select class="form" id="proveedor" name="idProveedor" required>
-                        <option value="" disabled selected>Cargando opciones...</option>
+                        <option value="" disabled selected>Elige una opción:</option>
                     </select>
 
+                    <?php if (in_array($_SESSION['rol'], ['Administrador'])): ?>
+                        <label for="idUnidadDestino" style="color: #d63384;">*Unidad médica destino:</label>
+                        <select class="form" id="idUnidadDestino" name="idUnidadDestino" style="border-color: #d63384;" required>
+                            <option value="" disabled selected>Elige una opción:</option>
+                        </select>
+                    <?php endif; ?>
+
                     <label for="cantidad">*Cantidad a ingresar (Cajas/Unidades):</label>
-                    <input class="form" type="number" id="cantidad" name="cantidad" min="1" max="10000" required>
+                    <input class="form" type="number" id="cantidad" name="cantidad" min="1" max="10000" step="1" required>
                     
                     <label for="lote">*Lote (Código):</label>
-                    <input class="form" type="text" id="lote" name="lote" maxlength="45" required>
+                    <input class="form" type="text" id="lote" name="lote" maxlength="45" pattern="^[a-zA-Z0-9_-]+$" required>
                     
                     <label for="fecha_caducidad">*Fecha de caducidad:</label>
                     <input class="form" type="date" id="fecha_caducidad" name="fecha_caducidad" required>
@@ -221,44 +117,71 @@ if (!isset($_SESSION['idUsuario'])) {
         const total = tabs.length;
         let catalogoMedicamentos = [];
 
-        // 🔥 BLOQUEO DE FECHA DE CADUCIDAD
+        // Fecha de caducidad mayor al día actual
         const fechaInput = document.getElementById('fecha_caducidad');
         const manana = new Date();
         manana.setDate(manana.getDate() + 1);
         fechaInput.min = manana.toISOString().split('T')[0];
 
-        // --- CARGA DINÁMICA ---
+        // Carga de datos
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                // 1. Cargar Proveedores
+                // Cargar proveedores
                 const resProv = await fetch('backend_catalogos.php?tabla=proveedores');
                 const dataProv = await resProv.json();
                 const selectProveedor = document.getElementById('proveedor');
-                dataProv.forEach(item => {
-                    selectProveedor.innerHTML += `<option value="${item.id}">${item.valor}</option>`;
-                });
+                
+                if (!dataProv.error) {
+                    dataProv.forEach(item => {
+                        selectProveedor.innerHTML += `<option value="${item.id}">${item.valor}</option>`;
+                    });
+                } else {
+                    selectProveedor.innerHTML = '<option value="" disabled selected>Error al cargar proveedores</option>';
+                }
 
-                // 2. Cargar Catálogo de Medicamentos
+                // Cargar catálogo de medicamentos
                 const resMed = await fetch('backend_get_cat_meds.php');
                 catalogoMedicamentos = await resMed.json();
-                catalogoMedicamentos.forEach(med => {
-                    selectCatalogo.innerHTML += `<option value="${med.idCatalogoMed}">${med.nombre} - ${med.concentracion} (${med.marca})</option>`;
-                });
+                
+                if (!catalogoMedicamentos.error) {
+                    catalogoMedicamentos.forEach(med => {
+                        selectCatalogo.innerHTML += `<option value="${med.idCatalogoMed}">${med.nombre} - ${med.concentracion} (${med.marca})</option>`;
+                    });
+                }
             } catch (e) {
                 console.error("Error de carga:", e);
             }
+
+            // Cargar unidades médicas (si el usuario es admin)
+                const selectUnidad = document.getElementById('idUnidadDestino');
+                if (selectUnidad) {
+                    const resUnidad = await fetch('backend_catalogos.php?tabla=registro_unidad');
+                    const dataUnidad = await resUnidad.json();
+                    
+                    if (!dataUnidad.error) {
+                        dataUnidad.forEach(item => {
+                            selectUnidad.innerHTML += `<option value="${item.id}">${item.valor}</option>`;
+                        });
+                    } else {
+                        selectUnidad.innerHTML = '<option value="" disabled selected>Error al cargar unidades</option>';
+                    }
+                }
         });
 
-        // 🔥 LÓGICA DE AUTO-COMPLETADO CON EL CATÁLOGO
+        // Auto completar campos
         selectCatalogo.addEventListener('change', (e) => {
             const valor = e.target.value;
             if (valor === 'nuevo') {
-                // Si es nuevo, vaciamos y desbloqueamos los campos
+                // Entrada manual
                 inputsMed.forEach(input => {
                     input.value = '';
-                    input.style.pointerEvents = 'auto'; // Permitir clics
+                    input.style.pointerEvents = 'auto';
                     input.style.backgroundColor = '';
-                    input.readOnly = false;
+                    if (input.tagName.toLowerCase() !== 'select') {
+                        input.readOnly = false;
+                    } else {
+                        input.disabled = false;
+                    }
                 });
             } else {
                 // Buscamos el medicamento en la memoria por su ID
@@ -272,17 +195,21 @@ if (!isset($_SESSION['idUsuario'])) {
                     document.getElementById('concentracion').value = med.concentracion;
                     document.getElementById('refrigerado').value = med.refrigerado;
                     
-                    // Bloqueamos los campos visualmente para que el usuario sepa que no puede alterar el catálogo desde aquí
+                    //Bloquear campos
                     inputsMed.forEach(input => {
-                        input.style.pointerEvents = 'none'; // Desactivar clics
-                        input.style.backgroundColor = '#e9ecef'; // Gris
-                        input.readOnly = true;
+                        input.style.pointerEvents = 'none'; 
+                        input.style.backgroundColor = '#e9ecef'; 
+                        if (input.tagName.toLowerCase() !== 'select') {
+                            input.readOnly = true;
+                        } else {
+                            input.disabled = true;
+                        }
                     });
                 }
             }
         });
 
-        // --- LÓGICA DE NAVEGACIÓN (TABS) ---
+        // Contador de pasos formulario
         function showStep(n){
             tabs.forEach((t, i) => {
                 const active = i === n;
@@ -317,12 +244,12 @@ if (!isset($_SESSION['idUsuario'])) {
         clearBtn.addEventListener('click', () => {
             if(confirm("¿Deseas borrar los datos ingresados?")) {
                 form.reset();
-                selectCatalogo.dispatchEvent(new Event('change')); // Desbloquea inputs
+                selectCatalogo.dispatchEvent(new Event('change')); 
                 showStep(0); 
             }
         });
 
-        // --- INTEGRACIÓN AJAX ---
+        // AJAX
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!validateStep(current)) return;
@@ -332,6 +259,10 @@ if (!isset($_SESSION['idUsuario'])) {
 
             const formData = new FormData(form);
             const dataObj = Object.fromEntries(formData.entries());
+
+            if (document.getElementById('idCatalogoMed').value !== 'nuevo') {
+               dataObj.refrigerado = document.getElementById('refrigerado').value;
+            }
 
             try {
                 const res = await fetch('backend_nuevo_medicamento.php', {
@@ -360,6 +291,8 @@ if (!isset($_SESSION['idUsuario'])) {
         showStep(0);
     })();
 </script>
+
+<script src="Scripts/js/timeout.js"></script>
 
         <footer class="bottombar">© 2026 ITZAM</footer>
     </body>

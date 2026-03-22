@@ -1,11 +1,17 @@
 <?php
-session_start();
-header('Content-Type: application/json');
+
+//Validaciones de seguridad e inactividad
+require 'seguridad_backend.php'; 
+require 'autorizacion.php';
+
 require 'db_conn.php';
+
+//RBAC
+requerir_roles_api(['Médico']);
 
 $metodo = $_SERVER['REQUEST_METHOD'];
 
-// --- GET: OBTENER MEDICAMENTOS DEL INVENTARIO (3FN) ---
+//Obtener datos
 if ($metodo === 'GET' && isset($_GET['accion']) && $_GET['accion'] === 'obtener_medicamentos') {
     $idUnidad_Doctor = $_SESSION['idUnidad'] ?? 1; 
 
@@ -28,16 +34,16 @@ if ($metodo === 'GET' && isset($_GET['accion']) && $_GET['accion'] === 'obtener_
         
         echo json_encode(["estatus" => "exito", "datos" => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
     } catch (PDOException $e) {
-        echo json_encode(["estatus" => "error", "mensaje" => "Error al cargar medicamentos: " . $e->getMessage()]);
+        echo json_encode(["estatus" => "error", "mensaje" => "Error interno al cargar el inventario."]);
     }
     exit;
 }
 
-// --- POST: GUARDAR RECETA (MAESTRO-DETALLE E INVENTARIO) ---
+//Guardar receta y descontar en inventario
 if ($metodo === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
 
-    // Validación estricta de campos vacíos
+    //Validar campos vacios
     if (empty($input['idConsulta']) || empty($input['indicaciones_generales']) || empty($input['medicamentos'])) {
         echo json_encode(["estatus" => "error", "mensaje" => "Faltan datos obligatorios (Consulta, medicamentos o indicaciones)."]);
         exit;
@@ -47,8 +53,7 @@ if ($metodo === 'POST') {
     $idUnidad_Doctor = $_SESSION['idUnidad'] ?? 1; 
 
     try {
-        // 🔥 NUEVO ESCUDO: Verificar que la consulta realmente exista 🔥
-        // (Y como extra de seguridad, verificamos que la consulta se haya dado en esta misma clínica)
+        //Validar que la consulta exista
         $stmtCheck = $pdo->prepare("SELECT idConsulta FROM registro_consultas WHERE idConsulta = :idConsulta AND idUnidad = :idUnidad");
         $stmtCheck->execute([
             'idConsulta' => $idConsulta_limpio,
@@ -58,15 +63,14 @@ if ($metodo === 'POST') {
         if (!$stmtCheck->fetch()) {
             echo json_encode([
                 "estatus" => "error", 
-                "mensaje" => "El ID de Consulta ingresado no es válido, no existe o pertenece a otra clínica."
+                "mensaje" => "El ID de Consulta ingresado no es válido o pertenece a otra clínica."
             ]);
             exit;
         }
 
-        // Iniciamos la transacción (Todo o nada)
         $pdo->beginTransaction();
 
-        // 1. Insertar la Cabecera de la Receta
+        //Insertar datos de proxima consulta e indicaciones
         $prox_consulta = !empty($input['prox_consulta']) ? $input['prox_consulta'] : null;
         $indicaciones_limpias = strip_tags(trim($input['indicaciones_generales']));
 
@@ -83,7 +87,7 @@ if ($metodo === 'POST') {
         
         $idRecetaGenerada = $pdo->lastInsertId();
 
-        // Preparar consultas para el ciclo de medicamentos
+        // Agregar a detalle de receta
         $stmtDetalle = $pdo->prepare("
             INSERT INTO receta_detalle (idReceta, idMed, dosis, cantidad_surtir) 
             VALUES (:idReceta, :idMed, :dosis, :cantidad_surtir)
@@ -97,14 +101,18 @@ if ($metodo === 'POST') {
               AND idUnidad = :idUnidad_seguridad
         ");
 
-        // 2. Iterar sobre el array de medicamentos
+        //Obtener medicamentos
         foreach ($input['medicamentos'] as $med) {
             
-            $dosis_limpia = strip_tags(trim($med['dosis']));
+            $dosis_limpia    = strip_tags(trim($med['dosis']));
             $cantidad_limpia = filter_var($med['cantidad_surtir'], FILTER_VALIDATE_INT);
-            $idMed_limpio = filter_var($med['idMed'], FILTER_VALIDATE_INT);
+            $idMed_limpio    = filter_var($med['idMed'], FILTER_VALIDATE_INT);
 
-            // A. Insertar en la tabla receta_detalle
+            if (!$cantidad_limpia || !$idMed_limpio || empty($dosis_limpia)) {
+                throw new Exception("Datos de medicamento inválidos detectados.");
+            }
+
+            //Insertar datos
             $stmtDetalle->execute([
                 'idReceta'        => $idRecetaGenerada,
                 'idMed'           => $idMed_limpio,
@@ -112,7 +120,7 @@ if ($metodo === 'POST') {
                 'cantidad_surtir' => $cantidad_limpia
             ]);
 
-            // B. Descontar del inventario
+            //Descontar del inventario
             $stmtInventario->execute([
                 'cantidad_surtir'    => $cantidad_limpia,
                 'idMed'              => $idMed_limpio,
@@ -121,11 +129,11 @@ if ($metodo === 'POST') {
             ]);
 
             if ($stmtInventario->rowCount() === 0) {
-                throw new Exception("Stock insuficiente para el medicamento seleccionado.");
+                throw new Exception("Stock insuficiente o medicamento no disponible en la clínica actual.");
             }
         }
 
-        // Confirmamos los cambios
+        //Confirmar cambios
         $pdo->commit();
         echo json_encode(["estatus" => "exito", "mensaje" => "Receta generada correctamente y stock actualizado."]);
         
@@ -134,13 +142,16 @@ if ($metodo === 'POST') {
             $pdo->rollBack();
         }
         
-        // 🛡️ ESCUDO FINAL: Capturar errores genéricos de Integridad de MySQL de forma elegante
         if ($e instanceof PDOException && $e->getCode() == 23000) {
              echo json_encode(["estatus" => "error", "mensaje" => "Error de integridad: El registro entra en conflicto con datos existentes."]);
         } else {
-             echo json_encode(["estatus" => "error", "mensaje" => "Error: " . $e->getMessage()]);
+             $error_msg = ($e instanceof PDOException) ? "Error interno del servidor." : $e->getMessage();
+             echo json_encode(["estatus" => "error", "mensaje" => $error_msg]);
         }
     }
     exit;
 }
+
+echo json_encode(["estatus" => "error", "mensaje" => "Método no permitido."]);
+exit;
 ?>

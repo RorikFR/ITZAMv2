@@ -1,19 +1,20 @@
 <?php
-session_start();
-header('Content-Type: application/json');
+//Validaciones de seguridad e inactividad
+require 'seguridad_backend.php'; 
+require 'autorizacion.php';      
 
-// DEV ONLY - quitar en prod.
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+//RBAC
+requerir_roles_api(['Administrador']); 
 
+//Conexion a DB
 require 'db_conn.php';
 
 $metodo = $_SERVER['REQUEST_METHOD'];
+$mi_id_sesion = $_SESSION['idUsuario'] ?? 0; //Obtener id de usuario actual
 
-// --- LÓGICA DE LECTURA (GET) ---
+//Carga de datos
 if ($metodo === 'GET') {
-    $busqueda = $_GET['q'] ?? '';
+    $busqueda = filter_var(trim($_GET['q'] ?? ''), FILTER_SANITIZE_FULL_SPECIAL_CHARS);
     
     $sql = "SELECT 
                 idUsuario, 
@@ -21,32 +22,27 @@ if ($metodo === 'GET') {
                 email AS 'Email', 
                 estatus AS 'Estatus', 
                 rol AS 'Rol', 
-                fecha_creacion AS 'Fecha de creación', 
-                fecha_suspension AS 'Fecha de suspensión' 
+                DATE_FORMAT(fecha_creacion, '%d/%m/%Y') AS 'Fecha de creación', 
+                DATE_FORMAT(fecha_suspension, '%d/%m/%Y') AS 'Fecha de suspensión' 
             FROM usuarios_sistema "; 
 
-    if ($busqueda !== '') {
-        $sql .= " WHERE nombre_usuario LIKE :busqueda ";
-    }
-    
-    $sql .= " ORDER BY idUsuario DESC"; 
-
     try {
-        $stmt = $pdo->prepare($sql);
         if ($busqueda !== '') {
+            $sql .= " WHERE nombre_usuario LIKE :busqueda ORDER BY idUsuario DESC LIMIT 200";
+            $stmt = $pdo->prepare($sql);
             $stmt->execute(['busqueda' => '%' . $busqueda . '%']);
         } else {
-            $stmt->execute();
+            $sql .= " ORDER BY idUsuario DESC LIMIT 200";
+            $stmt = $pdo->query($sql);
         }
         echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
     } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(["error" => "Error al obtener la lista de usuarios.", "detalle" => $e->getMessage()]);
+        echo json_encode(["error" => "Error interno al obtener la lista de usuarios."]);
     }
     exit;
 }
 
-// --- LÓGICA DE EDICIÓN Y SUSPENSIÓN (POST) ---
+//Editar y eliminar datos
 if ($metodo === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
     
@@ -58,8 +54,14 @@ if ($metodo === 'POST') {
         exit;
     }
 
-    // --- 1. SUSPENSIÓN RÁPIDA ---
+    //Suspender usuario (soft-delete)
     if ($accion === 'suspender') {
+        // Bloquear suspension del propio usuario (self-lockout)
+        if ($idUsuario == $mi_id_sesion) {
+            echo json_encode(["estatus" => "error", "mensaje" => "Por medidas de seguridad, no puedes suspender tu propia cuenta de Administrador."]);
+            exit;
+        }
+
         try {
             $stmt = $pdo->prepare("UPDATE usuarios_sistema 
                                    SET estatus = 'Suspendido', 
@@ -68,73 +70,102 @@ if ($metodo === 'POST') {
             $stmt->execute(['id' => $idUsuario]);
             echo json_encode(["estatus" => "exito", "mensaje" => "Usuario suspendido correctamente."]);
         } catch (PDOException $e) {
-            echo json_encode(["estatus" => "error", "mensaje" => "Error al suspender usuario."]);
+            echo json_encode(["estatus" => "error", "mensaje" => "Error interno al suspender usuario."]);
         }
         exit; 
     }
 
-    // --- 2. EDICIÓN COMPLETA (INCLUYE BCRYPT) ---
-    if ($accion === 'editar') {
-        // --- PASO 1 Y 2: TIPOS Y SANITIZACIÓN ---
-        $email   = filter_var($input['email'] ?? '', FILTER_VALIDATE_EMAIL);
-        $rol     = strip_tags(trim($input['rol'] ?? ''));
-        $estatus = strip_tags(trim($input['estatus'] ?? ''));
-        $nuevaPass = $input['nueva_contrasena'] ?? ''; // La recibimos plana
-
-        if (!$email || empty($rol) || empty($estatus)) {
-            echo json_encode(["estatus" => "error", "mensaje" => "Datos obligatorios inválidos o incompletos."]);
-            exit;
-        }
-
-        // --- PASO 3: VALIDACIÓN DE LONGITUDES ---
-        if (strlen($rol) > 50 || strlen($estatus) > 20) {
-            echo json_encode(["estatus" => "error", "mensaje" => "Longitud de campos excedida."]);
+    // Modificar contraseña usuario
+    if ($accion === 'cambiar_password_unico') {
+        $nuevaPass = $input['nueva_pass'] ?? '';
+        
+        if (strlen($nuevaPass) < 8) {
+            echo json_encode(["estatus" => "error", "mensaje" => "La nueva contraseña debe tener al menos 8 caracteres."]);
             exit;
         }
 
         try {
-            // Construcción dinámica del Query para no tocar la contraseña si no se envió una nueva
-            $sql = "UPDATE usuarios_sistema SET email = :email, rol = :rol, estatus = :estatus";
+            $hash = password_hash($nuevaPass, PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare("UPDATE usuarios_sistema SET contrasena = :pass WHERE idUsuario = :id");
+            $stmt->execute(['pass' => $hash, 'id' => $idUsuario]);
             
-            $params = [
-                'email'   => $email,
-                'rol'     => $rol,
-                'estatus' => $estatus,
-                'id'      => $idUsuario
-            ];
+            echo json_encode(["estatus" => "exito", "mensaje" => "Contraseña actualizada de forma segura."]);
+        } catch (PDOException $e) {
+            echo json_encode(["estatus" => "error", "mensaje" => "Error al actualizar la contraseña."]);
+        }
+        exit;
+    }
 
-            // ¿Hay nueva contraseña? Aplicamos BCrypt
-            if (!empty($nuevaPass)) {
-                if (strlen($nuevaPass) < 8) {
-                    echo json_encode(["estatus" => "error", "mensaje" => "La nueva contraseña debe tener al menos 8 caracteres."]);
+    // Editar perfil de usuario
+    if ($accion === 'editar') {
+        $email   = filter_var($input['email'] ?? '', FILTER_VALIDATE_EMAIL);
+        $rol     = strip_tags(trim($input['rol'] ?? ''));
+        $estatus = strip_tags(trim($input['estatus'] ?? ''));
+
+        if (!$email || empty($rol) || empty($estatus)) {
+            echo json_encode(["estatus" => "error", "mensaje" => "Faltan datos obligatorios o el correo es inválido."]);
+            exit;
+        }
+
+        $roles_validos = ['Administrador', 'Médico', 'Enfermería', 'Administrativo'];
+        if (!in_array($rol, $roles_validos) || !in_array($estatus, ['Activo', 'Suspendido'])) {
+            echo json_encode(["estatus" => "error", "mensaje" => "Parámetros de rol o estatus no permitidos."]);
+            exit;
+        }
+
+        // Bloquear cambio de rol de administrador
+        if ($idUsuario == $mi_id_sesion) {
+            if ($rol !== 'Administrador') {
+                echo json_encode(["estatus" => "error", "mensaje" => "Debe existir por lo menos un administrador en el sistema."]); exit;
+            }
+            if ($estatus === 'Suspendido') {
+                echo json_encode(["estatus" => "error", "mensaje" => "No puedes suspender tu propia cuenta desde aquí."]); exit;
+            }
+        }
+
+        try {
+            if ($rol === 'Administrador') {
+                // Validar si existe otro administrador
+                $stmtAdmin = $pdo->prepare("SELECT COUNT(*) FROM usuarios_sistema WHERE rol = 'Administrador' AND idUsuario != :id");
+                $stmtAdmin->execute(['id' => $idUsuario]);
+                if ($stmtAdmin->fetchColumn() >= 1) {
+                    echo json_encode(["estatus" => "error", "mensaje" => "Límite alcanzado: Ya existe otra cuenta de Administrador en el sistema."]);
                     exit;
                 }
-                $sql .= ", contrasena = :pass";
-                $params['pass'] = password_hash($nuevaPass, PASSWORD_DEFAULT); // 🔥 BCrypt nativo
             }
 
-            // Lógica de fecha de suspensión automática
-            $sql .= ", fecha_suspension = CASE 
-                        WHEN :est_check1 = 'Activo' THEN NULL 
-                        WHEN :est_check2 = 'Suspendido' THEN COALESCE(fecha_suspension, NOW()) 
-                        ELSE fecha_suspension 
-                      END";
+            // Actualizar datos
+            $sql = "UPDATE usuarios_sistema SET 
+                        email = :email, 
+                        rol = :rol, 
+                        estatus = :estatus,
+                        fecha_suspension = CASE 
+                            WHEN :est_check1 = 'Activo' THEN NULL 
+                            WHEN :est_check2 = 'Suspendido' THEN COALESCE(fecha_suspension, NOW()) 
+                            ELSE fecha_suspension 
+                        END
+                    WHERE idUsuario = :id";
             
-            $params['est_check1'] = $estatus;
-            $params['est_check2'] = $estatus;
-
-            $sql .= " WHERE idUsuario = :id";
+            $params = [
+                'email'      => $email,
+                'rol'        => $rol,
+                'estatus'    => $estatus,
+                'est_check1' => $estatus,
+                'est_check2' => $estatus,
+                'id'         => $idUsuario
+            ];
 
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             
-            echo json_encode(["estatus" => "exito", "mensaje" => "Usuario actualizado correctamente."]);
+            echo json_encode(["estatus" => "exito", "mensaje" => "Perfil de usuario actualizado correctamente."]);
             
         } catch (PDOException $e) {
+            //Email duplicado
             if ($e->getCode() == 23000) { 
-                echo json_encode(["estatus" => "error", "mensaje" => "Este correo ya está registrado en otra cuenta."]);
+                echo json_encode(["estatus" => "error", "mensaje" => "Este correo ya está asignado a otro usuario en el sistema."]);
             } else {
-                echo json_encode(["estatus" => "error", "mensaje" => "Error SQL: " . $e->getMessage()]);
+                echo json_encode(["estatus" => "error", "mensaje" => "Ocurrió un error en la base de datos."]);
             }
         }
         exit;

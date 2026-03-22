@@ -1,6 +1,6 @@
 <?php
-session_start();
-header('Content-Type: application/json');
+
+require 'seguridad_backend.php';
 require 'db_conn.php';
 
 try {

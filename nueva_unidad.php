@@ -1,131 +1,19 @@
 <?php
-session_start();
+date_default_timezone_set('America/Mexico_City');
 
-// Opcional pero recomendado: El escudo de seguridad
-if (!isset($_SESSION['idUsuario'])) {
-    header("Location: index.php");
-    exit;
-}
+//Validaciones de seguridad e inactividad
+require 'inactive.php';      
+require 'autorizacion.php';  
+
+//RBAC
+requerir_roles(['Administrativo']);
+
+
+//Menu dinamico
+require 'header.php';
 ?>
-<!doctype html>
-<html lang="es">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>Sistema ITZAM — Registro de unidad médica</title>
-        <link rel="stylesheet" href="styles.css" />
-    </head>
-    <body>
-        <header>
-			<div class="topbar-container">
-				<div>
-					<img class ="logo"src="Assets/itzam_logoV2.png" alt="LOGO" />
-				</div>
-				
-				<div class="topbar-header">Sistema web consulta de información clínica - ITZAM</div>
-				
-        <div class="user-menu">
-            <div class="user-menu">
-                <img id="header-user-photo" class="user-photo user-icon" src="<?php echo isset($_SESSION['foto_perfil']) && $_SESSION['foto_perfil'] ? $_SESSION['foto_perfil'] : 'Assets/think.jpg'; ?>" onclick="toggleMenu()">
-            </div>
-            
-            <div class="dropdown-menu" id="userDropdown">
-                <p class="user-menu-title" style="font-weight: bold;"><?= htmlspecialchars($_SESSION['nombre_usuario']) ?></p>
-                <hr></hr>
-                <a class="dropdown-item" href="administracion.php">Administración</a>
-                <a class="dropdown-item" href="catalogos.php">Catálogos</a>
-                <a class="dropdown-item" href="configuracion_cuenta.php">Configuración</a>
-                <a class="dropdown-item" href="logout.php">Cerrar sesión</a>
-            </div>
-        </div>
-    </header>
-    
-    <nav>   
-        <ul>
-            <li><a href="home.php" class="active">Inicio</a></li>
-
-            <!-- Dropdown menu for Asesorías -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Asesorías</a>
-            <div class="dropdown-content">
-                <a href="mis_asesorias.php">Mis asesorías</a>
-                <a href="nueva_asesoria.php">Registrar asesoría</a>
-            </div>  
-            </li>
-
-            <!-- Dropdown menu for Consultas médicas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Consultas médicas</a>
-            <div class="dropdown-content">
-                <a href="buscar_consulta.php">Buscar consulta</a>
-                <a href="nueva_consulta.php">Registrar consulta</a>
-            </div>
-            </li>
-
-            <li><a href="estadisticas.php">Estadísticas</a></li>
-
-            <!-- Dropdown menu for Estudios -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Laboratorios</a>
-            <div class="dropdown-content">
-                <a href="consulta_orden_laboratorio.php">Buscar orden de laboratorio</a>
-                <a href="nueva_orden_laboratorio.php">Crear orden de laboratorio</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Inventario -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Inventario</a>
-            <div class="dropdown-content">
-                <a href="consulta_inventario.php">Buscar en inventario</a>
-                <a href="nueva_compra_med.php">Registrar compra de medicamentos</a>
-                <a href="nueva_compra_insumo.php">Registrar compra de insumos</a>
-                <a href="nueva_compra_equipo.php">Registrar compra de equipo médico</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Pacientes -->
-            <li class="dropdown">
-                <a href="javascript:void(0)" class="dropbtn">Pacientes</a>
-                <div class="dropdown-content">
-                    <a href="consulta_expediente.php">Consultar historia clínica</a>
-                    <a href="consulta_paciente.php">Consultar paciente</a>
-                    <a href="nuevo_paciente.php">Registrar paciente</a>
-                </div>
-            </li>
-
-            <!-- Dropdown menu for Personal de salud -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Personal de salud</a>
-            <div class="dropdown-content">
-                <a href="consulta_personal.php">Consultar personal</a>
-                <a href="nuevo_personal.php">Registrar personal</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Recetas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Recetas</a>
-            <div class="dropdown-content">
-                <a href="consulta_receta.php">Consultar receta</a>
-                <a href="nueva_receta.php">Registrar receta</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Unidades médicas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Unidades médicas</a>
-            <div class="dropdown-content">
-                <a href="consulta_unidad.php">Consultar unidad médica</a>
-                <a href="nueva_unidad.php">Registrar unidad médica</a>
-            </div>
-            </li>
-
-        </ul>
-    </nav>
-
         <div class="title-box">
-        <h3>Formulario de registro de unidad médica</h3>
+            <h3>Formulario de registro de unidad médica</h3>
         </div>
 
 <div class="grid-wrapper">
@@ -138,10 +26,11 @@ if (!isset($_SESSION['idUsuario'])) {
         <span class="message">* Campos obligatorios</span>
 
         <form class="multiform" id="multiStepForm" novalidate autocomplete="off">
+            
             <div class="tab active" data-step="0" aria-hidden="false">
                 <fieldset id="unidad-datos">
                     <label for="nombre_unidad">*Nombre de la unidad:</label>
-                    <input class="form" type="text" id="nombre_unidad" name="nombre_unidad" placeholder="Ej. Hospital Central ITZAM" required />
+                    <input class="form" type="text" id="nombre_unidad" name="nombre_unidad" placeholder="Ej. Hospital Central ITZAM" required maxlength="200" />
 
                     <label for="afiliacion">*Afiliación:</label>
                     <select class="form" id="afiliacion" name="idAfiliacion" required>
@@ -165,7 +54,7 @@ if (!isset($_SESSION['idUsuario'])) {
             <div class="tab" data-step="1" aria-hidden="true">
                 <fieldset id="unidad-datos-direccion">
                     <label for="calle">*Calle y número:</label>
-                    <input class="form" type="text" id="calle" name="calle" placeholder="Ej. Av. Lázaro Cárdenas 123" required />
+                    <input class="form" type="text" id="calle" name="calle" placeholder="Ej. Av. Lázaro Cárdenas 123" required maxlength="65" />
 
                     <label for="ubicacion">*Ubicación (CP - Colonia, Ciudad):</label>
                     <select class="form" id="ubicacion" name="idUbicacion" required>
@@ -176,11 +65,11 @@ if (!isset($_SESSION['idUsuario'])) {
 
             <div class="tab" data-step="2" aria-hidden="true">
                 <fieldset id="unidad-datos-contacto">
-                    <label for="telefono">*Teléfono de contacto:</label>
-                    <input class="form" type="tel" id="telefono" name="telefono" placeholder="10 dígitos" required />  
+                    <label for="telefono">*Teléfono de contacto (10 dígitos):</label>
+                    <input class="form" type="tel" id="telefono" name="telefono" placeholder="Ej. 5512345678" required maxlength="10" pattern="^[0-9]{10}$" title="El teléfono debe tener exactamente 10 números, sin espacios ni guiones" />  
 
                     <label for="email">*Correo electrónico:</label>
-                    <input class="form" type="email" id="email" name="email" placeholder="contacto@unidad.com" required /> 
+                    <input class="form" type="email" id="email" name="email" placeholder="contacto@unidad.com" required maxlength="120" /> 
                 </fieldset>
             </div>
         </form>
@@ -208,9 +97,8 @@ if (!isset($_SESSION['idUsuario'])) {
         let current = 0;
         const total = tabs.length;
 
-        // --- CARGA DINÁMICA DE CATÁLOGOS ---
+        //Carga de datos de catalogos
         async function cargarCatalogos() {
-            // 🔥 Añadimos nuestro catálogo de ubicación a la lista
             const catalogos = [
                 { id: 'afiliacion', tabla: 'cat_afiliacion', msg: 'Selecciona una afiliación' },
                 { id: 'categoria', tabla: 'cat_categoria', msg: 'Selecciona una categoría' },
@@ -225,7 +113,11 @@ if (!isset($_SESSION['idUsuario'])) {
                     
                     select.innerHTML = `<option value="" disabled selected>${cat.msg}</option>`;
                     data.forEach(item => {
-                        select.innerHTML += `<option value="${item.id}">${item.valor}</option>`;
+                        if (cat.id === 'ubicacion') {
+                            select.innerHTML += `<option value="${item.id}">${item.valor}</option>`;
+                        } else {
+                            select.innerHTML += `<option value="${item.id}">${item.valor}</option>`;
+                        }
                     });
                 } catch (e) {
                     console.error(`Error cargando el catálogo ${cat.tabla}:`, e);
@@ -233,9 +125,9 @@ if (!isset($_SESSION['idUsuario'])) {
             }
         }
 
-        document.addEventListener('DOMContentLoaded', cargarCatalogos);
+        cargarCatalogos();
 
-        // --- LÓGICA DEL FORMULARIO ---
+        //Logica del formulario
         function showStep(n){
             tabs.forEach((t, i) => {
                 const active = i === n;
@@ -250,6 +142,7 @@ if (!isset($_SESSION['idUsuario'])) {
             current = n;
         }
 
+        //Validar pasos
         function validateStep(n){
             const inputs = Array.from(tabs[n].querySelectorAll('input, select, textarea'));
             for (const el of inputs){
@@ -274,7 +167,7 @@ if (!isset($_SESSION['idUsuario'])) {
                 showStep(0); 
             }
         });
-
+        //Ejecutar formulario y deshabilitar botones
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!validateStep(current)) return;
@@ -294,11 +187,11 @@ if (!isset($_SESSION['idUsuario'])) {
                 const data = await res.json();
 
                 if(data.estatus === 'exito') {
-                    alert("✅ " + data.mensaje);
+                    alert("Éxito: " + data.mensaje);
                     form.reset();
                     showStep(0);
                 } else {
-                    alert("⚠️ " + data.mensaje);
+                    alert("Atención: " + data.mensaje);
                 }
             } catch (error) {
                 alert("Error de conexión al servidor.");
@@ -312,7 +205,9 @@ if (!isset($_SESSION['idUsuario'])) {
     })();
 </script>
 
-        <footer class="bottombar">© 2026 ITZAM</footer>
+<script src="Scripts/js/timeout.js"></script>
 
-    </body>
+<footer class="bottombar">© 2026 ITZAM</footer>
+
+</body>
 </html>

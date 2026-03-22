@@ -1,13 +1,25 @@
 <?php
-session_start();
-header('Content-Type: application/json');
+
+require 'seguridad_backend.php';
+require 'autorizacion.php';
+
+// Solo personal clínico puede registrar consultas
+requerir_roles_api(['Médico', 'Enfermería']);
+
 require 'db_conn.php';
 
 $metodo = $_SERVER['REQUEST_METHOD'];
 
-// --- GET: BUSCAR PACIENTE POR CURP ---
+// Buscar paciente por CURP
 if ($metodo === 'GET' && isset($_GET['accion']) && $_GET['accion'] === 'buscar_paciente') {
-    $curp = $_GET['curp'] ?? '';
+    $curp = strtoupper(trim($_GET['curp'] ?? ''));
+    
+    // Validación de formato CURP rápido
+    if (!preg_match('/^[A-Z]{4}\d{6}[HM][A-Z]{2}[B-DF-HJ-NP-TV-Z]{3}[A-Z0-9]\d$/', $curp)) {
+        echo json_encode(["estatus" => "error", "mensaje" => "Formato de CURP inválido."]);
+        exit;
+    }
+
     $stmt = $pdo->prepare("SELECT idPaciente, nombre, apellido_p, apellido_m FROM registro_paciente WHERE curp = :curp LIMIT 1");
     $stmt->execute(['curp' => $curp]);
     $paciente = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -20,21 +32,62 @@ if ($metodo === 'GET' && isset($_GET['accion']) && $_GET['accion'] === 'buscar_p
     exit;
 }
 
-// --- POST: GUARDAR LA NUEVA CONSULTA ---
+// Guardar consulta
 if ($metodo === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
     
-    // Validamos que exista un paciente seleccionado
-    if (empty($input['idPaciente']) || empty($input['tipo_consulta'])) {
-        echo json_encode(["estatus" => "error", "mensaje" => "Faltan datos críticos (Paciente o Tipo de Consulta)."]);
+    // Validacion de IDs
+    $idPaciente     = filter_var($input['idPaciente'] ?? '', FILTER_VALIDATE_INT);
+    $idTipoConsulta = filter_var($input['tipo_consulta'] ?? '', FILTER_VALIDATE_INT);
+    
+    if (!$idPaciente || !$idTipoConsulta) {
+        echo json_encode(["estatus" => "error", "mensaje" => "Faltan datos críticos (Paciente o Tipo de Consulta) o su formato es incorrecto."]);
         exit;
     }
 
-    // 💡 NOTA DE ARQUITECTURA: En un sistema real, el idPersonal y idUnidad se sacan de la sesión del usuario que inició sesión.
-    // Como aún no hemos conectado las variables de sesión globales, usaremos IDs fijos (1 y 2) para que el registro no falle.
-    $idPersonal = $_SESSION['idPersonal'] ?? 1; 
-    $idUnidad = $_SESSION['idUnidad'] ?? 2;     
+    // Sanitizar datos de entrada
+    $sintomas    = htmlspecialchars(trim($input['sintomas'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $diagnostico = htmlspecialchars(trim($input['diagnostico'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $tratamiento = htmlspecialchars(trim($input['tratamiento'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $alergias    = htmlspecialchars(trim($input['alergias'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $antecedentes= htmlspecialchars(trim($input['antecedentes'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $habitos     = htmlspecialchars(trim($input['habitos'] ?? ''), ENT_QUOTES, 'UTF-8');
 
+    // Validar longitud de texto máxima
+    if (mb_strlen($sintomas) > 5000 || mb_strlen($diagnostico) > 5000 || mb_strlen($tratamiento) > 5000) {
+        echo json_encode(["estatus" => "error", "mensaje" => "Uno de los campos de texto excede el límite de 5,000 caracteres."]);
+        exit;
+    }
+
+    // Validar entradas de valores numericos
+    $peso        = filter_var($input['peso'] ?? null, FILTER_VALIDATE_FLOAT);
+    $talla       = filter_var($input['talla'] ?? null, FILTER_VALIDATE_FLOAT);
+    $temperatura = filter_var($input['temperatura'] ?? null, FILTER_VALIDATE_FLOAT);
+    $frecuencia  = filter_var($input['frecuencia'] ?? null, FILTER_VALIDATE_INT);
+    $saturacion  = filter_var($input['saturacion'] ?? null, FILTER_VALIDATE_INT);
+    
+    //Sanitizar entrada
+    $presionArterial = htmlspecialchars(trim($input['presion_arterial'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $fechaSintomas   = trim($input['inicio_sintomas'] ?? null);
+    
+    //Validar variables de sesión
+    $idPersonal = $_SESSION['idUsuario'] ?? null; 
+    $idUnidad   = $_SESSION['idUnidad'] ?? null; 
+
+    if (!$idPersonal || !$idUnidad) {
+        echo json_encode([
+            "estatus" => "error", 
+            "mensaje" => "Error de sesión: No se pudo identificar al médico tratante o su Unidad Médica. Por favor, cierre sesión y vuelva a ingresar."
+        ]);
+        exit; 
+    }    
+
+    if (!$idPersonal) {
+        echo json_encode(["estatus" => "error", "mensaje" => "Error de sesión. No se puede identificar al médico tratante."]);
+        exit;
+    }
+
+    //Enviar a DB
     try {
         $stmt = $pdo->prepare("
             INSERT INTO registro_consultas (
@@ -49,33 +102,31 @@ if ($metodo === 'POST') {
         ");
         
         $stmt->execute([
-            'idPaciente'     => $input['idPaciente'],
+            'idPaciente'     => $idPaciente,
             'idPersonal'     => $idPersonal,
-            'idTipoConsulta' => $input['tipo_consulta'],
-            'peso'           => $input['peso'],
-            'talla'          => $input['talla'],
-            'temperatura'    => $input['temperatura'],
-            'freq_card'      => $input['frecuencia'],
-            'sat_oxigeno'    => $input['saturacion'],
-            'presion_arte'   => $input['presion_arterial'],
-            'fecha_sintomas' => $input['inicio_sintomas'],
-            'sintomas'       => $input['sintomas'],
-            'alergias'       => $input['alergias'],
-            'antecedentes'   => $input['antecedentes'],
-            'habitos'        => $input['habitos'],
-            'diagnostico'    => $input['diagnostico'],
-            'tratamiento'    => $input['tratamiento'],
+            'idTipoConsulta' => $idTipoConsulta,
+            'peso'           => $peso,
+            'talla'          => $talla,
+            'temperatura'    => $temperatura,
+            'freq_card'      => $frecuencia,
+            'sat_oxigeno'    => $saturacion,
+            'presion_arte'   => $presionArterial,
+            'fecha_sintomas' => $fechaSintomas,
+            'sintomas'       => $sintomas,
+            'alergias'       => $alergias,
+            'antecedentes'   => $antecedentes,
+            'habitos'        => $habitos,
+            'diagnostico'    => $diagnostico,
+            'tratamiento'    => $tratamiento,
             'idUnidad'       => $idUnidad
         ]);
 
-        // Después de hacer el $stmt->execute(...) de la consulta
         $idNuevaConsulta = $pdo->lastInsertId();
         
-        // ¡Crucial! Enviamos el idConsulta de regreso al navegador
         echo json_encode([
             "estatus" => "exito", 
             "mensaje" => "Expediente clínico actualizado exitosamente.",
-            "idConsulta" => $idNuevaConsulta // <-- El JavaScript leerá este dato
+            "idConsulta" => $idNuevaConsulta
         ]);
         
     } catch (PDOException $e) {

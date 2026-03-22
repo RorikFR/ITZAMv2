@@ -1,13 +1,25 @@
 <?php
-session_start();
-header('Content-Type: application/json');
+// Validacion de seguridad e inactividad
+require 'seguridad_backend.php'; 
+require 'autorizacion.php';      
+
+//RBAC
+requerir_roles_api(['Médico', 'Enfermería']); 
+
 require 'db_conn.php';
 
 $metodo = $_SERVER['REQUEST_METHOD'];
 
-// --- GET: BUSCAR PACIENTE POR CURP ---
+// Buscar pacient por CURP
 if ($metodo === 'GET' && isset($_GET['accion']) && $_GET['accion'] === 'buscar_paciente') {
-    $curp = $_GET['curp'] ?? '';
+    $curp = strtoupper(trim($_GET['curp'] ?? ''));
+    
+    // Validar formato CURP
+    if (!preg_match('/^[A-Z]{4}\d{6}[HM][A-Z]{2}[B-DF-HJ-NP-TV-Z]{3}[A-Z0-9]\d$/', $curp)) {
+        echo json_encode(["estatus" => "error", "mensaje" => "Formato de CURP inválido."]);
+        exit;
+    }
+
     $stmt = $pdo->prepare("SELECT idPaciente, nombre, apellido_p, apellido_m FROM registro_paciente WHERE curp = :curp LIMIT 1");
     $stmt->execute(['curp' => $curp]);
     $paciente = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -20,45 +32,47 @@ if ($metodo === 'GET' && isset($_GET['accion']) && $_GET['accion'] === 'buscar_p
     exit;
 }
 
-// --- GET: OBTENER LISTA DE MÉDICOS ---
-if ($metodo === 'GET' && isset($_GET['accion']) && $_GET['accion'] === 'obtener_medicos') {
-    try {
-        // Buscamos a todo el personal que tenga una cédula registrada (para filtrar a los que no son médicos)
-        $stmt = $pdo->query("SELECT cedula, nombre, apellido_p, apellido_m FROM registro_personal WHERE cedula IS NOT NULL AND cedula != ''");
-        $medicos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        echo json_encode(["estatus" => "exito", "datos" => $medicos]);
-    } catch (PDOException $e) {
-        echo json_encode(["estatus" => "error", "mensaje" => "Error al cargar médicos"]);
-    }
-    exit;
-}
 
-// --- POST: GUARDAR LA ORDEN DE LABORATORIO (MAESTRO-DETALLE) ---
+//Guardar orden de laboratorio
 if ($metodo === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
     
-    if (empty($input['idPaciente']) || empty($input['estudios_solicitados']) || empty($input['prioridad']) || empty($input['medico'])) {
-        echo json_encode(["estatus" => "error", "mensaje" => "Faltan datos obligatorios."]);
+    // Validar IDs
+    $idPaciente  = filter_var($input['idPaciente'] ?? '', FILTER_VALIDATE_INT);
+    $idEstudio   = filter_var($input['estudios_solicitados'] ?? '', FILTER_VALIDATE_INT);
+    $idPrioridad = filter_var($input['prioridad'] ?? '', FILTER_VALIDATE_INT);
+    
+    if (!$idPaciente || !$idEstudio || !$idPrioridad) {
+        echo json_encode(["estatus" => "error", "mensaje" => "Faltan datos obligatorios o el formato es incorrecto."]);
+        exit;
+    }
+
+    // Sanitización de datos
+    $observaciones   = htmlspecialchars(trim($input['observaciones'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $diagnostico_pre = htmlspecialchars(trim($input['diagnostico_preliminar'] ?? ''), ENT_QUOTES, 'UTF-8');
+
+    // Validar longitud de texto
+    if (mb_strlen($observaciones) > 2000) {
+        echo json_encode(["estatus" => "error", "mensaje" => "Las observaciones exceden el límite de 2,000 caracteres."]);
+        exit;
+    }
+    if (mb_strlen($diagnostico_pre) > 5000) {
+        echo json_encode(["estatus" => "error", "mensaje" => "El diagnóstico preliminar excede el límite de 5,000 caracteres."]);
+        exit;
+    }
+
+    // Trazabilidad
+    $idPersonalSolicitante = $_SESSION['idUsuario'] ?? null;
+    
+    if (!$idPersonalSolicitante) {
+        echo json_encode(["estatus" => "error", "mensaje" => "Error de sesión: No se pudo identificar al médico solicitante."]);
         exit;
     }
 
     try {
-        // Iniciamos la transacción (Todo o nada)
         $pdo->beginTransaction();
 
-        // 1. Traducir la Cédula a idPersonal_solicitante
-        $stmtMed = $pdo->prepare("SELECT idPersonal FROM registro_personal WHERE cedula = :cedula LIMIT 1");
-        $stmtMed->execute(['cedula' => $input['medico']]);
-        $medico = $stmtMed->fetch(PDO::FETCH_ASSOC);
-
-        if (!$medico) {
-            // Si la cédula es falsa, abortamos
-            $pdo->rollBack();
-            echo json_encode(["estatus" => "error", "mensaje" => "No existe un médico registrado con esa cédula profesional."]);
-            exit;
-        }
-
-        // 2. Insertar en la tabla MAESTRO (registro_laboratorio)
+        // Guardar en DB
         $stmtOrden = $pdo->prepare("
             INSERT INTO registro_laboratorio (
                 idPaciente, idPersonal_solicitante, idPrioridad, observaciones, diagnostico_pre
@@ -68,17 +82,17 @@ if ($metodo === 'POST') {
         ");
         
         $stmtOrden->execute([
-            'idPaciente'             => $input['idPaciente'],
-            'idPersonal_solicitante' => $medico['idPersonal'],
-            'idPrioridad'            => $input['prioridad'],
-            'observaciones'          => $input['observaciones'],
-            'diagnostico_pre'        => $input['diagnostico_preliminar']
+            'idPaciente'             => $idPaciente,
+            'idPersonal_solicitante' => $idPersonalSolicitante, // 🔥 Usamos la variable de sesión
+            'idPrioridad'            => $idPrioridad,
+            'observaciones'          => $observaciones,
+            'diagnostico_pre'        => $diagnostico_pre
         ]);
 
-        // 3. Obtener el ID autoincrementable que MySQL acaba de generar
+        //Obtener ID
         $idOrdenLab_generado = $pdo->lastInsertId();
 
-        // 4. Insertar en la tabla DETALLE (laboratorio_detalle)
+        // Guardar en tabla detalle
         $stmtDetalle = $pdo->prepare("
             INSERT INTO laboratorio_detalle (idOrdenLab, idEstudio) 
             VALUES (:idOrdenLab, :idEstudio)
@@ -86,18 +100,17 @@ if ($metodo === 'POST') {
 
         $stmtDetalle->execute([
             'idOrdenLab' => $idOrdenLab_generado,
-            'idEstudio'  => $input['estudios_solicitados']
+            'idEstudio'  => $idEstudio
         ]);
 
-        // Si todo salió bien, confirmamos la transacción
         $pdo->commit();
         
         echo json_encode(["estatus" => "exito", "mensaje" => "Orden de laboratorio #$idOrdenLab_generado creada correctamente."]);
 
     } catch (PDOException $e) {
-        // Si hay error (ej. se cae la base de datos a la mitad), deshacemos todo
+        // Revertir cambios en caso de error
         $pdo->rollBack();
-        echo json_encode(["estatus" => "error", "mensaje" => "Error de base de datos."]);
+        echo json_encode(["estatus" => "error", "mensaje" => "Error interno al guardar la orden de laboratorio."]);
     }
     exit;
 }

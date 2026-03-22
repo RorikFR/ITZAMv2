@@ -1,6 +1,6 @@
 <?php
-session_start();
-header('Content-Type: application/json');
+
+require 'seguridad_backend.php';
 
 // DEV ONLY - para ver errores si algo falla
 ini_set('display_errors', 1);

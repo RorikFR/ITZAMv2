@@ -1,10 +1,25 @@
 <?php
-session_start();
+//Validaciones de seguridad e inactividad
+require 'inactive.php';      
+require 'autorizacion.php';   
+
+//RBAC
+requerir_roles(['Administrativo', 'Médico']);
 
 require 'db_conn.php';
 
-// 1. Identificamos qué módulo quiere ver el usuario (por defecto 'unidades')
-$modulo = $_GET['modulo'] ?? 'unidades';
+// Definimos lista de módulos permitidos
+$modulos_permitidos = ['unidades', 'categorias', 'incidencia', 'personal', 'inventario', 'insumos', 'equipo', 'edades'];
+
+// Recibimos el parámetro
+$modulo_solicitado = $_GET['modulo'] ?? 'unidades';
+
+// Verificamos solicitud, si no, enviar a unidades
+if (in_array($modulo_solicitado, $modulos_permitidos)) {
+    $modulo = $modulo_solicitado;
+} else {
+    $modulo = 'unidades'; 
+}
 
 // Variables por defecto
 $titulo = "Detalle de Estadísticas";
@@ -14,56 +29,78 @@ $col1 = "Etiqueta";
 $col2 = "Valor";
 $sql = "";
 
-// 2. Definimos la consulta y configuración según el módulo
+// Definimos la consulta y configuración según el módulo
 switch ($modulo) {
     case 'unidades':
         $titulo = "Consultas por Unidad Médica";
         $col1 = "Unidad Médica"; $col2 = "Total de Consultas";
         $sql = "SELECT u.nombre AS etiqueta, COUNT(c.idConsulta) AS valor FROM registro_consultas c INNER JOIN registro_unidad u ON c.idUnidad = u.idUnidad GROUP BY u.idUnidad ORDER BY valor DESC";
         break;
+        
     case 'categorias':
         $titulo = "Consultas por Tipo de Atención";
         $col1 = "Tipo de Atención"; $col2 = "Total de Consultas";
         $chartType = 'pie'; $horizontal = false;
-        // 🔥 CORRECCIÓN 3FN APLICADA AQUÍ:
         $sql = "SELECT tc.nombre_tipo AS etiqueta, COUNT(c.idConsulta) AS valor FROM registro_consultas c INNER JOIN cat_tipo_consulta tc ON c.idTipoConsulta = tc.idTipoConsulta GROUP BY tc.nombre_tipo ORDER BY valor DESC";
         break;
+        
     case 'incidencia':
         $titulo = "Diagnósticos de Mayor Incidencia";
         $col1 = "Diagnóstico Médico"; $col2 = "Casos Registrados";
         $sql = "SELECT diagnostico AS etiqueta, COUNT(idConsulta) AS valor FROM registro_consultas GROUP BY diagnostico ORDER BY valor DESC";
         break;
+        
     case 'personal':
         $titulo = "Productividad por Personal Médico";
         $col1 = "Médico / Especialista"; $col2 = "Pacientes Atendidos";
         $sql = "SELECT CONCAT_WS(' ', p.nombre, p.apellido_p, p.apellido_m) AS etiqueta, COUNT(c.idConsulta) AS valor FROM registro_consultas c INNER JOIN registro_personal p ON c.idPersonal = p.idPersonal GROUP BY p.idPersonal ORDER BY valor DESC";
         break;
+        
     case 'inventario':
         $titulo = "Detalle de Inventario de Medicamentos";
         $col1 = "Medicamento (Ubicación)"; $col2 = "Unidades en Stock";
-        $sql = "SELECT CONCAT(m.nombre, ' (', u.nombre, ')') AS etiqueta, SUM(m.cantidad) AS valor FROM inventario_medicamentos m INNER JOIN registro_unidad u ON m.idUnidad = u.idUnidad GROUP BY m.nombre, u.nombre ORDER BY valor DESC";
+        $sql = "SELECT CONCAT(cat.nombre, ' (', u.nombre, ')') AS etiqueta, SUM(m.cantidad) AS valor 
+                FROM inventario_medicamentos m 
+                INNER JOIN cat_medicamentos cat ON m.idCatalogoMed = cat.idCatalogoMed 
+                INNER JOIN registro_unidad u ON m.idUnidad = u.idUnidad 
+                GROUP BY cat.nombre, u.nombre 
+                ORDER BY valor DESC";
         break;
+        
     case 'insumos':
         $titulo = "Detalle de Insumos Médicos";
         $col1 = "Insumo (Ubicación)"; $col2 = "Unidades en Stock";
-        $sql = "SELECT CONCAT(i.nombre, ' (', u.nombre, ')') AS etiqueta, SUM(i.cantidad) AS valor FROM inventario_insumos i INNER JOIN registro_unidad u ON i.idUnidad = u.idUnidad GROUP BY i.nombre, u.nombre ORDER BY valor DESC";
+        $sql = "SELECT CONCAT(cat.nombre, ' (', u.nombre, ')') AS etiqueta, SUM(i.cantidad) AS valor 
+                FROM inventario_insumos i 
+                INNER JOIN cat_insumos cat ON i.idCatalogoInsumo = cat.idCatalogoInsumo 
+                INNER JOIN registro_unidad u ON i.idUnidad = u.idUnidad 
+                GROUP BY cat.nombre, u.nombre 
+                ORDER BY valor DESC";
         break;
+        
     case 'equipo':
         $titulo = "Detalle de Equipo Médico Asignado";
         $col1 = "Equipo (Ubicación)"; $col2 = "Cantidad";
-        $sql = "SELECT CONCAT(e.nombre, ' (', u.nombre, ')') AS etiqueta, SUM(e.cantidad) AS valor FROM inventario_equipo e INNER JOIN registro_unidad u ON e.idUnidad = u.idUnidad GROUP BY e.nombre, u.nombre ORDER BY valor DESC";
+        $sql = "SELECT CONCAT(cat.nombre, ' (', u.nombre, ')') AS etiqueta, SUM(e.cantidad) AS valor 
+                FROM inventario_equipo e 
+                INNER JOIN cat_equipo cat ON e.idCatalogoEquipo = cat.idCatalogoEquipo 
+                INNER JOIN registro_unidad u ON e.idUnidad = u.idUnidad 
+                GROUP BY cat.nombre, u.nombre 
+                ORDER BY valor DESC";
         break;
+        
     case 'edades':
         $titulo = "Distribución de Edades en Consulta";
         $col1 = "Rango de Edad"; $col2 = "Total de Consultas";
         $chartType = 'doughnut'; $horizontal = false;
         $sql = "SELECT CASE WHEN ROUND(DATEDIFF(c.fecha_consulta, p.fecha_nac) / 365.25) < 18 THEN 'Menores de 18' WHEN ROUND(DATEDIFF(c.fecha_consulta, p.fecha_nac) / 365.25) BETWEEN 18 AND 59 THEN 'Adultos (18-59)' ELSE 'Adultos Mayores (60+)' END AS etiqueta, COUNT(c.idConsulta) AS valor FROM registro_consultas c INNER JOIN registro_paciente p ON c.idPaciente = p.idPaciente GROUP BY etiqueta";
         break;
+        
     default:
         die("Módulo no reconocido.");
 }
 
-// 3. Ejecutamos la consulta maestra
+//Ejecutar consulta
 $tablaData = [];
 $chartLabels = [];
 $chartValues = [];
@@ -72,15 +109,15 @@ try {
     $stmt = $pdo->query($sql);
     $tablaData = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Llenamos la gráfica SOLO con los primeros 15 registros para no saturar el canvas
+    // Llenar la gráfica con los primeros 15 registros
     foreach ($tablaData as $index => $row) {
         if ($index < 15) {
             $chartLabels[] = $row['etiqueta'];
-            $chartValues[] = $row['valor'];
+            $chartValues[] = (int)$row['valor']; // Forzar uso de enteros
         }
     }
 } catch (PDOException $e) {
-    die("Error de BD: " . $e->getMessage());
+    die("Error interno de la base de datos.");
 }
 ?>
 <!doctype html>
@@ -101,7 +138,6 @@ try {
         .seccion-grafica { position: relative; height: 400px; margin-bottom: 40px; }
         .seccion-tabla { margin-top: 30px; }
 
-        /* Evita que los renglones de la tabla se partan a la mitad en el PDF */
         #tabla-datos tr {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
@@ -218,7 +254,7 @@ try {
         <hr>
 
         <div class="seccion-tabla">
-            <h3>Desglose de Datos en Crudo</h3>
+            <h3>Desglose de Datos</h3>
             <table id="tabla-datos" class="display" style="width:100%">
                 <thead>
                     <tr>
@@ -257,9 +293,32 @@ try {
 
     <script>
         $(document).ready(function() {
-            // 1. Inicializamos la tabla
+            // Inicializamos la tabla
             const miTabla = $('#tabla-datos').DataTable({
-                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json' },
+            language: {
+                    "decimal": "",
+                    "emptyTable": "No hay información en la base de datos",
+                    "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                    "infoEmpty": "Mostrando 0 a 0 de 0 registros",
+                    "infoFiltered": "(Filtrado de _MAX_ registros totales)",
+                    "infoPostFix": "",
+                    "thousands": ",",
+                    "lengthMenu": "Mostrar _MENU_ registros por página",
+                    "loadingRecords": "Cargando...",
+                    "processing": "Procesando...",
+                    "search": "Buscar:",
+                    "zeroRecords": "No se encontraron coincidencias",
+                    "paginate": {
+                        "first": "Primero",
+                        "last": "Último",
+                        "next": "Siguiente",
+                        "previous": "Anterior"
+                    },
+                    "aria": {
+                        "sortAscending": ": Activar para ordenar la columna de manera ascendente",
+                        "sortDescending": ": Activar para ordenar la columna de manera descendente"
+                    }
+                },
                 dom: 'Bfrtip',
                 buttons: [
                     { extend: 'excelHtml5', text: '📊 Descargar Excel', className: 'btn-exportar' },
@@ -268,7 +327,7 @@ try {
                 pageLength: 15
             });
 
-            // 2. Inicializamos la Gráfica (Sintaxis JS corregida)
+            // Inicializamos la gráfica 
             const ctx = document.getElementById('graficaDetalle').getContext('2d');
             const labels = <?php echo json_encode($chartLabels); ?>;
             const values = <?php echo json_encode($chartValues); ?>;
@@ -302,7 +361,7 @@ try {
                 }
             });
 
-            // 3. LA MAGIA DEL PDF
+            // Generar reporte PDF
             $('#btn-exportar-pdf').on('click', function() {
                 const botonExportar = this;
                 botonExportar.innerText = "⏳ Generando reporte...";
@@ -348,5 +407,7 @@ try {
             });
         });
     </script>
+
+    <script src="Scripts/js/timeout.js"></script>
 </body>
 </html>

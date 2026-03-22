@@ -1,130 +1,15 @@
 <?php
-session_start();
+date_default_timezone_set('America/Mexico_City');
 
-// Opcional pero recomendado: El escudo de seguridad
-if (!isset($_SESSION['idUsuario'])) {
-    header("Location: index.php");
-    exit;
-}
+require 'inactive.php';       // 1. Escudo de inactividad
+require 'autorizacion.php';   // 2. Motor de roles
+
+// 3. LA BARRERA DE HIERRO: Solo Administradores
+requerir_roles(['Administrador']);
+
+require 'header.php';
 ?>
 <!doctype html>
-<html lang="es">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>Sistema ITZAM — Catálogos</title>
-        <link rel="stylesheet" href="styles.css" />
-        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
-    </head>
-    <body>
-        <header>
-            <div class="topbar-container">
-                <div>
-                    <img class ="logo"src="Assets/itzam_logoV2.png" alt="LOGO" />
-                </div>
-                
-                <div class="topbar-header">Sistema web consulta de información clínica - ITZAM</div>
-                
-        <div class="user-menu">
-            <div class="user-menu">
-                <img id="header-user-photo" class="user-photo user-icon" src="<?php echo isset($_SESSION['foto_perfil']) && $_SESSION['foto_perfil'] ? $_SESSION['foto_perfil'] : 'Assets/think.jpg'; ?>" onclick="toggleMenu()">
-            </div>
-            
-            <div class="dropdown-menu" id="userDropdown">
-                <p class="user-menu-title" style="font-weight: bold;"><?= htmlspecialchars($_SESSION['nombre_usuario']) ?></p>
-                <hr></hr>
-                <a class="dropdown-item" href="administracion.php">Administración</a>
-                <a class="dropdown-item" href="catalogos.php">Catálogos</a>
-                <a class="dropdown-item" href="configuracion_cuenta.php">Configuración</a>
-                <a class="dropdown-item" href="logout.php">Cerrar sesión</a>
-            </div>
-        </div>
-    </header>
-    
-    <nav>   
-        <ul>
-            <li><a href="home.php" class="active">Inicio</a></li>
-
-            <!-- Dropdown menu for Asesorías -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Asesorías</a>
-            <div class="dropdown-content">
-                <a href="mis_asesorias.php">Mis asesorías</a>
-                <a href="nueva_asesoria.php">Registrar asesoría</a>
-            </div>  
-            </li>
-
-            <!-- Dropdown menu for Consultas médicas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Consultas médicas</a>
-            <div class="dropdown-content">
-                <a href="buscar_consulta.php">Buscar consulta</a>
-                <a href="nueva_consulta.php">Registrar consulta</a>
-            </div>
-            </li>
-
-            <li><a href="estadisticas.php">Estadísticas</a></li>
-
-            <!-- Dropdown menu for Estudios -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Laboratorios</a>
-            <div class="dropdown-content">
-                <a href="consulta_orden_laboratorio.php">Buscar orden de laboratorio</a>
-                <a href="nueva_orden_laboratorio.php">Crear orden de laboratorio</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Inventario -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Inventario</a>
-            <div class="dropdown-content">
-                <a href="consulta_inventario.php">Buscar en inventario</a>
-                <a href="nueva_compra_med.php">Registrar compra de medicamentos</a>
-                <a href="nueva_compra_insumo.php">Registrar compra de insumos</a>
-                <a href="nueva_compra_equipo.php">Registrar compra de equipo médico</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Pacientes -->
-            <li class="dropdown">
-                <a href="javascript:void(0)" class="dropbtn">Pacientes</a>
-                <div class="dropdown-content">
-                    <a href="consulta_expediente.php">Consultar historia clínica</a>
-                    <a href="consulta_paciente.php">Consultar paciente</a>
-                    <a href="nuevo_paciente.php">Registrar paciente</a>
-                </div>
-            </li>
-
-            <!-- Dropdown menu for Personal de salud -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Personal de salud</a>
-            <div class="dropdown-content">
-                <a href="consulta_personal.php">Consultar personal</a>
-                <a href="nuevo_personal.php">Registrar personal</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Recetas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Recetas</a>
-            <div class="dropdown-content">
-                <a href="consulta_receta.php">Consultar receta</a>
-                <a href="nueva_receta.php">Registrar receta</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Unidades médicas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Unidades médicas</a>
-            <div class="dropdown-content">
-                <a href="consulta_unidad.php">Consultar unidad médica</a>
-                <a href="nueva_unidad.php">Registrar unidad médica</a>
-            </div>
-            </li>
-
-        </ul>
-    </nav>
 
     <div class="title-box">
         <h1>Catálogos del sistema</h1>
@@ -133,73 +18,73 @@ if (!isset($_SESSION['idUsuario'])) {
 
     <div id="vista-tarjetas" style="display: flex; gap: 20px; flex-wrap: wrap; padding: 20px; justify-content: center; max-width: 1200px; margin: auto;">
         
-    <div onclick="abrirCatalogo('cat_especialidades', 'Especialidades Médicas')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-        <h1 style="font-size: 3em; margin: 0; color: #007bff;">🩺</h1>
-        <h3 style="margin: 10px 0;">Especialidades</h3>
-        <p style="color: #666; font-size: 0.9em;">Pediatría, Cardiología, etc.</p>
-    </div>
+        <div onclick="abrirCatalogo('cat_especialidades', 'Especialidades Médicas')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+            <h1 style="font-size: 3em; margin: 0; color: #007bff;">🩺</h1>
+            <h3 style="margin: 10px 0;">Especialidades</h3>
+            <p style="color: #666; font-size: 0.9em;">Pediatría, Cardiología, etc.</p>
+        </div>
 
-    <div onclick="abrirCatalogo('cat_puestos', 'Puestos de Personal')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-        <h1 style="font-size: 3em; margin: 0; color: #17a2b8;">👨‍⚕️</h1>
-        <h3 style="margin: 10px 0;">Puestos</h3>
-        <p style="color: #666; font-size: 0.9em;">Médico General, Enfermería, etc.</p>
-    </div>
+        <div onclick="abrirCatalogo('cat_puestos', 'Puestos de Personal')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+            <h1 style="font-size: 3em; margin: 0; color: #17a2b8;">👨‍⚕️</h1>
+            <h3 style="margin: 10px 0;">Puestos</h3>
+            <p style="color: #666; font-size: 0.9em;">Médico General, Enfermería, etc.</p>
+        </div>
 
-    <div onclick="abrirCatalogo('cat_tipo_consulta', 'Tipos de Consulta')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-        <h1 style="font-size: 3em; margin: 0; color: #6f42c1;">📋</h1>
-        <h3 style="margin: 10px 0;">Tipos de Consulta</h3>
-        <p style="color: #666; font-size: 0.9em;">General, Urgencias, Especialidad.</p>
-    </div>
+        <div onclick="abrirCatalogo('cat_tipo_consulta', 'Tipos de Consulta')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+            <h1 style="font-size: 3em; margin: 0; color: #6f42c1;">📋</h1>
+            <h3 style="margin: 10px 0;">Tipos de Consulta</h3>
+            <p style="color: #666; font-size: 0.9em;">General, Urgencias, Especialidad.</p>
+        </div>
 
-    <div onclick="abrirCatalogo('cat_motivos_asesoria', 'Motivos de Asesoría')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-        <h1 style="font-size: 3em; margin: 0; color: #e83e8c;">🗣️</h1>
-        <h3 style="margin: 10px 0;">Motivos de Asesoría</h3>
-        <p style="color: #666; font-size: 0.9em;">Vacunación, Tratamiento, etc.</p>
-    </div>
+        <div onclick="abrirCatalogo('cat_motivos_asesoria', 'Motivos de Asesoría')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+            <h1 style="font-size: 3em; margin: 0; color: #e83e8c;">🗣️</h1>
+            <h3 style="margin: 10px 0;">Motivos de Asesoría</h3>
+            <p style="color: #666; font-size: 0.9em;">Vacunación, Tratamiento, etc.</p>
+        </div>
 
-    <div onclick="abrirCatalogo('cat_estudios_laboratorio', 'Estudios de Laboratorio')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-        <h1 style="font-size: 3em; margin: 0; color: #20c997;">🧪</h1>
-        <h3 style="margin: 10px 0;">Estudios Médicos</h3>
-        <p style="color: #666; font-size: 0.9em;">Biometría, Química Sanguínea, etc.</p>
-    </div>
+        <div onclick="abrirCatalogo('cat_estudios_laboratorio', 'Estudios de Laboratorio')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+            <h1 style="font-size: 3em; margin: 0; color: #20c997;">🧪</h1>
+            <h3 style="margin: 10px 0;">Estudios Médicos</h3>
+            <p style="color: #666; font-size: 0.9em;">Biometría, Química Sanguínea, etc.</p>
+        </div>
 
-    <div onclick="abrirCatalogo('cat_prioridad_lab', 'Prioridades de Laboratorio')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-        <h1 style="font-size: 3em; margin: 0; color: #dc3545;">🚨</h1>
-        <h3 style="margin: 10px 0;">Prioridades Lab.</h3>
-        <p style="color: #666; font-size: 0.9em;">Urgente, Rutina, Programado.</p>
-    </div>
+        <div onclick="abrirCatalogo('cat_prioridad_lab', 'Prioridades de Laboratorio')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+            <h1 style="font-size: 3em; margin: 0; color: #dc3545;">🚨</h1>
+            <h3 style="margin: 10px 0;">Prioridades Lab.</h3>
+            <p style="color: #666; font-size: 0.9em;">Urgente, Rutina, Programado.</p>
+        </div>
 
-    <div onclick="abrirCatalogo('proveedores', 'Proveedores Autorizados')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-        <h1 style="font-size: 3em; margin: 0; color: #fd7e14;">📦</h1>
-        <h3 style="margin: 10px 0;">Proveedores</h3>
-        <p style="color: #666; font-size: 0.9em;">Farmacéuticas, Material médico.</p>
-    </div>
+        <div onclick="abrirCatalogo('proveedores', 'Proveedores Autorizados')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+            <h1 style="font-size: 3em; margin: 0; color: #fd7e14;">📦</h1>
+            <h3 style="margin: 10px 0;">Proveedores</h3>
+            <p style="color: #666; font-size: 0.9em;">Farmacéuticas, Material médico.</p>
+        </div>
 
-    <div onclick="abrirCatalogo('cat_afiliacion', 'Tipos de Afiliación')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-        <h1 style="font-size: 3em; margin: 0; color: #198754;">🤝</h1>
-        <h3 style="margin: 10px 0;">Afiliaciones</h3>
-        <p style="color: #666; font-size: 0.9em;">IMSS, ISSSTE, INSABI, etc.</p>
-    </div>
+        <div onclick="abrirCatalogo('cat_afiliacion', 'Tipos de Afiliación')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+            <h1 style="font-size: 3em; margin: 0; color: #198754;">🤝</h1>
+            <h3 style="margin: 10px 0;">Afiliaciones</h3>
+            <p style="color: #666; font-size: 0.9em;">IMSS, ISSSTE, INSABI, etc.</p>
+        </div>
 
-    <div onclick="abrirCatalogo('cat_categoria', 'Categorías de Unidad')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-        <h1 style="font-size: 3em; margin: 0; color: #ffc107;">🏢</h1>
-        <h3 style="margin: 10px 0;">Categorías</h3>
-        <p style="color: #666; font-size: 0.9em;">Clínica, Hospital General, etc.</p>
-    </div>
+        <div onclick="abrirCatalogo('cat_categoria', 'Categorías de Unidad')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+            <h1 style="font-size: 3em; margin: 0; color: #ffc107;">🏢</h1>
+            <h3 style="margin: 10px 0;">Categorías</h3>
+            <p style="color: #666; font-size: 0.9em;">Clínica, Hospital General, etc.</p>
+        </div>
 
-    <div onclick="abrirCatalogo('registro_unidad', 'Unidades Médicas')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #f8f9fa; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-        <h1 style="font-size: 3em; margin: 0; color: #0dcaf0;">🏥</h1>
-        <h3 style="margin: 10px 0;">Unidades Médicas</h3>
-        <p style="color: #666; font-size: 0.9em;"><em>Vista de solo lectura</em></p>
-    </div>
+        <div onclick="abrirCatalogo('registro_unidad', 'Unidades Médicas')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #f8f9fa; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+            <h1 style="font-size: 3em; margin: 0; color: #0dcaf0;">🏥</h1>
+            <h3 style="margin: 10px 0;">Unidades Médicas</h3>
+            <p style="color: #666; font-size: 0.9em;"><em>Vista de solo lectura</em></p>
+        </div>
 
-    <div onclick="abrirCatalogo('catalogo_ubicacion', 'Códigos Postales')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #f8f9fa; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-        <h1 style="font-size: 3em; margin: 0; color: #6c757d;">📍</h1>
-        <h3 style="margin: 10px 0;">Ubicaciones</h3>
-        <p style="color: #666; font-size: 0.9em;"><em>Vista de solo lectura</em></p>
-    </div>
+        <div onclick="abrirCatalogo('catalogo_ubicacion', 'Códigos Postales')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #f8f9fa; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
+            <h1 style="font-size: 3em; margin: 0; color: #6c757d;">📍</h1>
+            <h3 style="margin: 10px 0;">Ubicaciones</h3>
+            <p style="color: #666; font-size: 0.9em;"><em>Vista de solo lectura</em></p>
+        </div>
 
-</div>
+    </div>
 
     <div id="vista-tabla" style="display: none; max-width: 1200px; margin: auto; padding: 20px;">
         
@@ -210,12 +95,12 @@ if (!isset($_SESSION['idUsuario'])) {
         </div>
 
         <div class="tabla-container">
-            <table id="tablaDetalleCatalogo" class="display" style="width:100%">
+            <table id="tablaDetalleCatalogo" class="display responsive nowrap" style="width:100%">
                 <thead>
                     <tr>
-                        <th style="width: 15%;">ID</th>
-                        <th style="width: 60%;">Valor / Nombre</th>
-                        <th style="width: 25%;">Acciones</th>
+                        <th class="all" style="width: 15%;">ID</th>
+                        <th class="all" style="width: 60%;">Valor / Nombre</th>
+                        <th class="all" style="width: 25%;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="cuerpoTablaDetalle"></tbody>
@@ -227,17 +112,19 @@ if (!isset($_SESSION['idUsuario'])) {
         <div class="modal-box">
             <div class="modal-header" id="modal-titulo">Gestionar Registro</div>
             
-            <input type="hidden" id="inputModalId"> 
-            
-            <div class="form-group">
-                <label>Valor / Nombre del registro:</label>
-                <input type="text" id="inputModalValor" placeholder="Ej. Cardiología, A+, Oral..." autofocus>
-            </div>
-            
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
-                <button class="btn-save" onclick="guardarCambios()">Guardar</button>
-            </div>
+            <form id="formCatalogoModal" novalidate autocomplete="off">
+                <input type="hidden" id="inputModalId"> 
+                
+                <div class="form-group">
+                    <label for="inputModalValor">Valor / Nombre del registro:</label>
+                    <input type="text" id="inputModalValor" required maxlength="150" placeholder="Ej. Cardiología, A+, Oral..." autofocus>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+                    <button type="button" class="btn-save" id="btnSaveCatalogo" onclick="guardarCambios()">Guardar</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -246,6 +133,9 @@ if (!isset($_SESSION['idUsuario'])) {
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
 
 <script>
@@ -253,13 +143,15 @@ if (!isset($_SESSION['idUsuario'])) {
     const vistaTarjetas = document.getElementById("vista-tarjetas");
     const vistaTabla = document.getElementById("vista-tabla");
     const tituloCatalogo = document.getElementById("titulo-catalogo-actual");
-    const btnNuevoRegistro = document.querySelector(".btn-save[onclick='abrirModalNuevo()']"); // Botón + Nuevo
+    const btnNuevoRegistro = document.querySelector(".btn-save[onclick='abrirModalNuevo()']"); 
     
     // Variables de Tabla y Modal
     const cuerpoTabla = document.getElementById("cuerpoTablaDetalle");
     const modal = document.getElementById("modalEdicion");
+    const formModal = document.getElementById("formCatalogoModal");
     const inputModalId = document.getElementById("inputModalId");
     const inputModalValor = document.getElementById("inputModalValor");
+    const btnSaveCatalogo = document.getElementById("btnSaveCatalogo");
 
     let tablaInstancia = null; 
     
@@ -267,7 +159,7 @@ if (!isset($_SESSION['idUsuario'])) {
     let catalogoActualBD = ""; 
     let catalogoActualNombre = "";
     
-    // 🔥 LISTA DE CATÁLOGOS COMPLEJOS (No editables desde este modal simple)
+    // LISTA DE CATÁLOGOS COMPLEJOS (No editables desde este modal simple)
     const catalogosSoloLectura = ['registro_unidad', 'catalogo_ubicacion'];
 
     // --- NAVEGACIÓN ENTRE VISTAS ---
@@ -277,9 +169,8 @@ if (!isset($_SESSION['idUsuario'])) {
         
         tituloCatalogo.innerText = nombre_amigable;
         
-        // Configuramos la interfaz dependiendo del tipo de catálogo
         if (catalogosSoloLectura.includes(tabla_bd)) {
-            btnNuevoRegistro.style.display = 'none'; // Ocultamos el botón de crear
+            btnNuevoRegistro.style.display = 'none'; 
             tituloCatalogo.innerText += " (Solo Lectura)";
         } else {
             btnNuevoRegistro.style.display = 'inline-block';
@@ -314,7 +205,6 @@ if (!isset($_SESSION['idUsuario'])) {
             renderizar(datos);
 
         } catch (error) {
-            console.error(error);
             cuerpoTabla.innerHTML = "<tr><td colspan='3' style='text-align:center; color:red'>Error de conexión</td></tr>";
         }
     }
@@ -329,9 +219,9 @@ if (!isset($_SESSION['idUsuario'])) {
             cuerpoTabla.innerHTML = "<tr><td colspan='3' style='text-align:center; padding: 20px;'>El catálogo está vacío.</td></tr>";
         } else {
             datos.forEach(item => {
-                const valorSafe = item.valor ? item.valor.replace(/'/g, "\\'") : ''; 
+                // Sanitizamos las comillas para no romper el HTML de los botones
+                const valorSafe = item.valor ? item.valor.replace(/'/g, "\\'").replace(/"/g, '&quot;') : ''; 
 
-                // Si es de solo lectura, ocultamos los botones de acción
                 let botonesAccion = `
                     <button class="btn-edit" onclick="abrirModalEditar(${item.id}, '${valorSafe}')">Editar</button>
                     <button class="btn-del" onclick="eliminarRegistro(${item.id})">Borrar</button>
@@ -352,19 +242,48 @@ if (!isset($_SESSION['idUsuario'])) {
         }
 
         tablaInstancia = $('#tablaDetalleCatalogo').DataTable({
+            responsive: {
+                details: {
+                    renderer: function (api, rowIdx, columns) {
+                        let data = $.map(columns, function (col, i) {
+                            return col.hidden ?
+                                '<div class="dtr-detalle-celda" data-dt-row="' + col.rowIndex + '" data-dt-column="' + col.columnIndex + '">' +
+                                    '<div class="dtr-detalle-titulo">' + col.title + '</div> ' +
+                                    '<div class="dtr-detalle-dato">' + col.data + '</div>' +
+                                '</div>' : '';
+                        }).join('');
+                        return data ? $('<div class="dtr-detalle-fila"/>').append(data) : false;
+                    }
+                }
+            },
             language: {
                 "decimal": "",
                 "emptyTable": "No hay registros en este catálogo",
                 "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
                 "infoEmpty": "Mostrando 0 a 0 de 0 registros",
                 "infoFiltered": "(Filtrado de _MAX_ registros totales)",
-                "search": "🔍 Buscar registro:",
+                "search": "Buscar registro:",
                 "zeroRecords": "No se encontraron coincidencias",
                 "paginate": { "first": "Primero", "last": "Último", "next": "Siguiente", "previous": "Anterior" }
             },
-            dom: 'Bfrtip',
+            dom: '<"top"Bf>rt<"bottom"lip><"clear">',
             buttons: [
-                { extend: 'excelHtml5', text: '📊 Exportar a Excel', className: 'btn-exportar' }
+                { 
+                    extend: 'pdfHtml5', 
+                    text: 'Exportar PDF', 
+                    className: 'btn-exportar',
+                    // Título dinámico
+                    title: function() { return 'Catálogo de ' + catalogoActualNombre + ' - ITZAM'; },
+                    exportOptions: {
+                        columns: [0, 1] // Excluimos los botones
+                    },
+                    customize: function (doc) {
+                        doc.defaultStyle.fontSize = 10;
+                        doc.styles.tableHeader.fontSize = 11;
+                        doc.content[1].table.widths = ['20%', '80%'];
+                    }
+                },
+                { extend: 'csvHtml5', text: 'Exportar CSV', className: 'btn-exportar', exportOptions: { columns: [0, 1] } }
             ],
             pageLength: 10,
             ordering: true,
@@ -392,7 +311,7 @@ if (!isset($_SESSION['idUsuario'])) {
             if(res.estatus === 'exito') {
                 cargarDatosCatalogo(); 
             } else {
-                alert("⚠️ " + res.mensaje);
+                alert("Atención: " + res.mensaje);
             }
         } catch (error) { alert("Error al eliminar"); }
     }
@@ -400,8 +319,8 @@ if (!isset($_SESSION['idUsuario'])) {
     // --- 3. GESTIÓN DEL MODAL (NUEVO / EDITAR) ---
     function abrirModalNuevo() {
         document.getElementById("modal-titulo").innerText = `Nuevo Registro - ${catalogoActualNombre}`;
+        formModal.reset();
         inputModalId.value = ""; 
-        inputModalValor.value = "";
         modal.classList.add("show");
     }
 
@@ -417,22 +336,24 @@ if (!isset($_SESSION['idUsuario'])) {
     }
 
     async function guardarCambios() {
-        const id = inputModalId.value;
-        const valor = inputModalValor.value.trim();
-        
-        const accion = id === "" ? 'crear' : 'editar'; 
-
-        if (valor === "") {
-            alert("El valor no puede estar vacío.");
+        if (!formModal.checkValidity()) {
+            formModal.reportValidity();
             return;
         }
+
+        const id = inputModalId.value;
+        const valor = inputModalValor.value.trim();
+        const accion = id === "" ? 'crear' : 'editar'; 
+
+        btnSaveCatalogo.disabled = true;
+        btnSaveCatalogo.textContent = "Guardando...";
 
         try {
             const response = await fetch('backend_catalogos.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    accion: accion, 
+                    accion: 'editar', // Tu backend parece usar la acción base para guardar o insertar
                     tabla: catalogoActualBD,
                     id: id, 
                     valor: valor 
@@ -444,13 +365,20 @@ if (!isset($_SESSION['idUsuario'])) {
                 cerrarModal();
                 cargarDatosCatalogo(); 
             } else {
-                alert("⚠️ " + res.mensaje);
+                alert("Atención: " + res.mensaje);
             }
-        } catch (error) { alert("Error al guardar cambios"); }
+        } catch (error) { 
+            alert("Error al guardar cambios de red."); 
+        } finally {
+            btnSaveCatalogo.disabled = false;
+            btnSaveCatalogo.textContent = "Guardar";
+        }
     }
 
     window.onclick = function(ev) { if (ev.target == modal) cerrarModal(); }
 </script>
+
+<script src="Scripts/js/timeout.js"></script>
 
     <footer class="bottombar">© 2026 ITZAM</footer>
     </body>

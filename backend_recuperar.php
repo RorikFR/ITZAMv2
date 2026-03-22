@@ -1,6 +1,13 @@
 <?php
-header('Content-Type: application/json; charset=utf-8');
+// 1. ESCUDOS BASE
+require 'seguridad_backend.php'; // Valida la sesión, inactividad y formatea la salida a JSON
+require 'autorizacion.php';      // Carga el motor de permisos
 
+// 2. 🛑 LA BARRERA DE HIERRO (Nivel 3)
+// Usamos la función terminada en "_api" para que devuelva un error HTTP 403 en lugar de redirigir.
+requerir_roles_api(['Administrador' , 'Médico', 'Administrativo', 'Enfermería']); 
+
+// 3. CONEXIÓN Y LÓGICA
 require 'db_conn.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

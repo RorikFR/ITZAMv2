@@ -814,17 +814,70 @@ th { background-color: #f8fafc; font-weight: 700; text-transform: uppercase; fon
   .btn-insumo { background-color: var(--wine); }
   .btn-equipo { background-color: var(--wine); }
 
-.bottombar{
-  width:100%;
-  background: #611232;
+/* --- TU CLASE ORIGINAL (con ligeros ajustes) --- */
+.bottombar {
+  width: 100%;
+  background-color: #611232; /* Tu color guinda base */
   color: #fff;
-  padding:10px 16px;
-  text-align:center;
-  margin-top:18px;
+  padding: 10px 16px;
+  text-align: center;
   position: fixed;
   left: 0;
   bottom: 0;
+  z-index: 1000; /* Asegura que esté por encima de todo */
+  
+  /* IMPORTANTE: Necesario para que las texturas de los 
+     extremos se queden dentro del footer */
+  overflow: hidden; 
 }
+
+/* --- ESTILOS COMPARTIDOS PARA AMBOS EXTREMOS --- */
+.bottombar::before,
+.bottombar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  height: 100%;
+  
+  /* AJUSTA AQUÍ: Cuánto quieres que ocupe la textura 
+     desde el borde hacia el centro (ej. 30%, 40%...) */
+  width: 25%; 
+  
+  /* Propiedades de tu textura */
+  background-image: url('Assets/textura_oficial.png');
+  background-repeat: repeat;
+  background-size: 50px;
+  
+  /* Puedes mantener el blend mode si te gusta cómo queda */
+  background-blend-mode: soft-light; 
+  opacity: 0.6; /* Un poco de transparencia base */
+  
+  z-index: -1; /* Manda la textura DETRÁS del texto del footer */
+  pointer-events: none; /* Evita que las texturas interfieran con clics */
+}
+
+/* --- EFECTO PARA EL EXTREMO IZQUIERDO --- */
+.bottombar::before {
+  left: 0; /* Lo pega a la izquierda */
+  
+  /* LA MÁGICA DEL DEGRADADO HACA EL CENTRO */
+  /* -webkit- es necesario para Safari, Chrome, Edge modernos */
+  -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1), rgba(0,0,0,0));
+          mask-image: linear-gradient(to right, rgba(0,0,0,1), rgba(0,0,0,0));
+}
+
+/* --- EFECTO PARA EL EXTREMO DERECHO --- */
+.bottombar::after {
+  right: 0; /* Lo pega a la derecha */
+  
+  /* LA MÁGICA DEL DEGRADADO HACA EL CENTRO (dirección opuesta) */
+  -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1), rgba(0,0,0,0));
+          mask-image: linear-gradient(to left, rgba(0,0,0,1), rgba(0,0,0,0));
+}
+
+
+
+
 
 /* Dropdown Menu Styles TEST */ 
 .user-menu {
@@ -980,4 +1033,38 @@ p.modal-body {
   text-align: center;
   font-weight: bold;
   text-shadow: 0px 1px 5px hsla(0, 0%, 82%, 0.75);
+}
+
+/* ==========================================================================
+   ESTILOS MINIMALISTAS: RESPONSIVE HORIZONTAL (DATATABLES)
+   ========================================================================== */
+
+.dtr-detalle-fila {
+    display: flex;
+    flex-wrap: wrap; /* Permite que las celdas bajen de renglón si la pantalla es muy pequeña */
+    gap: 24px; /* Espaciado horizontal y vertical entre cada bloque de datos */
+    padding: 10px 0;
+    justify-content: space-evenly;
+    border: solid;
+    border-style: ridge;
+    border-radius: 5px;
+}
+
+.dtr-detalle-celda {
+    display: flex;
+    flex-direction: column; /* Acomoda el título arriba y el dato abajo, imitando la tabla original */
+    min-width: 120px; /* Garantiza que los textos no se aplasten demasiado */
+}
+
+.dtr-detalle-titulo {
+    font-weight: 600;
+    color: #6c757d;
+    font-size: 0.85em; /* Ligeramente más pequeño para jerarquía visual */
+    margin-bottom: 4px;
+    white-space: nowrap;
+}
+
+.dtr-detalle-dato {
+    color: #212529;
+    font-size: 1em;
 }

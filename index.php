@@ -21,9 +21,7 @@ if (isset($_SESSION['idUsuario'])) {
 
 	<header>
 		<div class="topbar-container-login">
-			
 			<div class="topbar-header-login">Sistema web de consulta de información clínica ITZAM</div>
-			
 		</div>
 	</header>
 
@@ -161,10 +159,12 @@ if (isset($_SESSION['idUsuario'])) {
 		<script>
 			const form = document.getElementById('login-form');
 			const errorEl = document.getElementById('error');
+            const submitBtn = form.querySelector('button[type="submit"]'); // 🔥 Novedad: Capturamos el botón
 
 			form.addEventListener('submit', async (ev) => {
 				ev.preventDefault();
 				errorEl.style.display = 'none';
+                
 				if (typeof grecaptcha === 'undefined') {
 					errorEl.textContent = 'reCAPTCHA no está cargado.';
 					errorEl.style.display = 'block';
@@ -184,6 +184,10 @@ if (isset($_SESSION['idUsuario'])) {
 					'g-recaptcha-response': token
 				};
 
+                // 🔥 Novedad: Bloqueamos el botón y cambiamos el texto
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Verificando...';
+
 				try {
 					const res = await fetch('/login.php', {
 						method: 'POST',
@@ -202,8 +206,23 @@ if (isset($_SESSION['idUsuario'])) {
 					errorEl.textContent = err.message || 'Error en el inicio de sesión';
 					errorEl.style.display = 'block';
 					if (typeof grecaptcha !== 'undefined') grecaptcha.reset();
-				}
+				} finally {
+                    // 🔥 Novedad: Reactivamos el botón al terminar
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Iniciar sesión';
+                }
 			});
+
+			// Agrega esto en tu script de index.html
+			const urlParams = new URLSearchParams(window.location.search);
+			if (urlParams.has('timeout')) {
+			    const errorEl = document.getElementById('error');
+			    errorEl.textContent = "Tu sesión ha expirado por inactividad. Por favor, ingresa de nuevo.";
+			    errorEl.style.display = 'block';
+			    
+			    // Limpiamos la URL para que no se quede el ?timeout=1
+			    window.history.replaceState({}, document.title, window.location.pathname);
+			}
 		</script>
 
 	</body>

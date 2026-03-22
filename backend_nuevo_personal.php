@@ -1,54 +1,61 @@
 <?php
-session_start();
-header('Content-Type: application/json');
+//Validaciones de seguridad e inactividad
+require 'seguridad_backend.php';
+require 'autorizacion.php';      
 
-// DEV ONLY - quitar en producción
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+
+//RBAC
+requerir_roles_api(['Administrativo']); 
 
 require 'db_conn.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
     
-    // --- ESCUDO 1 Y 2: TIPOS DE DATOS Y SANITIZACIÓN ---
+    //Validaciones de datos y sanitizacion
     $curp         = trim(strtoupper($input['curp'] ?? ''));
-    $cedula       = preg_replace('/\D/', '', $input['cedula'] ?? ''); // Extraemos solo números
-    $nombre       = strip_tags(trim($input['nombre'] ?? ''));
-    $apellido_p   = strip_tags(trim($input['apellido_paterno'] ?? ''));
-    $apellido_m   = strip_tags(trim($input['apellido_materno'] ?? ''));
+    $cedula       = preg_replace('/\D/', '', $input['cedula'] ?? '');
+    
+    // Sanitizamos texto y eliminamos espacios
+    $nombre       = preg_replace('/\s+/', ' ', strip_tags(trim($input['nombre'] ?? '')));
+    $apellido_p   = preg_replace('/\s+/', ' ', strip_tags(trim($input['apellido_paterno'] ?? '')));
+    $apellido_m   = preg_replace('/\s+/', ' ', strip_tags(trim($input['apellido_materno'] ?? '')));
     
     $idPuesto     = filter_var($input['puesto'] ?? '', FILTER_VALIDATE_INT);
     $idUnidad     = filter_var($input['unidad'] ?? '', FILTER_VALIDATE_INT);
     
-    // Opcionales
     $idEspecialidad = !empty($input['especialidad']) ? filter_var($input['especialidad'], FILTER_VALIDATE_INT) : null;
     $cedula_esp     = !empty($input['cedula_especialidad']) ? preg_replace('/\D/', '', $input['cedula_especialidad']) : null;
     
-    $email_inst     = filter_var($input['email_institucional'] ?? '', FILTER_VALIDATE_EMAIL);
-    $email_personal = filter_var($input['email_personal'] ?? '', FILTER_VALIDATE_EMAIL);
-    $telefono       = preg_replace('/\D/', '', $input['telefono'] ?? ''); // Solo números
+    $email_inst     = trim($input['email_institucional'] ?? '');
+    $email_personal = trim($input['email_personal'] ?? '');
+    $telefono       = preg_replace('/\D/', '', $input['telefono'] ?? ''); 
     
-    // Validación estricta
-    if (empty($curp) || empty($nombre) || empty($apellido_p) || empty($cedula) || !$idPuesto || !$idUnidad) {
-        echo json_encode(["estatus" => "error", "mensaje" => "Faltan datos obligatorios o selección inválida en el formulario."]);
+    // Validar datos completos
+    if (empty($curp) || empty($nombre) || empty($apellido_p) || empty($cedula) || !$idPuesto || !$idUnidad || empty($email_inst) || empty($email_personal) || empty($telefono)) {
+        echo json_encode(["estatus" => "error", "mensaje" => "Faltan datos obligatorios o la selección de catálogos es inválida."]);
         exit;
     }
 
-    // --- ESCUDO 3: LONGITUDES Y PATRONES ---
+    // Validaciones regex formatos
     if (!preg_match('/^[A-Z]{4}\d{6}[HM][A-Z]{2}[B-DF-HJ-NP-TV-Z]{3}[A-Z0-9]\d$/', $curp)) {
         echo json_encode(["estatus" => "error", "mensaje" => "Formato de CURP inválido."]); exit;
     }
     if (strlen($cedula) < 7 || strlen($cedula) > 8) {
         echo json_encode(["estatus" => "error", "mensaje" => "La Cédula Profesional debe tener 7 u 8 dígitos."]); exit;
     }
-    if (!empty($telefono) && strlen($telefono) !== 10) {
-        echo json_encode(["estatus" => "error", "mensaje" => "El teléfono debe ser exactamente de 10 dígitos."]); exit;
+    if ($cedula_esp && (strlen($cedula_esp) < 7 || strlen($cedula_esp) > 8)) {
+        echo json_encode(["estatus" => "error", "mensaje" => "La Cédula de Especialidad debe tener 7 u 8 dígitos."]); exit;
+    }
+    if (strlen($telefono) !== 10) {
+        echo json_encode(["estatus" => "error", "mensaje" => "El teléfono celular debe contener exactamente 10 dígitos numéricos."]); exit;
+    }
+    if (!filter_var($email_inst, FILTER_VALIDATE_EMAIL) || !filter_var($email_personal, FILTER_VALIDATE_EMAIL)) {
+        echo json_encode(["estatus" => "error", "mensaje" => "El formato de los correos electrónicos es inválido."]); exit;
     }
 
     try {
-        // --- ESCUDO 4: PREVENCIÓN DE DUPLICADOS ---
+        //Evitar registros duplicados
         $stmtCheck = $pdo->prepare("SELECT idPersonal FROM registro_personal WHERE curp = :curp OR cedula = :cedula LIMIT 1");
         $stmtCheck->execute([
             'curp' => $curp,
@@ -60,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // --- INSERCIÓN DE DATOS ---
+        // Insertar datos
         $stmt = $pdo->prepare("
             INSERT INTO registro_personal (
                 curp, cedula, nombre, apellido_p, apellido_m, 
@@ -81,18 +88,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'apellido_m'     => empty($apellido_m) ? null : $apellido_m,
             'idPuesto'       => $idPuesto,
             'idEspecialidad' => $idEspecialidad,
-            'cedula_esp'     => empty($cedula_esp) ? null : $cedula_esp,
+            'cedula_esp'     => $cedula_esp,
             'idUnidad'       => $idUnidad,
-            'email_inst'     => $email_inst ? $email_inst : null,
-            'email_personal' => $email_personal ? $email_personal : null,
-            'telefono'       => empty($telefono) ? null : $telefono
+            'email_inst'     => $email_inst,
+            'email_personal' => $email_personal,
+            'telefono'       => $telefono
         ]);
         
-        echo json_encode(["estatus" => "exito", "mensaje" => "Personal médico registrado exitosamente."]);
+        echo json_encode(["estatus" => "exito", "mensaje" => "Personal médico registrado exitosamente en el sistema."]);
         
     } catch (PDOException $e) {
-        echo json_encode(["estatus" => "error", "mensaje" => "Error SQL: " . $e->getMessage()]);
+        echo json_encode(["estatus" => "error", "mensaje" => "Ocurrió un error interno al registrar al personal. Verifique los datos."]);
     }
+    exit;
+} else {
+    echo json_encode(["estatus" => "error", "mensaje" => "Método no permitido."]);
     exit;
 }
 ?>

@@ -1,11 +1,10 @@
 <?php
-session_start();
-header('Content-Type: application/json');
+//Validaciones de seguridad e inactividad
+require 'seguridad_backend.php';
+require 'autorizacion.php';
 
-// DEV ONLY - quitar en producción
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+//RBAC
+requerir_roles_api(['Administrador']);
 
 require 'db_conn.php';
 
@@ -13,12 +12,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $input = json_decode(file_get_contents('php://input'), true);
 
-    // --- ESCUDO 1 Y 2: TIPOS DE DATOS Y SANITIZACIÓN ---
+    //Validar tipos de datos y sanitizar
     $idPersonal     = filter_var($input['idPersonal'] ?? '', FILTER_VALIDATE_INT);
     $email          = filter_var($input['email'] ?? '', FILTER_VALIDATE_EMAIL);
-    
     $rol            = strip_tags(trim($input['rol'] ?? ''));
-    $nombre_usuario = strip_tags(trim($input['nombre_usuario'] ?? ''));
+    
+    // Forzar formato de nombre de usuario a letras, números y guiones bajos
+    $nombre_usuario = preg_replace('/[^a-zA-Z0-9_]/', '', $input['nombre_usuario'] ?? '');
     $contrasena     = $input['contrasena'] ?? '';
 
     // Validaciones de campos nulos o formatos inválidos
@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // --- ESCUDO 3: LONGITUDES DE DATOS (Protección de Base de Datos) ---
+    //Validar longitudes de datos
     if (strlen($contrasena) < 8) {
         echo json_encode(["estatus" => "error", "mensaje" => "La contraseña debe tener al menos 8 caracteres."]);
         exit;
@@ -43,13 +43,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    if (strlen($rol) > 50) {
-        echo json_encode(["estatus" => "error", "mensaje" => "El rol excede la longitud permitida."]);
+    $roles_permitidos = ['Administrador', 'Médico', 'Enfermería', 'Administrativo'];
+    if (!in_array($rol, $roles_permitidos)) {
+        echo json_encode(["estatus" => "error", "mensaje" => "El rol seleccionado no es válido en el sistema."]);
         exit;
     }
 
     try {
-        // --- ESCUDO 4: REGLAS DE NEGOCIO (Evitar Duplicados) ---
+        //Limite de 1 usuario con el rol de administrador
+        if ($rol === 'Administrador') {
+            $stmtAdmin = $pdo->query("SELECT COUNT(*) FROM usuarios_sistema WHERE rol = 'Administrador'");
+            $adminCount = $stmtAdmin->fetchColumn();
+            
+            if ($adminCount >= 1) {
+                echo json_encode(["estatus" => "error", "mensaje" => "Límite alcanzado: Ya existe una cuenta de Administrador en el sistema. Seleccione otro rol."]);
+                exit;
+            }
+        }
+
+        //Validar que no existan registros duplicados
         $stmtCheck = $pdo->prepare("SELECT email, nombre_usuario, idPersonal FROM usuarios_sistema WHERE email = :email OR nombre_usuario = :usuario OR idPersonal = :idPer");
         $stmtCheck->execute([
             'email'   => $email,
@@ -68,8 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // Encriptación y guardado
+        //Generar hash para contraseña con Bcrypt
         $hash_contrasena = password_hash($contrasena, PASSWORD_DEFAULT);
+        // Imagen de perfil por defecto
         $ruta_foto_db = "Assets/img_placeholder.png";
 
         $stmt = $pdo->prepare("
@@ -92,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(["estatus" => "exito", "mensaje" => "Usuario creado y vinculado al personal exitosamente."]);
 
     } catch (PDOException $e) {
-        echo json_encode(["estatus" => "error", "mensaje" => "Error al guardar en base de datos: " . $e->getMessage()]);
+        echo json_encode(["estatus" => "error", "mensaje" => "Error interno al intentar guardar el usuario en la base de datos."]);
     }
 } else {
     echo json_encode(["estatus" => "error", "mensaje" => "Método no permitido."]);

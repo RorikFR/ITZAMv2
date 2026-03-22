@@ -1,31 +1,24 @@
 <?php
-// 1. Iniciamos la sesión ANTES de enviar cualquier cabecera
-session_start();
-header('Content-Type: application/json');
+date_default_timezone_set('America/Mexico_City');
 
-// DEV ONLY - quitar en prod.
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+//Validaciones de seguridad e inactividad
+require 'seguridad_backend.php';
+require 'autorizacion.php';     
 
-// 2. ESCUDO DE SESIÓN: Si no hay un usuario logueado, lo pateamos
-if (!isset($_SESSION['idUsuario'])) {
-    http_response_code(401);
-    echo json_encode(["error" => "No tienes autorización. Inicia sesión primero."]);
-    exit;
-}
 
+//RBAC
+requerir_roles_api(['Administrador', 'Administrativo', 'Médico', 'Enfermería']);
+
+//Conexion a DB
 require 'db_conn.php';
 
-// Atrapamos el ID real del usuario desde la memoria del servidor
+//Obtener idUsuario logeado
 $idLogueado = $_SESSION['idUsuario'];
 
 $metodo = $_SERVER['REQUEST_METHOD'];
 
-// --- LÓGICA DE LECTURA DE MI CUENTA (GET) ---
 if ($metodo === 'GET') {
     
-    // Agregamos el WHERE para que solo traiga SU propia información
     $sql = "SELECT 
                 idUsuario, 
                 nombre_usuario AS 'Nombre de usuario', 
@@ -36,11 +29,9 @@ if ($metodo === 'GET') {
 
     try {
         $stmt = $pdo->prepare($sql);
-        // Usamos la variable de sesión
+
         $stmt->execute(['id' => $idLogueado]); 
         
-        // Usamos fetchAll para que devuelva un arreglo (aunque sea de 1 elemento), 
-        // así no se rompe tu forEach en el JavaScript del frontend.
         $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         echo json_encode($datos);
         
@@ -51,12 +42,12 @@ if ($metodo === 'GET') {
     exit;
 }
  
-// --- LÓGICA DE EDICIÓN DE MI CUENTA (POST) ---
+//Editar registros
 if ($metodo === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
     $accion = $input['accion'] ?? '';
 
-    // --- EDICIÓN DE CORREO ---
+    // Editar correo
     if ($accion === 'editar') {
         $email = trim($input['email'] ?? '');
 
@@ -84,7 +75,7 @@ if ($metodo === 'POST') {
         exit;
     }
 
-    // --- CAMBIO DE CONTRASEÑA ---
+    // Modificar contraseña 
     if ($accion === 'cambiar_password') {
         $passwordActual = trim($input['passwordActual'] ?? '');
         $passwordNuevo = trim($input['passwordNuevo'] ?? '');
@@ -95,7 +86,7 @@ if ($metodo === 'POST') {
         }
 
         try {
-            // Buscamos la contraseña actual usando el ID de la sesión
+            // Obtener contraseña actual con idUsuario
             $stmt = $pdo->prepare("SELECT contrasena FROM usuarios_sistema WHERE idUsuario = :id LIMIT 1");
             $stmt->execute(['id' => $idLogueado]);
             $usuarioDb = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -107,7 +98,7 @@ if ($metodo === 'POST') {
 
             $nuevoHash = password_hash($passwordNuevo, PASSWORD_BCRYPT);
 
-            // Actualizamos la contraseña del usuario logueado
+            // Actualizamos la contraseña
             $stmtUpdate = $pdo->prepare("UPDATE usuarios_sistema SET contrasena = :hash WHERE idUsuario = :id");
             $stmtUpdate->execute(['hash' => $nuevoHash, 'id' => $idLogueado]);
 

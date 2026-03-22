@@ -1,6 +1,6 @@
 <?php
-session_start();
-header('Content-Type: application/json');
+
+require 'seguridad_backend.php';
 require 'db_conn.php';
 
 // Obtenemos los medicamentos únicos registrados previamente (sin importar la unidad, para estandarizar la captura)

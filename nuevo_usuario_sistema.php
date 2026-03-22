@@ -1,132 +1,19 @@
 <?php
-session_start();
+date_default_timezone_set('America/Mexico_City');
 
-// Opcional pero recomendado: El escudo de seguridad
-if (!isset($_SESSION['idUsuario'])) {
-    header("Location: index.php");
-    exit;
-}
+//Validaciones de seguridad e inactividad
+require 'inactive.php';      
+require 'autorizacion.php';   
+
+// RBAC
+requerir_roles(['Administrador']);
+
+//Menú dinamico
+require 'header.php';
 ?>
 
-<!doctype html>
-<html lang="es">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>Sistema ITZAM — Usuarios del sistema</title>
-        <link rel="stylesheet" href="styles.css" />
-    </head>
-    <body>
-        <header>
-			<div class="topbar-container">
-				<div>
-					<img class ="logo"src="Assets/itzam_logoV2.png" alt="LOGO" />
-				</div>
-				
-				<div class="topbar-header">Sistema web consulta de información clínica - ITZAM</div>
-				
-		<div class="user-menu">
-  			<div class="user-menu">
-			    <img id="header-user-photo" class="user-photo user-icon" src="<?php echo isset($_SESSION['foto_perfil']) && $_SESSION['foto_perfil'] ? $_SESSION['foto_perfil'] : 'Assets/think.jpg'; ?>" onclick="toggleMenu()">
-			</div>
-  			
-			<div class="dropdown-menu" id="userDropdown">
-				<p class="user-menu-title" style="font-weight: bold;"><?= htmlspecialchars($_SESSION['nombre_usuario']) ?></p>
-				<hr></hr>
-    			<a class="dropdown-item" href="administracion.php">Administración</a>
-    			<a class="dropdown-item" href="catalogos.php">Catálogos</a>
-    			<a class="dropdown-item" href="configuracion_cuenta.php">Configuración</a>
-    			<a class="dropdown-item" href="logout.php">Cerrar sesión</a>
-  			</div>
-		</div>
-	</header>
-	
-	<nav>	
-		<ul>
-  			<li><a href="home.php" class="active">Inicio</a></li>
-
-			<!-- Dropdown menu for Asesorías -->
-			<li class="dropdown">
-   			<a href="javascript:void(0)" class="dropbtn">Asesorías</a>
-			<div class="dropdown-content">
-				<a href="mis_asesorias.php">Mis asesorías</a>
-      			<a href="nueva_asesoria.php">Registrar asesoría</a>
-    		</div>	
-  			</li>
-
-			<!-- Dropdown menu for Consultas médicas -->
-			<li class="dropdown">
-   			<a href="javascript:void(0)" class="dropbtn">Consultas médicas</a>
-			<div class="dropdown-content">
-				<a href="buscar_consulta.php">Buscar consulta</a>
-      			<a href="nueva_consulta.php">Registrar consulta</a>
-    		</div>
-  			</li>
-
-			<li><a href="estadisticas.php">Estadísticas</a></li>
-
-			<!-- Dropdown menu for Estudios -->
-			<li class="dropdown">
-   			<a href="javascript:void(0)" class="dropbtn">Laboratorios</a>
-			<div class="dropdown-content">
-				<a href="consulta_orden_laboratorio.php">Buscar orden de laboratorio</a>
-      			<a href="nueva_orden_laboratorio.php">Crear orden de laboratorio</a>
-    		</div>
-  			</li>
-
-			<!-- Dropdown menu for Inventario -->
-			<li class="dropdown">
-   			<a href="javascript:void(0)" class="dropbtn">Inventario</a>
-			<div class="dropdown-content">
-				<a href="consulta_inventario.php">Buscar en inventario</a>
-				<a href="nueva_compra_med.php">Registrar compra de medicamentos</a>
-				<a href="nueva_compra_insumo.php">Registrar compra de insumos</a>
-				<a href="nueva_compra_equipo.php">Registrar compra de equipo médico</a>
-    		</div>
-  			</li>
-
-			<!-- Dropdown menu for Pacientes -->
-			<li class="dropdown">
-   				<a href="javascript:void(0)" class="dropbtn">Pacientes</a>
-				<div class="dropdown-content">
-					<a href="consulta_expediente.php">Consultar historia clínica</a>
-					<a href="consulta_paciente.php">Consultar paciente</a>
-					<a href="nuevo_paciente.php">Registrar paciente</a>
-				</div>
-  			</li>
-
-			<!-- Dropdown menu for Personal de salud -->
-			<li class="dropdown">
-   			<a href="javascript:void(0)" class="dropbtn">Personal de salud</a>
-			<div class="dropdown-content">
-				<a href="consulta_personal.php">Consultar personal</a>
-      			<a href="nuevo_personal.php">Registrar personal</a>
-    		</div>
-  			</li>
-
-			<!-- Dropdown menu for Recetas -->
-			<li class="dropdown">
-   			<a href="javascript:void(0)" class="dropbtn">Recetas</a>
-			<div class="dropdown-content">
-				<a href="consulta_receta.php">Consultar receta</a>
-      			<a href="nueva_receta.php">Registrar receta</a>
-    		</div>
-  			</li>
-
-			<!-- Dropdown menu for Unidades médicas -->
-			<li class="dropdown">
-   			<a href="javascript:void(0)" class="dropbtn">Unidades médicas</a>
-			<div class="dropdown-content">
-				<a href="consulta_unidad.php">Consultar unidad médica</a>
-      			<a href="nueva_unidad.php">Registrar unidad médica</a>
-    		</div>
-  			</li>
-
-		</ul>
-	</nav>
-
         <div class="title-box">
-        <h3>Nuevo usuario del sistema</h3>
+            <h3>Nuevo usuario del sistema</h3>
         </div>
 
 <div class="grid-wrapper">
@@ -149,12 +36,11 @@ if (!isset($_SESSION['idUsuario'])) {
                         <option value="Administrador">Administrador</option>
                         <option value="Médico">Médico</option>
                         <option value="Enfermería">Enfermería</option>
-                        <option value="Recepción">Recepción</option>
-                        <option value="Farmacia">Farmacia</option>
+                        <option value="Administrativo">Administrativo</option>
                     </select>
 
                     <label for="nom-usuario">*Nombre de usuario:</label>
-                    <input class="form" type="text" id="nom-usuario" name="nombre_usuario" required placeholder="Ej. dr_ramos" maxlength="50" />
+                    <input class="form" type="text" id="nom-usuario" name="nombre_usuario" required placeholder="Ej. dr_ramos" maxlength="50" pattern="^[a-zA-Z0-9_]+$" title="Solo letras, números y guiones bajos. Sin espacios." />
 
                     <label for="email-usuario">*Email:</label>
                     <input class="form" type="email" id="email-usuario" name="email" required placeholder="correo@clinica.com" maxlength="100" />
@@ -181,13 +67,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pass1 = document.getElementById('pass-usuario');
     const pass2 = document.getElementById('pass-usuario-verify');
     const selectPersonal = document.getElementById('idPersonal');
-    const inputEmail = document.getElementById('email-usuario'); // Añadimos el input del correo
+    const selectRol = document.getElementById('rol');
+    const inputEmail = document.getElementById('email-usuario'); 
     const submitBtn = document.getElementById('submitBtn');
     const clearBtn = document.getElementById('clearBtn');
 
-    let listaPersonal = []; // Guardamos la lista a nivel global para accederla fácilmente
+    let listaPersonal = []; 
 
-    // --- CARGAR PERSONAL DISPONIBLE ---
+    //Validar si usuario administrador ya existe
+    try {
+        const resAdmin = await fetch('backend_verificar_admin.php');
+        const dataAdmin = await resAdmin.json();
+        
+        // Si ya existe un administrador, bloqueamos la opción.
+        if (dataAdmin.existe_admin) {
+            const opAdmin = selectRol.querySelector('option[value="Administrador"]');
+            if (opAdmin) {
+                opAdmin.disabled = true;
+                opAdmin.textContent = "Administrador (Límite de 1 cuenta alcanzado)";
+            }
+        }
+    } catch (e) {
+        console.error("Error al verificar disponibilidad de roles.");
+    }
+
+    //Cargar personal sin usuario en sistema
     try {
         const res = await fetch('backend_get_personal_sin_usuario.php');
         listaPersonal = await res.json();
@@ -201,10 +105,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
     } catch (e) {
-        selectPersonal.innerHTML = '<option value="" disabled selected>Error al cargar personal</option>';
+        selectPersonal.innerHTML = '<option value="" disabled selected>Error de conexión al cargar personal</option>';
     }
 
-    // 🔥 MAGIA DE AUTOCOMPLETADO DE CORREO 🔥
+    // Obtener email de DB
     selectPersonal.addEventListener('change', (e) => {
         const idSeleccionado = e.target.value;
         const empleado = listaPersonal.find(p => p.idPersonal == idSeleccionado);
@@ -216,7 +120,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             inputEmail.style.cursor = 'not-allowed';
             inputEmail.title = "Correo heredado del perfil del empleado.";
         } else {
-            // Si el empleado no tiene correo, abrimos el candado
             inputEmail.value = '';
             inputEmail.readOnly = false;
             inputEmail.style.backgroundColor = '#ffffff';
@@ -226,7 +129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // --- VALIDACIÓN VISUAL DE CONTRASEÑAS ---
+    //Validar que contraseñas coincidan
     function validarPasswords() {
         if (pass2.value === '') {
             pass2.style.borderColor = '';
@@ -243,7 +146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     pass1.addEventListener('input', validarPasswords);
     pass2.addEventListener('input', validarPasswords);
 
-    // --- LIMPIAR FORMULARIO ---
+    //Limpiar formulario
     clearBtn.addEventListener('click', () => {
         if(confirm("¿Deseas borrar todos los datos del formulario?")) {
             form.reset();
@@ -258,7 +161,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // --- ENVÍO DEL FORMULARIO (JSON) ---
+    //Enviar formulario (JSON)
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -268,7 +171,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (pass1.value !== pass2.value) {
-            alert("⚠️ Las contraseñas no coinciden.");
+            alert("Las contraseñas no coinciden.");
             pass2.focus();
             return;
         }
@@ -288,15 +191,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await res.json();
 
             if (data.estatus === 'exito') {
-                alert("✅ ¡Excelente!\n\n" + data.mensaje);
+                alert(data.mensaje);
                 form.reset();
                 pass2.style.borderColor = '';
                 location.reload(); 
             } else {
-                alert("⚠️ Atención:\n\n" + data.mensaje);
+                alert("Atención:\n\n" + data.mensaje);
             }
         } catch (error) {
-            alert("❌ Error de conexión al servidor.");
+            alert("Error de conexión al servidor.");
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = "Crear usuario";
@@ -304,6 +207,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 </script>
+
+<script src="Scripts/js/timeout.js"></script>
         
         <footer class="bottombar">© 2026 ITZAM</footer>
     </body>

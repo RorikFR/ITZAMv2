@@ -1,134 +1,18 @@
 <?php
-session_start();
+date_default_timezone_set('America/Mexico_City');
 
-// Obligamos al servidor a usar la hora de Ciudad de México
-date_default_timezone_set('America/Mexico_City'); 
+require 'inactive.php';       // 1. Escudo de inactividad y anti-caché (ya verifica que el usuario esté logueado)
+require 'autorizacion.php';   // 2. Motor de roles
 
-// Opcional pero recomendado: El escudo de seguridad
-if (!isset($_SESSION['idUsuario'])) {
-    header("Location: index.php");
-    exit;
-}
+// 3. LA BARRERA DE HIERRO: Solo Médicos y SuperAdmins pueden entrar aquí
+requerir_roles(['Médico', 'Enfermería', 'Administrativo']);
+
+require 'header.php';
 ?>
 <!doctype html>
-<html lang="es">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>Sistema ITZAM — Registro de paciente</title>
-        <link rel="stylesheet" href="styles.css" />
-    </head>
-    <body>
-        <header>
-			<div class="topbar-container">
-				<div>
-					<img class ="logo"src="Assets/itzam_logoV2.png" alt="LOGO" />
-				</div>
-				
-				<div class="topbar-header">Sistema web consulta de información clínica - ITZAM</div>
-                				
-        <div class="user-menu">
-            <div class="user-menu">
-                <img id="header-user-photo" class="user-photo user-icon" src="<?php echo isset($_SESSION['foto_perfil']) && $_SESSION['foto_perfil'] ? $_SESSION['foto_perfil'] : 'Assets/think.jpg'; ?>" onclick="toggleMenu()">
-            </div>
-            
-            <div class="dropdown-menu" id="userDropdown">
-                <p class="user-menu-title" style="font-weight: bold;"><?= htmlspecialchars($_SESSION['nombre_usuario']) ?></p>
-                <hr></hr>
-                <a class="dropdown-item" href="administracion.php">Administración</a>
-                <a class="dropdown-item" href="catalogos.php">Catálogos</a>
-                <a class="dropdown-item" href="configuracion_cuenta.php">Configuración</a>
-                <a class="dropdown-item" href="logout.php">Cerrar sesión</a>
-            </div>
-        </div>
-    </header>
-    
-    <nav>   
-        <ul>
-            <li><a href="home.php" class="active">Inicio</a></li>
-
-            <!-- Dropdown menu for Asesorías -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Asesorías</a>
-            <div class="dropdown-content">
-                <a href="mis_asesorias.php">Mis asesorías</a>
-                <a href="nueva_asesoria.php">Registrar asesoría</a>
-            </div>  
-            </li>
-
-            <!-- Dropdown menu for Consultas médicas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Consultas médicas</a>
-            <div class="dropdown-content">
-                <a href="buscar_consulta.php">Buscar consulta</a>
-                <a href="nueva_consulta.php">Registrar consulta</a>
-            </div>
-            </li>
-
-            <li><a href="estadisticas.php">Estadísticas</a></li>
-
-            <!-- Dropdown menu for Estudios -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Laboratorios</a>
-            <div class="dropdown-content">
-                <a href="consulta_orden_laboratorio.php">Buscar orden de laboratorio</a>
-                <a href="nueva_orden_laboratorio.php">Crear orden de laboratorio</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Inventario -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Inventario</a>
-            <div class="dropdown-content">
-                <a href="consulta_inventario.php">Buscar en inventario</a>
-                <a href="nueva_compra_med.php">Registrar compra de medicamentos</a>
-                <a href="nueva_compra_insumo.php">Registrar compra de insumos</a>
-                <a href="nueva_compra_equipo.php">Registrar compra de equipo médico</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Pacientes -->
-            <li class="dropdown">
-                <a href="javascript:void(0)" class="dropbtn">Pacientes</a>
-                <div class="dropdown-content">
-                    <a href="consulta_expediente.php">Consultar historia clínica</a>
-                    <a href="consulta_paciente.php">Consultar paciente</a>
-                    <a href="nuevo_paciente.php">Registrar paciente</a>
-                </div>
-            </li>
-
-            <!-- Dropdown menu for Personal de salud -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Personal de salud</a>
-            <div class="dropdown-content">
-                <a href="consulta_personal.php">Consultar personal</a>
-                <a href="nuevo_personal.php">Registrar personal</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Recetas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Recetas</a>
-            <div class="dropdown-content">
-                <a href="consulta_receta.php">Consultar receta</a>
-                <a href="nueva_receta.php">Registrar receta</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Unidades médicas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Unidades médicas</a>
-            <div class="dropdown-content">
-                <a href="consulta_unidad.php">Consultar unidad médica</a>
-                <a href="nueva_unidad.php">Registrar unidad médica</a>
-            </div>
-            </li>
-
-        </ul>
-    </nav>
 
         <div class="title-box">
-        <h3>Formulario de registro de pacientes</h3>
+            <h3>Formulario de registro de pacientes</h3>
         </div>
 
 <div class="grid-wrapper">
@@ -272,7 +156,7 @@ if (!isset($_SESSION['idUsuario'])) {
         this.value = this.value.toUpperCase();
     });
 
-// 🔥 LÓGICA DE AUTOCOMPLETADO DE UBICACIÓN POR CP 🔥
+    // LÓGICA DE AUTOCOMPLETADO DE UBICACIÓN POR CP
     const inputCP = document.getElementById('codigo_postal');
     const selectColonia = document.getElementById('idUbicacion');
     const inputNuevaColonia = document.getElementById('nueva_colonia');
@@ -337,7 +221,7 @@ if (!isset($_SESSION['idUsuario'])) {
                 
                 // Mensaje informativo (No es un error rojo, es una instrucción azul)
                 msgCP.style.color = '#0dcaf0'; 
-                msgCP.textContent = "ℹ️ CP no registrado. Por favor, ingrese la colonia, ciudad y estado manualmente.";
+                msgCP.textContent = "CP no registrado. Por favor, ingrese la colonia, ciudad y estado manualmente.";
                 msgCP.style.display = 'block';
             }
         } else {
@@ -433,12 +317,12 @@ if (!isset($_SESSION['idUsuario'])) {
             const data = await res.json();
 
             if(data.estatus === 'exito') {
-                alert("✅ " + data.mensaje);
+                alert("Éxito: " + data.mensaje);
                 form.reset();
                 selectColonia.innerHTML = '<option value="" disabled selected>Primero ingrese un Código Postal válido...</option>';
                 showStep(0);
             } else {
-                alert("⚠️ " + data.mensaje);
+                alert("Atención: " + data.mensaje);
             }
         } catch (error) {
             alert("Error de conexión al guardar.");
@@ -451,3 +335,5 @@ if (!isset($_SESSION['idUsuario'])) {
     showStep(0);
 })();
 </script>
+
+<script src="Scripts/js/timeout.js"></script>

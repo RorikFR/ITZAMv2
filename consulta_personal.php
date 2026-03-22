@@ -1,146 +1,31 @@
 <?php
-session_start();
+date_default_timezone_set('America/Mexico_City');
 
-// Opcional pero recomendado: El escudo de seguridad
-if (!isset($_SESSION['idUsuario'])) {
-    header("Location: index.php");
-    exit;
-}
+//Validaciones de seguridad e inactividad
+require 'inactive.php';     
+require 'autorizacion.php';   
+
+//RBAC
+requerir_roles(['Administrativo']);
+
+//Menu dinamico
+require 'header.php';
 ?>
-<!doctype html>
-<html lang="es">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>Sistema ITZAM — Consultar registro de personal de salud</title>
-        <link rel="stylesheet" href="styles.css" />
-        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
-    </head>
-
-    <body>
-        <header>
-            <div class="topbar-container">
-                <div>
-                    <img class ="logo"src="Assets/itzam_logoV2.png" alt="LOGO" />
-                </div>
-                
-                <div class="topbar-header">Consultar registro de personal de salud</div>
-                
-        <div class="user-menu">
-            <div class="user-menu">
-                <img id="header-user-photo" class="user-photo user-icon" src="<?php echo isset($_SESSION['foto_perfil']) && $_SESSION['foto_perfil'] ? $_SESSION['foto_perfil'] : 'Assets/think.jpg'; ?>" onclick="toggleMenu()">
-            </div>
-            
-            <div class="dropdown-menu" id="userDropdown">
-                <p class="user-menu-title" style="font-weight: bold;"><?= htmlspecialchars($_SESSION['nombre_usuario']) ?></p>
-                <hr></hr>
-                <a class="dropdown-item" href="administracion.php">Administración</a>
-                <a class="dropdown-item" href="catalogos.php">Catálogos</a>
-                <a class="dropdown-item" href="configuracion_cuenta.php">Configuración</a>
-                <a class="dropdown-item" href="logout.php">Cerrar sesión</a>
-            </div>
-        </div>
-    </header>
-    
-    <nav>   
-        <ul>
-            <li><a href="home.php" class="active">Inicio</a></li>
-
-            <!-- Dropdown menu for Asesorías -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Asesorías</a>
-            <div class="dropdown-content">
-                <a href="mis_asesorias.php">Mis asesorías</a>
-                <a href="nueva_asesoria.php">Registrar asesoría</a>
-            </div>  
-            </li>
-
-            <!-- Dropdown menu for Consultas médicas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Consultas médicas</a>
-            <div class="dropdown-content">
-                <a href="buscar_consulta.php">Buscar consulta</a>
-                <a href="nueva_consulta.php">Registrar consulta</a>
-            </div>
-            </li>
-
-            <li><a href="estadisticas.php">Estadísticas</a></li>
-
-            <!-- Dropdown menu for Estudios -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Laboratorios</a>
-            <div class="dropdown-content">
-                <a href="consulta_orden_laboratorio.php">Buscar orden de laboratorio</a>
-                <a href="nueva_orden_laboratorio.php">Crear orden de laboratorio</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Inventario -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Inventario</a>
-            <div class="dropdown-content">
-                <a href="consulta_inventario.php">Buscar en inventario</a>
-                <a href="nueva_compra_med.php">Registrar compra de medicamentos</a>
-                <a href="nueva_compra_insumo.php">Registrar compra de insumos</a>
-                <a href="nueva_compra_equipo.php">Registrar compra de equipo médico</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Pacientes -->
-            <li class="dropdown">
-                <a href="javascript:void(0)" class="dropbtn">Pacientes</a>
-                <div class="dropdown-content">
-                    <a href="consulta_expediente.php">Consultar historia clínica</a>
-                    <a href="consulta_paciente.php">Consultar paciente</a>
-                    <a href="nuevo_paciente.php">Registrar paciente</a>
-                </div>
-            </li>
-
-            <!-- Dropdown menu for Personal de salud -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Personal de salud</a>
-            <div class="dropdown-content">
-                <a href="consulta_personal.php">Consultar personal</a>
-                <a href="nuevo_personal.php">Registrar personal</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Recetas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Recetas</a>
-            <div class="dropdown-content">
-                <a href="consulta_receta.php">Consultar receta</a>
-                <a href="nueva_receta.php">Registrar receta</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Unidades médicas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Unidades médicas</a>
-            <div class="dropdown-content">
-                <a href="consulta_unidad.php">Consultar unidad médica</a>
-                <a href="nueva_unidad.php">Registrar unidad médica</a>
-            </div>
-            </li>
-
-        </ul>
-    </nav>
 
     <br>
 
         <div class="tabla-container">
-            <table id="tablaPersonal" class="display" style="width:100%">
+            <table id="tablaPersonal" class="display responsive nowrap" style="width:100%">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Apellido paterno</th>
-                        <th>Apellido materno</th>   
+                        <th class="all">ID</th>
+                        <th class="all">Nombre</th>
+                        <th class="all">Apellido paterno</th>
+                        <th class="all">Apellido materno</th>   
                         <th>Cédula profesional</th>
                         <th>Email institucional</th>
                         <th>Teléfono celular</th>
-                        <th>Acciones</th>
+                        <th class="all">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="cuerpoTabla"></tbody>
@@ -150,22 +35,25 @@ if (!isset($_SESSION['idUsuario'])) {
     <div id="modalEdicion" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">Editar Registro</div>
-            <input type="hidden" id="inputModalId"> 
             
-            <div class="form-group">
-                <label>Email institucional:</label>
-                <input type="email" id="inputModalEmail">
-            </div>
+            <form id="formEdicionModal" novalidate autocomplete="off">
+                <input type="hidden" id="inputModalId"> 
+                
+                <div class="form-group">
+                    <label for="inputModalEmail">*Email institucional:</label>
+                    <input type="email" id="inputModalEmail" maxlength="120" required placeholder="usuario@itzam.com">
+                </div>
 
-            <div class="form-group">
-                <label>Teléfono celular:</label>
-                <input type="text" id="inputModalTel">
-            </div>
+                <div class="form-group">
+                    <label for="inputModalTel">*Teléfono celular (10 dígitos):</label>
+                    <input type="text" id="inputModalTel" required maxlength="10" pattern="^[0-9]{10}$" title="El teléfono debe contener exactamente 10 números, sin espacios ni guiones." placeholder="Ej. 5512345678">
+                </div>
 
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
-                <button class="btn-save" onclick="guardarCambios()">Guardar Cambios</button>
-            </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+                    <button type="button" class="btn-save" onclick="guardarCambios()">Guardar Cambios</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -174,6 +62,8 @@ if (!isset($_SESSION['idUsuario'])) {
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
     <script>
         const cuerpoTabla = document.getElementById("cuerpoTabla");
@@ -182,25 +72,22 @@ if (!isset($_SESSION['idUsuario'])) {
         const inputModalEmail = document.getElementById("inputModalEmail");
         const inputModalTel = document.getElementById("inputModalTel");
 
-        // Variable global para la instancia de DataTables
         let tablaInstancia = null; 
 
-        // --- 1. CARGAR DATOS INICIALES (GET TODO) ---
+        //Carga de datos 
         async function cargarDatosIniciales() {
             if (tablaInstancia !== null) {
                 tablaInstancia.destroy();
                 tablaInstancia = null;
             }
 
-            // Cambiamos el colspan a 8 (número de columnas de esta tabla)
             cuerpoTabla.innerHTML = "<tr><td colspan='8' style='text-align:center'>Cargando base de datos...</td></tr>";
 
             try {
-                // Fetch directo al backend sin la variable "q"
                 const response = await fetch('backend_consulta-personal.php');
                 const datos = await response.json();
                 
-                if(datos.error) { alert(datos.error); return; }
+                if(datos.error) { alert("Atención: " + datos.error); return; }
                 renderizar(datos);
 
             } catch (error) {
@@ -209,7 +96,7 @@ if (!isset($_SESSION['idUsuario'])) {
             }
         }
 
-        // --- RENDERIZAR E INICIALIZAR DATATABLES ---
+        //Renderizar e inicializar DataTables
         function renderizar(datos) {
             cuerpoTabla.innerHTML = "";
             
@@ -236,8 +123,25 @@ if (!isset($_SESSION['idUsuario'])) {
                 `;
             });
 
-            // Inicializamos DataTables con diccionario en español
             tablaInstancia = $('#tablaPersonal').DataTable({
+                responsive: {
+                    details: {
+                        renderer: function (api, rowIdx, columns) {
+                            let data = $.map(columns, function (col, i) {
+                                return col.hidden ?
+                                    '<div class="dtr-detalle-celda" data-dt-row="' + col.rowIndex + '" data-dt-column="' + col.columnIndex + '">' +
+                                        '<div class="dtr-detalle-titulo">' + col.title + '</div> ' +
+                                        '<div class="dtr-detalle-dato">' + col.data + '</div>' +
+                                    '</div>' :
+                                    '';
+                            }).join('');
+
+                            return data ?
+                                $('<div class="dtr-detalle-fila"/>').append(data) :
+                                false;
+                        }
+                    }
+                },
                 language: {
                     "decimal": "",
                     "emptyTable": "No hay información en la base de datos",
@@ -262,18 +166,63 @@ if (!isset($_SESSION['idUsuario'])) {
                         "sortDescending": ": Activar para ordenar la columna de manera descendente"
                     }
                 },
-                dom: 'Bfrtip',
+                dom: '<"top"Bf>rt<"bottom"lip><"clear">',
                 buttons: [
-                    { extend: 'excelHtml5', text: '📊 Descargar Excel', className: 'btn-exportar' },
-                    { extend: 'csvHtml5', text: '📄 Descargar CSV', className: 'btn-exportar' }
+                    { 
+                        extend: 'pdfHtml5', 
+                        text: 'Reporte general PDF', 
+                        className: 'btn-exportar',
+                        orientation: 'landscape', 
+                        pageSize: 'LETTER',       
+                        title: 'Reporte de Personal - ITZAM',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4, 5, 6] 
+                        },
+                        customize: function (doc) {
+                            // Ajustes para 7 columnas
+                            doc.defaultStyle.fontSize = 8;
+                            doc.styles.tableHeader.fontSize = 9;
+                            doc.defaultStyle.alignment = 'center';
+                            doc.styles.tableHeader.alignment = 'center';
+
+                            doc.pageMargins = [20, 20, 20, 20];
+
+                            doc.content[1].table.widths = [
+                                'auto', // ID
+                                '*',    // Nombre
+                                '*',    // Apellido P
+                                '*',    // Apellido M
+                                'auto', // Cédula
+                                '*',    // Email
+                                'auto'  // Teléfono
+                            ];
+
+                            var objLayout = {};
+                            objLayout['hLineWidth'] = function(i) { return 0.5; };
+                            objLayout['vLineWidth'] = function(i) { return 0.5; };
+                            objLayout['hLineColor'] = function(i) { return '#aaa'; };
+                            objLayout['vLineColor'] = function(i) { return '#aaa'; };
+                            objLayout['paddingLeft'] = function(i) { return 4; };
+                            objLayout['paddingRight'] = function(i) { return 4; };
+                            doc.content[1].layout = objLayout;
+                        }
+                    },
+                    { 
+                        extend: 'csvHtml5', 
+                        text: 'Reporte general CSV', 
+                        className: 'btn-exportar',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4, 5, 6]
+                        }
+                    }
                 ],
                 pageLength: 10,
                 ordering: true,
-                order: [[0, "desc"]] // Opcional: Ordena por el ID del personal descendente
+                order: [[0, "desc"]]
             });
         }
 
-        // --- 2. ELIMINAR (POST) ---
+        //Eliminar registros
         async function eliminarRegistro(idPersonal) {
             if(!confirm("¿Confirma que desea eliminar este registro permanentemente?")) return;
 
@@ -286,15 +235,15 @@ if (!isset($_SESSION['idUsuario'])) {
                 const res = await response.json();
                 
                 if(res.estatus === 'exito') {
-                    alert("✅ " + res.mensaje);
-                    cargarDatosIniciales(); // Recargar tabla usando la nueva función
+                    alert("Éxito: " + res.mensaje);
+                    cargarDatosIniciales();
                 } else {
-                    alert("⚠️ " + res.mensaje);
+                    alert("Atención: " + res.mensaje);
                 }
-            } catch (error) { alert("Error al eliminar"); }
+            } catch (error) { alert("Error al eliminar el registro."); }
         }
 
-        // --- 3. EDITAR (POST) ---
+        //Editar registros
         function abrirModal(idPersonal, email_institucional, telefono_celular) {
             inputModalId.value = idPersonal;
             inputModalEmail.value = email_institucional;
@@ -305,9 +254,20 @@ if (!isset($_SESSION['idUsuario'])) {
         function cerrarModal() { modal.classList.remove("show"); }
 
         async function guardarCambios() {
+            const form = document.getElementById('formEdicionModal');
+            
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
             const idPersonal = inputModalId.value;
             const email_institucional = inputModalEmail.value;
             const telefono_celular = inputModalTel.value;
+
+            const btnSave = document.querySelector('.btn-save');
+            btnSave.disabled = true;
+            btnSave.textContent = "Guardando...";
 
             try {
                 const response = await fetch('backend_consulta-personal.php', {
@@ -323,22 +283,30 @@ if (!isset($_SESSION['idUsuario'])) {
                 const res = await response.json();
                 
                 if(res.estatus === 'error') {
-                    alert("⚠️ Atención:\n\n" + res.mensaje);
+                    alert("Atención:\n\n" + res.mensaje);
                 } 
                 else if (res.estatus === 'exito') {
-                    alert("✅ " + res.mensaje);
+                    alert("Éxito: " + res.mensaje);
                     cerrarModal();
-                    cargarDatosIniciales(); // Recargar tabla usando la nueva función
+                    cargarDatosIniciales();
                 }
-            } catch (error) { alert("Error al guardar cambios"); }
+            } catch (error) { 
+                alert("Error de conexión al guardar cambios."); 
+            } finally {
+                btnSave.disabled = false;
+                btnSave.textContent = "Guardar Cambios";
+            }
         }
 
-        // Carga inicial al abrir la página
+        //Recargar datos
         cargarDatosIniciales();
 
-        // Cerrar modal click fuera
+        // Cerrar modal
         window.onclick = function(ev) { if (ev.target == modal) cerrarModal(); }
     </script>
+
+    <script src="Scripts/js/timeout.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
     <footer class="bottombar">© 2026 ITZAM</footer>
     </body>

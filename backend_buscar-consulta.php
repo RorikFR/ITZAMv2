@@ -1,58 +1,73 @@
 <?php
-header('Content-Type: application/json');
+//Validaciones de seguridad e inactividad
+require 'seguridad_backend.php'; 
+require 'autorizacion.php';      
 
-// FORZAR A PHP A MOSTRAR ERRORES (Quitar en producción)
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// RBAC
+requerir_roles_api(['Médico', 'Administrativo', 'Enfermería']); 
 
 require 'db_conn.php';
 
 $metodo = $_SERVER['REQUEST_METHOD'];
 
-// ==========================================
-// --- LEER DATOS (BÚSQUEDA GENERAL PARA DATATABLES) ---
-// ==========================================
+//Cargar datos para DataTables
 if ($metodo === 'GET') {
-    
-    // Consulta optimizada con JOIN al nuevo catálogo de Tipos de Consulta
-    $sql = "SELECT 
-                c.idConsulta, 
-                p.nombre, 
-                p.apellido_p,
-                p.apellido_m,
-                p.curp, 
-                p.fecha_nac, 
-                p.genero, 
-                tc.nombre_tipo AS tipo_consulta, -- Texto para mostrar en la tabla
-                c.idTipoConsulta                 -- ID numérico para el modal de edición
-            FROM registro_consultas c
-            INNER JOIN registro_paciente p ON c.idPaciente = p.idPaciente
-            LEFT JOIN cat_tipo_consulta tc ON c.idTipoConsulta = tc.idTipoConsulta
-            ORDER BY c.idConsulta DESC";
-            
+
     try {
+        $sql = "SELECT 
+                    c.idConsulta, 
+                    c.idPersonal,
+                    p.nombre, 
+                    p.apellido_p,
+                    p.apellido_m,
+                    p.curp, 
+                    p.fecha_nac, 
+                    p.genero, 
+                    tc.nombre_tipo AS tipo_consulta,
+                    c.idTipoConsulta,                
+                    CONCAT_WS(' ', med.nombre, med.apellido_p, med.apellido_m) AS personal_medico 
+                FROM registro_consultas c
+                INNER JOIN registro_paciente p ON c.idPaciente = p.idPaciente
+                LEFT JOIN cat_tipo_consulta tc ON c.idTipoConsulta = tc.idTipoConsulta
+                LEFT JOIN registro_personal med ON c.idPersonal = med.idPersonal
+                ORDER BY c.idConsulta DESC";
+                
         $stmt = $pdo->query($sql);
         echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+        
     } catch (PDOException $e) {
-        echo json_encode(["error" => "Error en la base de datos al consultar."]);
+        echo json_encode(["error" => "Error interno al consultar las bases de datos."]);
     }
     exit;
 }
 
-// ==========================================
-// --- EDITAR O ELIMINAR ---
-// ==========================================
+
 if ($metodo === 'POST') {
     
     // Recibimos los datos JSON del frontend
     $inputJSON = file_get_contents('php://input');
     $input = json_decode($inputJSON, true);
     
-    $accion = $input['accion'] ?? '';
-    $idConsulta = $input['idConsulta'] ?? 0;
+    $accion = filter_var($input['accion'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $idConsulta = filter_var($input['idConsulta'] ?? 0, FILTER_VALIDATE_INT);
 
-    // --- LÓGICA DE ELIMINACIÓN ---
+    // Trazabilidad del registro
+    if ($idConsulta > 0 && ($accion === 'editar' || $accion === 'eliminar')) {
+        $stmtAutor = $pdo->prepare("SELECT idPersonal FROM registro_consultas WHERE idConsulta = :id");
+        $stmtAutor->execute(['id' => $idConsulta]);
+        $autor = $stmtAutor->fetch(PDO::FETCH_ASSOC);
+
+        // Validar ID del usuario que inicio sesión
+        if (!$autor || ($autor['idPersonal'] != $_SESSION['idUsuario'] && $_SESSION['rol'] !== 'Administrador')) {
+            echo json_encode([
+                "estatus" => "error", 
+                "mensaje" => "Acceso denegado: Solo el médico tratante que registró esta consulta puede modificarla o eliminarla."
+            ]);
+            exit; 
+        }
+    }
+
+    // Eliminar registro
     if ($accion === 'eliminar' && $idConsulta > 0) {
         try {
             $stmt = $pdo->prepare("DELETE FROM registro_consultas WHERE idConsulta = :idConsulta");
@@ -60,24 +75,23 @@ if ($metodo === 'POST') {
             
             echo json_encode([
                 "estatus" => "exito", 
-                "mensaje" => "Registro eliminado permanentemente del sistema."
+                "mensaje" => "Expediente de consulta eliminado permanentemente del sistema."
             ]);
         } catch (PDOException $e) {
             echo json_encode([
                 "estatus" => "error", 
-                "mensaje" => "No se puede eliminar la consulta por restricciones en la base de datos."
+                "mensaje" => "No se puede eliminar la consulta por restricciones en la base de datos (posiblemente tenga recetas o laboratorios asociados)."
             ]);
         }
         exit;
     }
 
-    // --- LÓGICA DE EDICIÓN ---
+    // Editar registro
     if ($accion === 'editar' && $idConsulta > 0) {
         
-        // 🔥 AHORA RECIBIMOS EL ID NUMÉRICO DEL TIPO DE CONSULTA
-        $idTipoConsulta = $input['idTipoConsulta'] ?? ''; 
+        $idTipoConsulta = filter_var($input['idTipoConsulta'] ?? null, FILTER_VALIDATE_INT); 
         
-        if (empty($idTipoConsulta)) {
+        if (!$idTipoConsulta) {
             echo json_encode([
                 "estatus" => "error", 
                 "mensaje" => "Debe seleccionar un tipo de consulta válido."
@@ -103,7 +117,7 @@ if ($metodo === 'POST') {
         } catch (PDOException $e) {
             echo json_encode([
                 "estatus" => "error", 
-                "mensaje" => "Error de base de datos al actualizar la consulta."
+                "mensaje" => "Error interno al actualizar la consulta."
             ]);
         }
         exit;

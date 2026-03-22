@@ -1,131 +1,15 @@
 <?php
-session_start();
+date_default_timezone_set('America/Mexico_City');
 
-// Opcional pero recomendado: El escudo de seguridad
-if (!isset($_SESSION['idUsuario'])) {
-    header("Location: index.php");
-    exit;
-}
-?>
-<!doctype html>
-<html lang="es">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>Sistema ITZAM — Expediente electrónico</title>
-        <link rel="stylesheet" href="styles.css" />
-        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
-    </head>
-    <body>
-        <header>
-            <div class="topbar-container">
-                <div>   
-                    <img class ="logo"src="Assets/itzam_logoV2.png" alt="LOGO" />
-                </div>
-                
-                <div class="topbar-header">Consultar historia clínica</div>
-                
-        <div class="user-menu">
-            <div class="user-menu">
-                <img id="header-user-photo" class="user-photo user-icon" src="<?php echo isset($_SESSION['foto_perfil']) && $_SESSION['foto_perfil'] ? $_SESSION['foto_perfil'] : 'Assets/think.jpg'; ?>" onclick="toggleMenu()">
-            </div>
-            
-            <div class="dropdown-menu" id="userDropdown">
-                <p class="user-menu-title" style="font-weight: bold;"><?= htmlspecialchars($_SESSION['nombre_usuario']) ?></p>
-                <hr></hr>
-                <a class="dropdown-item" href="administracion.php">Administración</a>
-                <a class="dropdown-item" href="catalogos.php">Catálogos</a>
-                <a class="dropdown-item" href="configuracion_cuenta.php">Configuración</a>
-                <a class="dropdown-item" href="logout.php">Cerrar sesión</a>
-            </div>
-        </div>
-    </header>
-    
-    <nav>   
-        <ul>
-            <li><a href="home.php" class="active">Inicio</a></li>
+require 'inactive.php';       // Control de cache e inactividad
+require 'autorizacion.php';   // RBAC
 
-            <!-- Dropdown menu for Asesorías -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Asesorías</a>
-            <div class="dropdown-content">
-                <a href="mis_asesorias.php">Mis asesorías</a>
-                <a href="nueva_asesoria.php">Registrar asesoría</a>
-            </div>  
-            </li>
+// Roles autorizados
+requerir_roles(['Médico', 'Administrativo', 'Enfermería']);
 
-            <!-- Dropdown menu for Consultas médicas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Consultas médicas</a>
-            <div class="dropdown-content">
-                <a href="buscar_consulta.php">Buscar consulta</a>
-                <a href="nueva_consulta.php">Registrar consulta</a>
-            </div>
-            </li>
-
-            <li><a href="estadisticas.php">Estadísticas</a></li>
-
-            <!-- Dropdown menu for Estudios -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Laboratorios</a>
-            <div class="dropdown-content">
-                <a href="consulta_orden_laboratorio.php">Buscar orden de laboratorio</a>
-                <a href="nueva_orden_laboratorio.php">Crear orden de laboratorio</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Inventario -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Inventario</a>
-            <div class="dropdown-content">
-                <a href="consulta_inventario.php">Buscar en inventario</a>
-                <a href="nueva_compra_med.php">Registrar compra de medicamentos</a>
-                <a href="nueva_compra_insumo.php">Registrar compra de insumos</a>
-                <a href="nueva_compra_equipo.php">Registrar compra de equipo médico</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Pacientes -->
-            <li class="dropdown">
-                <a href="javascript:void(0)" class="dropbtn">Pacientes</a>
-                <div class="dropdown-content">
-                    <a href="consulta_expediente.php">Consultar historia clínica</a>
-                    <a href="consulta_paciente.php">Consultar paciente</a>
-                    <a href="nuevo_paciente.php">Registrar paciente</a>
-                </div>
-            </li>
-
-            <!-- Dropdown menu for Personal de salud -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Personal de salud</a>
-            <div class="dropdown-content">
-                <a href="consulta_personal.php">Consultar personal</a>
-                <a href="nuevo_personal.php">Registrar personal</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Recetas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Recetas</a>
-            <div class="dropdown-content">
-                <a href="consulta_receta.php">Consultar receta</a>
-                <a href="nueva_receta.php">Registrar receta</a>
-            </div>
-            </li>
-
-            <!-- Dropdown menu for Unidades médicas -->
-            <li class="dropdown">
-            <a href="javascript:void(0)" class="dropbtn">Unidades médicas</a>
-            <div class="dropdown-content">
-                <a href="consulta_unidad.php">Consultar unidad médica</a>
-                <a href="nueva_unidad.php">Registrar unidad médica</a>
-            </div>
-            </li>
-
-        </ul>
-    </nav>
-        
+//Menú de navegación dinámico
+require 'header.php';
+?>      
         <br>
 
       <div class="tabla-container">
@@ -180,11 +64,22 @@ if (!isset($_SESSION['idUsuario'])) {
         </div>
     </div>
 
+    <div style="display: none; width: 800px; height: 400px;">
+        <canvas id="graficaOcultaVitales" width="800" height="400"></canvas>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="Scripts/js/logo_base64.js"></script>
 
     <script>
         const cuerpoTabla = document.getElementById("cuerpoTabla");
@@ -195,11 +90,12 @@ if (!isset($_SESSION['idUsuario'])) {
         const inputModalTipo = document.getElementById("inputModalTipo");
 
         let tablaInstancia = null; 
+        let datosCompletosExpediente = [];
+        let chartInstancia = null; 
 
-        // --- FUNCIÓN PARA CARGAR SELECTS DEL MODAL ---
+        // Carga de datos modal
         async function cargarSelectsModal() {
             try {
-                // 1. Cargar Médicos y Unidades (desde el backend propio)
                 const response = await fetch('backend_consulta_expediente.php?accion=cargar_catalogos');
                 const datos = await response.json();
                 
@@ -221,7 +117,6 @@ if (!isset($_SESSION['idUsuario'])) {
                     selectUnidad.appendChild(opcion);
                 });
 
-                // 2. 🔥 NUEVO: Cargar Tipos de Consulta (desde nuestra API dinámica)
                 const resTipos = await fetch('backend_catalogos.php?tabla=cat_tipo_consulta');
                 const datosTipos = await resTipos.json();
 
@@ -235,22 +130,17 @@ if (!isset($_SESSION['idUsuario'])) {
                         selectTipo.appendChild(opcion);
                     });
                 }
-
             } catch (error) {
                 console.error("Error al cargar los catálogos:", error);
-                document.getElementById('inputModalMedico').innerHTML = '<option value="">Error al cargar</option>';
-                document.getElementById('inputModalUnidad').innerHTML = '<option value="">Error al cargar</option>';
-                document.getElementById('inputModalTipo').innerHTML = '<option value="">Error al cargar</option>';
             }
         }
         
-        // --- 1. CARGAR DATOS INICIALES (GET TODO) ---
+        // Cargar datos iniciales
         async function cargarDatosIniciales() {
             if (tablaInstancia !== null) {
                 tablaInstancia.destroy();
                 tablaInstancia = null;
             }
-
             cuerpoTabla.innerHTML = "<tr><td colspan='9' style='text-align:center'>Cargando base de datos...</td></tr>";
 
             try {
@@ -258,24 +148,22 @@ if (!isset($_SESSION['idUsuario'])) {
                 const datos = await response.json();
                 
                 if(datos.error) { alert(datos.error); return; }
+                datosCompletosExpediente = datos; 
                 renderizar(datos);
-
             } catch (error) {
-                console.error(error);
                 cuerpoTabla.innerHTML = "<tr><td colspan='9' style='text-align:center; color:red'>Error de conexión</td></tr>";
             }
         }
 
-        // --- RENDERIZAR E INICIALIZAR DATATABLES ---
+        // Renderizar tabla
         function renderizar(datos) {
             cuerpoTabla.innerHTML = "";
-            
             if(datos.length === 0){
                 cuerpoTabla.innerHTML = "<tr><td colspan='9' style='text-align:center; padding: 20px;'>No se encontraron resultados</td></tr>";
                 return;
             }
 
-            datos.forEach(item => {
+            datos.forEach((item, index) => {
                 cuerpoTabla.innerHTML += `
                     <tr>
                         <td><b>${item.idConsulta}</b></td>
@@ -286,7 +174,9 @@ if (!isset($_SESSION['idUsuario'])) {
                         <td>${item.unidad_medica}</td>
                         <td><span style="background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 0.9em;">${item.tipo_consulta}</span></td>
                         <td>${item.fecha_consulta}</td>
-                        <td>
+                        <td style="white-space: nowrap;">
+                            <button class="btn-edit" style="background-color: #0d6efd; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer;" onclick="generarPDFIndividual(${index})" title="Generar Nota de Esta Consulta">PDF</button>
+                            <button class="btn-edit" style="background-color: #198754; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer;" onclick="generarHistoriaClinica('${item.curp}')" title="Generar Historia Clínica Completa">Historial</button>
                             <button class="btn-edit" onclick="abrirModal(${item.idConsulta}, ${item.idPersonal}, ${item.idUnidad}, ${item.idTipoConsulta || 'null'})">Editar</button>
                             <button class="btn-del" onclick="eliminarRegistro(${item.idConsulta})">Borrar</button>
                         </td>
@@ -315,14 +205,31 @@ if (!isset($_SESSION['idUsuario'])) {
                         "previous": "Anterior"
                     },
                     "aria": {
-                        "sortAscending": ": Activar para ordenar ascendente",
-                        "sortDescending": ": Activar para ordenar descendente"
+                        "sortAscending": ": Activar para ordenar la columna de manera ascendente",
+                        "sortDescending": ": Activar para ordenar la columna de manera descendente"
                     }
                 },
-                dom: 'Bfrtip',
+                dom: '<"top"Bf>rt<"bottom"lip><"clear">',
                 buttons: [
-                    { extend: 'excelHtml5', text: '📊 Descargar Excel', className: 'btn-exportar' },
-                    { extend: 'csvHtml5', text: '📄 Descargar CSV', className: 'btn-exportar' }
+                    { 
+                        extend: 'pdfHtml5', 
+                        text: 'Reporte general PDF', 
+                        className: 'btn-exportar',
+                        orientation: 'landscape', 
+                        pageSize: 'LETTER',       
+                        title: 'Reporte de Asesorías Clínicas - ITZAM',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4, 5, 6, 7] 
+                        }
+                    },
+                    { 
+                        extend: 'csvHtml5', 
+                        text: 'Reporte general CSV', 
+                        className: 'btn-exportar',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3, 4, 5, 6, 7] 
+                        }
+                    }
                 ],
                 pageLength: 10,
                 ordering: true,
@@ -330,85 +237,288 @@ if (!isset($_SESSION['idUsuario'])) {
             });
         }
 
-        // --- 2. ELIMINAR (POST) ---
-        async function eliminarRegistro(idConsulta) {
-            if(!confirm("¿Confirma que desea eliminar este registro permanentemente?")) return;
+        // Crear gráfica reporte
+        async function generarGraficaVitales(historial) {
+            return new Promise((resolve) => {
+                // Organizar cronologicamente
+                const cronologico = [...historial].reverse();
+
+                const fechas = cronologico.map(c => c.fecha_consulta);
+                const pesos = cronologico.map(c => c.peso ? parseFloat(c.peso) : null);
+                
+                const sistolica = cronologico.map(c => {
+                    if(!c.presion_arte) return null;
+                    const partes = c.presion_arte.split('/');
+                    return partes[0] ? parseInt(partes[0]) : null;
+                });
+                const diastolica = cronologico.map(c => {
+                    if(!c.presion_arte) return null;
+                    const partes = c.presion_arte.split('/');
+                    return partes[1] ? parseInt(partes[1]) : null;
+                });
+
+                const ctx = document.getElementById('graficaOcultaVitales').getContext('2d');
+                
+                if (chartInstancia) { chartInstancia.destroy(); }
+
+                chartInstancia = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: fechas,
+                        datasets: [
+                            { label: 'Sistólica (mmHg)', data: sistolica, borderColor: '#dc3545', backgroundColor: '#dc3545', fill: false, tension: 0.3 },
+                            { label: 'Diastólica (mmHg)', data: diastolica, borderColor: '#0d6efd', backgroundColor: '#0d6efd', fill: false, tension: 0.3 },
+                            { label: 'Peso (kg)', data: pesos, borderColor: '#198754', backgroundColor: '#198754', fill: false, tension: 0.3, yAxisID: 'yPeso' }
+                        ]
+                    },
+                    options: {
+                        animation: false, 
+                        responsive: false,
+                        plugins: {
+                            legend: { position: 'top' },
+                            title: { display: true, text: 'Curva de Tendencias de Signos Vitales', font: { size: 16 } }
+                        },
+                        scales: {
+                            y: { title: { display: true, text: 'Presión Arterial (mmHg)' }, min: 50, max: 200 },
+                            yPeso: { position: 'right', title: { display: true, text: 'Peso (kg)' }, grid: { drawOnChartArea: false } }
+                        }
+                    }
+                });
+
+                setTimeout(() => {
+                    const imagenBase64 = document.getElementById('graficaOcultaVitales').toDataURL('image/png', 1.0);
+                    resolve(imagenBase64);
+                }, 100);
+            });
+        }
+
+        // Reporte médico individual
+        function generarPDFIndividual(index) {
+            const info = datosCompletosExpediente[index];
+            const docDefinition = {
+                content: [
+                    {
+                        columns: [
+                            { image: typeof logoItzamBase64 !== 'undefined' ? logoItzamBase64 : '', width: 50 }, 
+                            { text: 'Nota Médica de Evolución - Sistema ITZAM\n', style: 'header', alignment: 'right', margin: [0, 10, 0, 0] }
+                        ],
+                        margin: [0, 0, 0, 20]
+                    },
+                    { text: `Fecha de Consulta: ${info.fecha_consulta}`, alignment: 'right', margin: [0, 0, 0, 20] },
+                    { text: 'Datos del Paciente', style: 'subheader' },
+                    {
+                        table: { widths: ['*', '*'], body: [ [{ text: 'Nombre:', bold: true, fillColor: '#f2f2f2' }, info.nombre_paciente], [{ text: 'CURP:', bold: true, fillColor: '#f2f2f2' }, info.curp] ] },
+                        layout: 'lightHorizontalLines', margin: [0, 0, 0, 20]
+                    },
+                    { text: 'Datos Generales de la Consulta', style: 'subheader' },
+                    {
+                        table: { widths: ['*', '*'], body: [ [{ text: 'Folio de Consulta:', bold: true, fillColor: '#f2f2f2' }, info.idConsulta], [{ text: 'Tipo de Atención:', bold: true, fillColor: '#f2f2f2' }, info.tipo_consulta], [{ text: 'Unidad Médica:', bold: true, fillColor: '#f2f2f2' }, info.unidad_medica], [{ text: 'Médico Tratante:', bold: true, fillColor: '#f2f2f2' }, `${info.medico_que_atendio} (Cédula: ${info.cedula_medico})`] ] },
+                        layout: 'lightHorizontalLines', margin: [0, 0, 0, 20]
+                    },
+                    { text: 'Evaluación Clínica', style: 'subheader' },
+                    { text: 'Sintomatología / Motivo de Consulta:', style: 'tituloSeccion' },
+                    { text: info.sintomas || 'Sin registro', margin: [0, 0, 0, 15] },
+                    { text: 'Diagnóstico Médico:', style: 'tituloSeccion' },
+                    { text: info.diagnostico || 'Sin registro', margin: [0, 0, 0, 15] },
+                    { text: 'Tratamiento y Notas:', style: 'tituloSeccion' },
+                    { text: info.tratamiento || 'Sin registro', margin: [0, 0, 0, 30] },
+                    { text: '______________________________________________', alignment: 'center', margin: [0, 40, 0, 5] },
+                    { text: `Dr(a). ${info.medico_que_atendio}`, alignment: 'center', bold: true },
+                    { text: `Cédula Profesional: ${info.cedula_medico}`, alignment: 'center', fontSize: 10 }
+                ],
+                styles: { header: { fontSize: 16, bold: true, color: '#084298' }, subheader: { fontSize: 14, bold: true, color: '#495057', margin: [0, 10, 0, 5], decoration: 'underline' }, tituloSeccion: { fontSize: 11, bold: true, margin: [0, 5, 0, 2], color: '#212529' } },
+                defaultStyle: { fontSize: 10 }
+            };
+            pdfMake.createPdf(docDefinition).download(`NotaMedica_${info.curp}_${info.fecha_consulta}.pdf`);
+        }
+
+        // Tabla de expedientes
+        async function generarHistoriaClinica(curpPaciente) {
+            console.log("Extrayendo expediente profundo y generando gráfica...");
 
             try {
+                const response = await fetch(`backend_consulta_expediente.php?accion=obtener_historial&curp=${curpPaciente}`);
+                const data = await response.json();
+
+                if (data.error) { alert("Atención: No se pudo obtener el historial: " + data.error); return; }
+
+                const paciente = data.paciente;
+                const historial = data.historial;
+                
+                if (!paciente) {
+                    alert("Error crítico: El servidor no devolvió los datos del paciente.");
+                    return;
+                }
+                
+                const nombreCompleto = `${paciente.nombre} ${paciente.apellido_p} ${paciente.apellido_m || ''}`.trim();
+                const horaImpresion = new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' });
+
+                const imagenGrafica = await generarGraficaVitales(historial);
+
+                // Dashboard con gráfica y logos
+                let contenidoPDF = [
+                    {
+                        columns: [
+                            { image: typeof logoItzamBase64 !== 'undefined' ? logoItzamBase64 : '', width: 60 },
+                            {
+                                text: [
+                                    { text: 'ITZAM - Inteligencia Médica Integrada\n', fontSize: 16, bold: true, color: '#198754' },
+                                    { text: 'Expediente Clínico Electrónico Longitudinal', fontSize: 11, color: '#6c757d' }
+                                ], alignment: 'right', margin: [0, 10, 0, 0]
+                            }
+                        ], margin: [0, 0, 0, 20]
+                    },
+                    {
+                        table: {
+                            widths: ['*', '*', '*'],
+                            body: [
+                                [
+                                    { text: `Paciente: ${nombreCompleto}\nCURP: ${curpPaciente}\nGénero: ${paciente.genero}`, margin: [5, 5, 5, 5] },
+                                    { text: `Alergias Conocidas:\n${paciente.alergias || 'Ninguna reportada / Sin registro'}`, margin: [5, 5, 5, 5], fillColor: '#fff3cd', color: '#854001' },
+                                    { text: `Antecedentes Médicos:\n${paciente.antecedentes || 'Ninguno reportado / Sin registro'}`, margin: [5, 5, 5, 5], fillColor: '#f8d7da', color: '#842029' }
+                                ]
+                            ]
+                        }, margin: [0, 0, 0, 15]
+                    },
+                    
+                    { text: 'Análisis de Tendencias Clínicas', style: 'subheader', margin: [0, 10, 0, 10] },
+                    { image: imagenGrafica, width: 500, alignment: 'center', margin: [0, 0, 0, 25] },
+
+                    // Salto de página
+                    { text: `Desglose Clínico Detallado (${historial.length} consultas registradas)`, style: 'headerTablas', pageBreak: 'before', margin: [0, 0, 0, 15] }
+                ];
+
+                // Tabla de expedientes
+                let cuerpoTablaHistorial = [
+                    // Cabecera de la tabla
+                    [
+                        { text: 'Fecha / Atención', style: 'tablaHeader' },
+                        { text: 'Médico / Signos Vitales', style: 'tablaHeader' },
+                        { text: 'Evaluación y Tratamiento', style: 'tablaHeader' }
+                    ]
+                ];
+
+                historial.forEach((consulta) => {
+                    let signosVitalesTexto = `Peso: ${consulta.peso || '--'} kg\nPA: ${consulta.presion_arte || '--'} mmHg\nTemp: ${consulta.temperatura || '--'} °C\nFC: ${consulta.freq_card || '--'} lpm\nSpO2: ${consulta.sat_oxigeno || '--'} %`;
+
+                    cuerpoTablaHistorial.push([
+                        // Columna 1: Fecha y tipo
+                        { text: `Fecha: ${consulta.fecha_consulta}\n\nUnidad: ${consulta.unidad_medica}\nTipo: ${consulta.tipo_consulta}`, fontSize: 9, margin: [0, 5, 0, 5] },
+                        
+                        // Columna 2: Médico y signos
+                        { text: `Médico: ${consulta.medico}\n\nSignos Vitales:\n${signosVitalesTexto}`, fontSize: 9, margin: [0, 5, 0, 5] },
+                        
+                        // Columna 3: Datos clínicos
+                        { 
+                            text: [
+                                { text: 'Sintomatología: ', bold: true, color: '#084298' }, `${consulta.sintomas || 'Sin registro'}\n\n`,
+                                { text: 'Diagnóstico: ', bold: true, color: '#198754' }, `${consulta.diagnostico || 'Sin registro'}\n\n`,
+                                { text: 'Tratamiento/Notas: ', bold: true, color: '#212529' }, `${consulta.tratamiento || 'Sin registro'}`
+                            ], 
+                            fontSize: 9, 
+                            margin: [0, 5, 0, 5] 
+                        }
+                    ]);
+                });
+
+                // Añadimos la tabla al PDF
+                contenidoPDF.push({
+                    table: {
+                        headerRows: 1,
+                        widths: ['20%', '25%', '55%'], // Ajuste de columnas
+                        body: cuerpoTablaHistorial
+                    },
+                    layout: {
+                        // Diseño de tabla
+                        hLineWidth: function (i, node) { return 1; },
+                        vLineWidth: function (i, node) { return 0; },
+                        hLineColor: function (i, node) { return '#dee2e6'; },
+                        paddingTop: function(i, node) { return 8; },
+                        paddingBottom: function(i, node) { return 8; }
+                    }
+                });
+
+                //Marca de agua
+                const docDefinition = {
+                    content: contenidoPDF,
+                    watermark: { text: 'DOCUMENTO CONFIDENCIAL', color: 'gray', opacity: 0.1, bold: true, italics: false },
+                    footer: function(currentPage, pageCount) {
+                        return {
+                            //Pie de pagina
+                            columns: [
+                                { text: `Generado por ITZAM el ${horaImpresion}`, fontSize: 8, color: '#aaaaaa', margin: [30, 0, 0, 0] },
+                                { text: `Página ${currentPage} de ${pageCount}`, alignment: 'right', fontSize: 9, bold: true, color: '#198754', margin: [0, 0, 30, 0] }
+                            ], margin: [0, 10, 0, 0]
+                        };
+                    },
+                    //Estilos
+                    styles: {
+                        header: { fontSize: 16, bold: true, color: '#198754', alignment: 'center', margin: [0, 0, 0, 15] },
+                        headerTablas: { fontSize: 16, bold: true, color: '#084298', alignment: 'left' },
+                        subheader: { fontSize: 14, bold: true, color: '#495057', margin: [0, 10, 0, 5], decoration: 'underline' },
+                        tablaHeader: { fontSize: 11, bold: true, color: '#ffffff', fillColor: '#084298', alignment: 'center', margin: [0, 5, 0, 5] }
+                    },
+                    defaultStyle: { fontSize: 10 },
+                    pageMargins: [30, 30, 30, 40] 
+                };
+
+                pdfMake.createPdf(docDefinition).download(`Expediente_Longitudinal_${curpPaciente}.pdf`);
+
+            } catch (error) {
+                console.error(error);
+                alert("Error al generar el documento PDF.");
+            }
+        }
+
+        // Eliminar registro
+        async function eliminarRegistro(idConsulta) {
+            if(!confirm("¿Confirma que desea eliminar este registro permanentemente?")) return;
+            try {
                 const response = await fetch('backend_consulta_expediente.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ accion: 'eliminar', idConsulta: idConsulta })
                 });
                 const res = await response.json();
-                
-                if(res.estatus === 'exito') {
-                    alert("✅ " + res.mensaje);
-                    cargarDatosIniciales(); 
-                } else {
-                    alert("⚠️ " + res.mensaje);
-                }
+                if(res.estatus === 'exito') { alert("Éxito: " + res.mensaje); cargarDatosIniciales(); } 
+                else { alert("Atención: " + res.mensaje); }
             } catch (error) { alert("Error al eliminar"); }
         }
 
-        // --- 3. EDITAR (POST) ---
+        // Editar registro
         function abrirModal(idConsulta, idPersonal, idUnidad, idTipoConsulta) {
-            inputModalId.value = idConsulta;
-            inputModalMedico.value = idPersonal;
-            inputModalUnidad.value = idUnidad;
-            inputModalTipo.value = idTipoConsulta; // Seleccionamos por ID
+            inputModalId.value = idConsulta; inputModalMedico.value = idPersonal;
+            inputModalUnidad.value = idUnidad; inputModalTipo.value = idTipoConsulta; 
             modal.classList.add("show");
         }
 
         function cerrarModal() { modal.classList.remove("show"); }
 
         async function guardarCambios() {
-            const idConsulta = inputModalId.value;
-            const idPersonal = inputModalMedico.value;
-            const idUnidad = inputModalUnidad.value;
-            const idTipoConsulta = inputModalTipo.value; // Guardamos el ID
+            const idConsulta = inputModalId.value; const idPersonal = inputModalMedico.value;
+            const idUnidad = inputModalUnidad.value; const idTipoConsulta = inputModalTipo.value; 
 
-            if(!idTipoConsulta || !idPersonal || !idUnidad) {
-                alert("Por favor, llena todos los campos del formulario.");
-                return;
-            }
+            if(!idTipoConsulta || !idPersonal || !idUnidad) { alert("Por favor, llena todos los campos del formulario."); return; }
 
             try {
                 const response = await fetch('backend_consulta_expediente.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        accion: 'editar', 
-                        idConsulta: idConsulta, 
-                        idPersonal: idPersonal, 
-                        idUnidad: idUnidad,
-                        idTipoConsulta: idTipoConsulta // 👈 Nueva llave JSON esperada por PHP
-                    })
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ accion: 'editar', idConsulta: idConsulta, idPersonal: idPersonal, idUnidad: idUnidad, idTipoConsulta: idTipoConsulta })
                 });
                 const res = await response.json();
                 
-                if(res.estatus === 'error') {
-                    alert("⚠️ Atención:\n\n" + res.mensaje);
-                } 
-                else if (res.estatus === 'exito') {
-                    alert("✅ " + res.mensaje);
-                    cerrarModal();
-                    cargarDatosIniciales(); 
-                }
+                if(res.estatus === 'error') { alert("Atención:\n\n" + res.mensaje); } 
+                else if (res.estatus === 'exito') { alert("Éxito: " + res.mensaje); cerrarModal(); cargarDatosIniciales(); }
             } catch (error) { alert("Error al guardar cambios"); }
         }
 
-        // Cargas iniciales
         document.addEventListener('DOMContentLoaded', () => {
             cargarSelectsModal();
             cargarDatosIniciales();
         });
 
-        // Cerrar modal click fuera
         window.onclick = function(ev) { if (ev.target == modal) cerrarModal(); }
     </script>
-
+    <script src="Scripts/js/timeout.js"></script>
     <footer class="bottombar">© 2026 ITZAM</footer>
-
     </body>
 </html>

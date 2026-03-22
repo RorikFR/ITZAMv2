@@ -1,17 +1,21 @@
 <?php
-header('Content-Type: application/json');
+//Validaciones de seguridad e inactividad
+require 'seguridad_backend.php'; 
+require 'autorizacion.php';      
 
-// require 'conexion.php'; 
+// RBAC
+requerir_roles_api(['Médico', 'Administrativo', 'Enfermería']); 
+
 require 'db_conn.php';
 
 $metodo = $_SERVER['REQUEST_METHOD'];
 
-// --- LEER DATOS (BÚSQUEDA / FILTRO) ---
+//Obtener datos
 if ($metodo === 'GET') {
-    $filtro = isset($_GET['filtro']) ? $_GET['filtro'] : '';
+
+    // Sanitizar filtro de busqueda
+    $filtro = isset($_GET['filtro']) ? filter_var(trim($_GET['filtro']), FILTER_SANITIZE_FULL_SPECIAL_CHARS) : '';
     
-    // 🔥 CONSULTA MAESTRA CON JOINs
-    // Unimos registro_unidad con sus 3 tablas satélite: ubicación, afiliación y categoría.
     $sqlBase = "SELECT 
                     u.idUnidad AS idUnidadMedica, 
                     u.nombre AS nombre_unidad, 
@@ -22,66 +26,85 @@ if ($metodo === 'GET') {
                     u.telefono, 
                     u.email AS correo_electronico
                 FROM registro_unidad u
-                INNER JOIN catalogo_ubicacion c ON u.idUbicacion = c.idUbicacion
-                INNER JOIN cat_afiliacion a ON u.idAfiliacion = a.idAfiliacion
-                INNER JOIN cat_categoria cat ON u.idCategoria = cat.idCategoria";
+                LEFT JOIN catalogo_ubicacion c ON u.idUbicacion = c.idUbicacion
+                LEFT JOIN cat_afiliacion a ON u.idAfiliacion = a.idAfiliacion
+                LEFT JOIN cat_categoria cat ON u.idCategoria = cat.idCategoria";
 
     try {
         if($filtro) {
-            $sql = $sqlBase . " WHERE u.es_prioritaria = :es_prioritaria ORDER BY u.idUnidad DESC";
+            $sql = $sqlBase . " WHERE u.es_prioritaria = :es_prioritaria ORDER BY u.idUnidad DESC LIMIT 200";
             $stmt = $pdo->prepare($sql);
             $valorBooleano = ($filtro === 'prioritaria') ? 1 : 0;
             $stmt->execute(['es_prioritaria' => $valorBooleano]);
         } else {
-            $sql = $sqlBase . " ORDER BY u.idUnidad DESC";
+            $sql = $sqlBase . " ORDER BY u.idUnidad DESC LIMIT 200";
             $stmt = $pdo->query($sql);
         }
         
         echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
     } catch (PDOException $e) {
-        echo json_encode(["error" => "Error al consultar: " . $e->getMessage()]);
+        echo json_encode(["error" => "Error interno al consultar el catálogo de unidades."]);
     }
     exit;
 }
 
-// --- EDITAR O ELIMINAR ---
+
+//Editar y eliminar registros
 if ($metodo === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
+    
     $accion = $input['accion'] ?? '';
-    $idUnidadMedica = $input['idUnidadMedica'] ?? 0; 
+    $idUnidadMedica = intval($input['idUnidadMedica'] ?? 0); 
 
-    // --- ELIMINACIÓN (Se mantiene igual, la integridad referencial hará su trabajo) ---
+    // Eliminar registros
     if ($accion === 'eliminar' && $idUnidadMedica > 0) {
         try {
             $stmt = $pdo->prepare("DELETE FROM registro_unidad WHERE idUnidad = :idUnidad");
             $stmt->execute(['idUnidad' => $idUnidadMedica]);
-            echo json_encode(["estatus" => "exito", "mensaje" => "Unidad médica eliminada correctamente."]);
+            echo json_encode(["estatus" => "exito", "mensaje" => "Unidad médica eliminada correctamente del sistema."]);
         } catch (PDOException $e) {
-            echo json_encode(["estatus" => "error", "mensaje" => "No se puede eliminar: Esta unidad tiene registros asociados (Personal/Pacientes)."]);
+            //Error de integridad referencial
+            echo json_encode(["estatus" => "error", "mensaje" => "No se puede eliminar: Esta unidad clínica tiene registros o historial clínico asociados."]);
         }
         exit; 
     }
 
-    // --- EDICIÓN (Actualizamos contacto y refrescamos con JOINs) ---
+    // Editar registros
     if ($accion === 'editar' && $idUnidadMedica > 0) {
-        $telefono = $input['telefono'] ?? '';
-        $correo_electronico = $input['correo_electronico'] ?? '';
+        
+        // Sanitizar datos
+        $telefono = preg_replace('/[^\d\-\s]/', '', $input['telefono'] ?? '');
+        $correo_electronico = trim($input['correo_electronico'] ?? '');
+        
+        // Validar formato de correo
+        if (!empty($correo_electronico) && !filter_var($correo_electronico, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode(["estatus" => "error", "mensaje" => "El formato del correo electrónico ingresado es inválido."]);
+            exit;
+        }
         
         try {
-            // 1. Actualizar contacto
+            // Actualizar datos en tabla
             $stmt = $pdo->prepare("UPDATE registro_unidad SET telefono = :tel, email = :mail WHERE idUnidad = :id");
-            $stmt->execute(['tel' => $telefono, 'mail' => $correo_electronico, 'id' => $idUnidadMedica]);
+            $stmt->execute([
+                'tel'  => $telefono, 
+                'mail' => $correo_electronico, 
+                'id'   => $idUnidadMedica
+            ]);
             
-            // 2. Recuperar registro actualizado CON JOINs para no romper la vista del frontend
+            // Obtener registro actualizado
             $sqlObtener = "SELECT 
-                                u.idUnidad AS idUnidadMedica, u.nombre AS nombre_unidad, 
-                                a.nombre_afiliacion AS afiliacion, cat.nombre_categoria AS categoria, 
+                                u.idUnidad AS idUnidadMedica, 
+                                u.nombre AS nombre_unidad, 
+                                a.nombre_afiliacion AS afiliacion, 
+                                cat.nombre_categoria AS categoria, 
                                 IF(u.es_prioritaria = 1, 'Sí', 'No') AS es_prioritaria, 
-                                c.ciudad, u.telefono, u.email AS correo_electronico
+                                c.ciudad, 
+                                u.telefono, 
+                                u.email AS correo_electronico
                            FROM registro_unidad u
-                           INNER JOIN catalogo_ubicacion c ON u.idUbicacion = c.idUbicacion
-                           INNER JOIN cat_afiliacion a ON u.idAfiliacion = a.idAfiliacion
-                           INNER JOIN cat_categoria cat ON u.idCategoria = cat.idCategoria
+                           LEFT JOIN catalogo_ubicacion c ON u.idUbicacion = c.idUbicacion
+                           LEFT JOIN cat_afiliacion a ON u.idAfiliacion = a.idAfiliacion
+                           LEFT JOIN cat_categoria cat ON u.idCategoria = cat.idCategoria
                            WHERE u.idUnidad = :idUnidad";
                            
             $stmtObtener = $pdo->prepare($sqlObtener);
@@ -89,11 +112,11 @@ if ($metodo === 'POST') {
             
             echo json_encode([
                 "estatus" => "exito", 
-                "mensaje" => "Contacto actualizado.",
+                "mensaje" => "Datos de contacto de la clínica actualizados correctamente.",
                 "datos"   => $stmtObtener->fetch(PDO::FETCH_ASSOC)
             ]);
         } catch (PDOException $e) {
-            echo json_encode(["estatus" => "error", "mensaje" => "Error al actualizar."]);
+            echo json_encode(["estatus" => "error", "mensaje" => "Ocurrió un error interno al intentar actualizar los datos."]);
         }
         exit;
     }

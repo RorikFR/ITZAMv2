@@ -1,28 +1,41 @@
 <?php
-session_start();
-header('Content-Type: application/json');
+date_default_timezone_set('America/Mexico_City');
 
-// DEV ONLY - quitar en producción
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+//Validaciones de seguridad e inactividad
+require 'seguridad_backend.php';
+require 'autorizacion.php';
+
+// RBAC
+requerir_roles_api(['Administrativo', 'Administrador']);
 
 require 'db_conn.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
 
-    // 🛡️ REGLA DE NEGOCIO: La unidad médica se extrae de la sesión
-    $idUnidad_Usuario = $_SESSION['idUnidad'] ?? 2; // (Bypass temporal a 2)
+    // Trazabilidad de usuario y unidad médica
+    $rolUsuario = $_SESSION['rol'] ?? '';
+    $esAdminGlobal = in_array($rolUsuario, ['Administrador']);
 
-    if (!$idUnidad_Usuario) {
-        echo json_encode(["estatus" => "error", "mensaje" => "Error de sesión: No se detectó tu Unidad Médica."]);
-        exit;
+    if ($esAdminGlobal) {
+        // Si usuario es admin, debe seleccionar unidad médica
+        $idUnidad_Usuario = filter_var($input['idUnidadDestino'] ?? '', FILTER_VALIDATE_INT);
+        if (!$idUnidad_Usuario) {
+            echo json_encode(["estatus" => "error", "mensaje" => "Error: Como Administrador, debe seleccionar la Unidad Médica de destino para el equipo."]);
+            exit;
+        }
+    } else {
+        // Si usuario no es admin, se carga datos de unidad médica con variable de sesión.
+        $idUnidad_Usuario = $_SESSION['idUnidad'] ?? null; 
+        if (!$idUnidad_Usuario) {
+            echo json_encode(["estatus" => "error", "mensaje" => "Error: No tiene una Unidad Médica asignada en su sesión para ingresar equipo."]);
+            exit;
+        }
     }
 
-    $idCatalogoEquipo = $input['idCatalogoEquipo'] ?? '';
+    $idCatalogoEquipo = trim($input['idCatalogoEquipo'] ?? '');
 
-    // --- ESCUDO 1: SANITIZACIÓN Y TIPOS DE LA COMPRA (Bodega) ---
+    // Sanitización de entradas
     $idProveedor  = filter_var($input['idProveedor'] ?? '', FILTER_VALIDATE_INT);
     $cantidad     = filter_var($input['cantidad'] ?? '', FILTER_VALIDATE_INT);
     $fecha_compra = trim($input['fecha_compra'] ?? '');
@@ -37,7 +50,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // --- ESCUDO 2: VALIDACIÓN LÓGICA DE FECHAS ---
+    // Validacion de formato de fecha
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha_compra)) {
+        echo json_encode(["estatus" => "error", "mensaje" => "Formato de fecha de compra inválido."]);
+        exit;
+    }
+
+    //Validacion de fechas
     $hoy = date('Y-m-d');
     if ($fecha_compra > $hoy) {
         echo json_encode(["estatus" => "error", "mensaje" => "La fecha de compra no puede ser una fecha en el futuro."]);
@@ -45,34 +64,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
-        // Iniciamos el escudo de Todo o Nada
         $pdo->beginTransaction();
 
-        // FLUJO A: REGISTRAR UN EQUIPO TOTALMENTE NUEVO EN EL CATÁLOGO
+        // Registro manual de equipo médico
         if ($idCatalogoEquipo === 'nuevo') {
             
-            // Sanitizamos los datos del diccionario
-            $nombre     = strip_tags(trim($input['nombre'] ?? ''));
-            $marca      = strip_tags(trim($input['marca'] ?? ''));
-            $modelo     = strip_tags(trim($input['modelo'] ?? ''));
-            $fabricante = strip_tags(trim($input['fabricante'] ?? ''));
+            // Sanitización de datos
+            $nombre     = htmlspecialchars(trim($input['nombre'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $marca      = htmlspecialchars(trim($input['marca'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $modelo     = htmlspecialchars(trim($input['modelo'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $fabricante = htmlspecialchars(trim($input['fabricante'] ?? ''), ENT_QUOTES, 'UTF-8');
 
             if (empty($nombre)) {
                 echo json_encode(["estatus" => "error", "mensaje" => "El nombre del equipo es obligatorio para el catálogo."]);
                 $pdo->rollBack(); exit;
             }
 
-            // --- ESCUDO 3: LONGITUDES DEL CATÁLOGO (VARCHAR límites) ---
-            if (strlen($nombre) > 120 || strlen($fabricante) > 120) {
+            // Validar longitudes de datos
+            if (mb_strlen($nombre) > 120 || mb_strlen($fabricante) > 120) {
                 echo json_encode(["estatus" => "error", "mensaje" => "El nombre o fabricante exceden los 120 caracteres permitidos."]);
                 $pdo->rollBack(); exit;
             }
-            if (strlen($marca) > 65 || strlen($modelo) > 65) {
-                echo json_encode(["estatus" => "error", "mensaje" => "La marca o el modelo exceden los 65 caracteres."]);
+            if (mb_strlen($marca) > 65 || mb_strlen($modelo) > 65) {
+                echo json_encode(["estatus" => "error", "mensaje" => "La marca o el modelo exceden los 65 caracteres permitidos."]);
                 $pdo->rollBack(); exit;
             }
 
-            // Insertamos en el catálogo oficial
+            //Guardar en DB
             $stmtCat = $pdo->prepare("
                 INSERT INTO cat_equipo (nombre, marca, modelo, fabricante) 
                 VALUES (:nombre, :marca, :modelo, :fabricante)
@@ -89,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idCatalogoFinal = $pdo->lastInsertId();
 
         } else {
-            // FLUJO B: EL EQUIPO YA EXISTE EN EL CATÁLOGO
+            // Si el equipo ya existe en catalogo
             $idCatalogoFinal = filter_var($idCatalogoEquipo, FILTER_VALIDATE_INT);
             if (!$idCatalogoFinal) {
                 echo json_encode(["estatus" => "error", "mensaje" => "ID de catálogo inválido."]);
@@ -97,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // --- PASO FINAL: ASIGNAR EL EQUIPO A LA CLÍNICA (Inventario) ---
+        // Asignar equipo a unidad médica
         $stmtInv = $pdo->prepare("
             INSERT INTO inventario_equipo (
                 idCatalogoEquipo, idUnidad, idProveedor, fecha_compra, cantidad
@@ -108,19 +126,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $stmtInv->execute([
             'idCat'        => $idCatalogoFinal,
-            'idUnidad'     => $idUnidad_Usuario,
+            'idUnidad'     => $idUnidad_Usuario, 
             'idProveedor'  => $idProveedor,
             'fecha_compra' => $fecha_compra,
             'cantidad'     => $cantidad
         ]);
         
-        // Confirmamos y guardamos todo
         $pdo->commit();
         echo json_encode(["estatus" => "exito", "mensaje" => "Equipo médico registrado y asignado exitosamente al inventario."]);
         
     } catch (PDOException $e) {
         if ($pdo->inTransaction()) { $pdo->rollBack(); }
-        echo json_encode(["estatus" => "error", "mensaje" => "Error de base de datos: " . $e->getMessage()]);
+        echo json_encode(["estatus" => "error", "mensaje" => "Error interno al registrar el equipo médico en la base de datos."]);
     }
     exit;
 }
