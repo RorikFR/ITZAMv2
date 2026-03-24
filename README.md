@@ -1,50 +1,61 @@
-# Proyecto Terminal
+# 🏥 ITZAM - Sistema Web de Gestión Clínica
 
-This workspace contains a simple login page demo with Google reCAPTCHA v2 integration.
+![Estado](https://img.shields.io/badge/Estado-Producci%C3%B3n-success)
+![Versión](https://img.shields.io/badge/Versi%C3%B3n-1.0.0-blue)
+![PHP](https://img.shields.io/badge/PHP-8.x-777BB4?logo=php&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-Database-4479A1?logo=mysql&logoColor=white)
 
-Setup
------
+**ITZAM** es un sistema web integral diseñado para la administración y consulta de información clínica. Optimiza los flujos de trabajo de unidades médicas, desde el registro de pacientes y consultas, hasta el control de inventario y generación de órdenes de laboratorio. 
 
-Edit `index.html` and replace `YOUR_RECAPTCHA_SITE_KEY` with your reCAPTCHA **site key**.
-Keep your **secret key** on the server and use it to verify tokens from the client.
+Destaca por su sólida arquitectura de seguridad, un motor de control de acceso basado en roles (RBAC) y una interfaz de usuario (UI/UX) premium, totalmente responsiva y adaptada para dispositivos móviles.
 
-Quick test (static site)
--------------------------
+---
 
-Serve the folder locally and open http://localhost:8000/
+## ✨ Características Principales
 
-```bash
-python3 -m http.server 8000
-```
+* 🔐 **Seguridad de Nivel Empresarial:** * Encriptación de contraseñas con BCrypt.
+  * Protección contra inyecciones SQL mediante consultas preparadas (PDO/MySQLi).
+  * Escudos anti-IDOR (Insecure Direct Object Reference) en el backend.
+  * Control estricto de sesiones con cierre automático por inactividad y validación reCAPTCHA.
+* 👥 **Control de Acceso Basado en Roles (RBAC):** Vistas y permisos dinámicos según el perfil del usuario (Administrador, Médico, Enfermería, Administrativo).
+* 📱 **Diseño 100% Responsivo (Mobile-First):** * Interfaces construidas con CSS Grid y Flexbox.
+  * Menú de navegación tipo hamburguesa adaptativo.
+  * Formularios multi-paso optimizados para pantallas táctiles.
+* 📊 **Gestión Avanzada de Datos:** * Tablas interactivas con `DataTables` (búsqueda, paginación, ordenamiento).
+  * Adaptabilidad móvil extrema (`DataTables Responsive`).
+  * Exportación nativa de reportes a **PDF** y **CSV**.
+* 🎨 **Identidad Visual Consistente:** Paleta de colores institucional basada en estándares PANTONE (Verde 626 C, Dorado 1255 C) y código CSS modular/minificado.
 
-Server-side verification (example)
-----------------------------------
+---
 
-Example Node.js/Express verification using `node-fetch` (install with `npm install node-fetch@2`):
+## 🧩 Módulos del Sistema
 
-```js
-const fetch = require('node-fetch');
+1. **Dashboard y Estadísticas:** KPIs en tiempo real de consultas, recetas, pacientes e inventario.
+2. **Pacientes y Expedientes:** Registro clínico y consulta del historial médico completo.
+3. **Consultas Médicas:** Formularios multi-paso (Triage, Síntomas, Diagnóstico, Tratamiento) con contadores dinámicos de caracteres.
+4. **Asesorías:** Registro de atenciones rápidas e intervenciones de enfermería.
+5. **Recetas y Laboratorios:** Generación de prescripciones médicas y órdenes de estudios.
+6. **Inventario:** Control de entradas de medicamentos, insumos y equipo médico.
+7. **Administración y Catálogos:** Gestión de personal, unidades médicas y catálogos del sistema (solo Administrador).
 
-async function verifyRecaptcha(token) {
-	const secret = process.env.RECAPTCHA_SECRET; // keep this secret on server
-	const res = await fetch(`https://www.google.com/recaptcha/api/siteverify`, {
-		method: 'POST',
-		headers: {'Content-Type':'application/x-www-form-urlencoded'},
-		body: `secret=${encodeURIComponent(secret)}&response=${encodeURIComponent(token)}`
-	});
-	return res.json();
-}
+---
 
-// In your /login handler:
-// const result = await verifyRecaptcha(req.body['g-recaptcha-response']);
-// if (!result.success) return res.status(403).json({ error: 'reCAPTCHA verification failed' });
-```
+## 🛠️ Stack Tecnológico
 
-Replace the `/login` endpoint in the client script with your own backend route. Verify `result.success` and any risk scores returned by reCAPTCHA before accepting the login.
+**Frontend:**
+* HTML5 (Semántico)
+* CSS3 (Grid/Flexbox, Variables CSS, Minificado)
+* JavaScript (ES6, Vanilla JS para interacciones DOM)
+* jQuery & DataTables (Renderizado y exportación de tablas)
 
-Notes
------
-- This example uses reCAPTCHA v2 (checkbox). For an invisible or v3 flow adjust client and server logic accordingly.
-- Do not embed the secret key in client-side code.
-# proyecto-terminal
-Sistema web para titulación
+**Backend:**
+* PHP (Lógica de negocio, gestión de sesiones, enrutamiento seguro)
+* MySQL / MariaDB (Base de datos relacional)
+
+---
+
+## 🚀 Instalación y Despliegue
+
+1. **Clonar el repositorio:**
+   ```bash
+   git clone [https://github.com/tu-usuario/itzam-clinico.git](https://github.com/tu-usuario/itzam-clinico.git)
