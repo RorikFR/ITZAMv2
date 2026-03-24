@@ -15,16 +15,16 @@ require 'header.php';
     <br>
 
         <div class="tabla-container">
-            <table id="tablaInventario" class="display" style="width:100%">
+            <table id="tablaInventario" class="display responsive nowrap" style="width:100%">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Piezas en stock</th>
-                        <th>Proveedor</th>
-                        <th>Categoría</th>
-                        <th>Unidad Médica</th>
-                        <th>Acciones</th>
+                        <th class="all">ID</th>
+                        <th class="all">Nombre</th>
+                        <th class="all">Piezas en stock</th>
+                        <th class="min-tablet">Proveedor</th>
+                        <th class="min-tablet">Categoría</th>
+                        <th class="all">Unidad Médica</th>
+                        <th class="min-tablet">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="cuerpoTabla"></tbody>
@@ -65,6 +65,7 @@ require 'header.php';
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
@@ -156,6 +157,7 @@ require 'header.php';
             });
 
             tablaInstancia = $('#tablaInventario').DataTable({
+                responsive: true,
                 language: {
                     "decimal": "",
                     "emptyTable": "No hay información en el inventario",

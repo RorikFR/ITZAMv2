@@ -36,7 +36,8 @@ require 'header.php';
                     <input class="form" type="date" id="prox_consulta" name="prox_consulta" min="<?= date('Y-m-d') ?>" />
 
                     <label for="indicaciones_generales">*Indicaciones Generales y Cuidados:</label>
-                    <textarea class="form" id="indicaciones_generales" name="indicaciones_generales" rows="3" maxlength="1000" placeholder="Dieta blanda, reposo absoluto, etc." required></textarea>
+                    <textarea class="form" id="indicaciones_generales" name="indicaciones_generales" rows="3" maxlength="1000" style="resize: none; width:100%;" required></textarea>
+                    <small id="contador-indicaciones_generales" class="contador-char">Límite de caracteres: 1000</small>
                 </fieldset>
             </div>
 
@@ -338,6 +339,45 @@ function inicializarFormulario() {
 
     showStep(0);
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Obtener textareas
+    const textareas = document.querySelectorAll('textarea[maxlength]');
+
+    textareas.forEach(function(textarea) {
+        // Seleccionar textareas
+        const contadorId = 'contador-' + textarea.id;
+        const contadorEl = document.getElementById(contadorId);
+
+        if (contadorEl) {
+            //Obtener limite
+            const limite = parseInt(textarea.getAttribute('maxlength'));
+
+            // Logica contador
+            const actualizarContador = function() {
+                const caracteresEscritos = textarea.value.length;
+                const restantes = limite - caracteresEscritos;
+                
+                contadorEl.textContent = restantes + " caracteres restantes";
+
+                //Colores dinamicos
+                if (restantes <= 50) {
+                    contadorEl.style.color = 'var(--PANTONE7420C)'; 
+                } else if (restantes <= (limite * 0.10)) { 
+                    contadorEl.style.color = 'var(--PANTONE1255C)'; 
+                } else {
+                    contadorEl.style.color = 'gray';
+                }
+            };
+
+            //Inicializar contador
+            actualizarContador();
+
+            // Escuchar eventos de entrada
+            textarea.addEventListener('input', actualizarContador);
+        }
+    });
+});
 </script>
 
 <script src="Scripts/js/timeout.js"></script>

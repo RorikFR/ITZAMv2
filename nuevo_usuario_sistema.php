@@ -208,6 +208,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 </script>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const formulario = document.getElementById("formUsuario");
+        
+        if (formulario) {
+            setTimeout(() => {
+                formulario.scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'  
+                });
+            }, 300);
+        }
+    });
+</script>
+
 <script src="Scripts/js/timeout.js"></script>
         
         <footer class="bottombar">© 2026 ITZAM</footer>

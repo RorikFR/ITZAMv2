@@ -18,14 +18,14 @@ require 'header.php';
                 <thead>
                     <tr>
                         <th class="all">ID</th>
-                        <th class="all">Nombre del paciente</th> 
+                        <th class="min-tablet">Nombre del paciente</th> 
                         <th class="all">CURP paciente</th>
                         <th class="all">Médico que receta</th>
-                        <th class="none">Medicamento</th>
-                        <th class="none">Dosis</th>
-                        <th class="none">Cajas surtidas</th>
-                        <th class="all">Fecha prox. consulta</th>
-                        <th class="all">Acciones</th>
+                        <th class="min-tablet">Medicamento</th>
+                        <th class="min-tablet">Dosis</th>
+                        <th class="min-tablet">Cajas surtidas</th>
+                        <th class="min-tablet">Fecha prox. consulta</th>
+                        <th class="min-tablet">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="cuerpoTabla"></tbody>
@@ -52,6 +52,7 @@ require 'header.php';
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
@@ -109,7 +110,7 @@ require 'header.php';
                         <td>${item.cantidad_surtir}</td>
                         <td>${item.prox_consulta || 'N/A'}</td> 
                         <td style="display: flex; gap: 5px;">
-                            <button class="btn-pdf" style="background-color: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;" onclick="descargarReceta(${item.idReceta})">PDF</button>
+                            <button class="btn-pdf" onclick="descargarReceta(${item.idReceta})">PDF</button>
                             <button class="btn-edit" onclick="abrirModal(${item.idReceta}, '${item.prox_consulta || ''}')">Editar</button>
                             <button class="btn-del" onclick="eliminarRegistro(${item.idReceta})">Borrar</button>
                         </td>
@@ -118,7 +119,6 @@ require 'header.php';
             });
 
             tablaInstancia = $('#tablaRecetas').DataTable({
-                responsive: {
                     details: {
                         renderer: function (api, rowIdx, columns) {
                             let data = $.map(columns, function (col, i) {
@@ -134,8 +134,8 @@ require 'header.php';
                                 $('<div class="dtr-detalle-fila"/>').append(data) :
                                 false;
                         }
-                    }
                 },
+                responsive: true,
                 language: {
                     "decimal": "",
                     "emptyTable": "No hay información en la base de datos",

@@ -40,7 +40,7 @@ require 'header.php';
                     <label for="curp">*CURP del Paciente:</label>
                     <div style="display: flex; gap: 10px; margin-bottom: 5px;">
                         <input class="form" type="text" id="curp" name="curp" maxlength="18" style="text-transform: uppercase; width: 100%; margin-bottom: 0;" required />
-                        <button type="button" id="btn-buscar-curp" class="btn" style="padding: 10px 20px;">Buscar</button>
+
                     </div>
                     <small id="curp-mensaje" style="color: #d9534f; display: none; margin-bottom: 15px;"></small>
 
@@ -78,7 +78,7 @@ require 'header.php';
 
                     <label for="sintomas">*Síntomas (Subjetivos):</label>
                     <textarea id="consulta-sintomas" name="sintomas" rows="10" maxlength="5000" required></textarea>
-                    <small style="color: gray; float: right;">Límite de caracteres: 5000</small>
+                    <small id="contador-consulta-sintomas" class="contador-char">Límite de caracteres: 5000</small>
                 </fieldset>
 
                 <fieldset id="antecedentes_fieldset">
@@ -97,20 +97,21 @@ require 'header.php';
             <div class="tab" data-step="2" aria-hidden="true">
                 <label for="diagnostico">*Diagnóstico Médico:</label>
                 <textarea id="consulta-diagnostico" name="diagnostico" rows="10" maxlength="5000" required></textarea>
-                <small style="color: gray; float: right;">Límite de caracteres: 5000</small>
+                <small id="contador-consulta-diagnostico" class="contador-char">Límite de caracteres: 5000</small>
             </div>
 
             <div class="tab" data-step="3" aria-hidden="true">
                 <label for="tratamiento">*Tratamiento</label>
                 <textarea id="consulta-tratamiento" name="tratamiento" rows="10" maxlength="5000" required></textarea>
-                <small style="color: gray; float: right;">Límite de caracteres: 5000</small>
+                <small id="contador-consulta-tratamiento" class="contador-char">Límite de caracteres: 5000</small>
             </div>
         </form>
         
         <div class="step-controls">
+            <button type="button" id="btn-buscar-curp" class="multi-btn">Buscar CURP</button>
             <button class="multi-btn" type="button" id="prevBtn">Anterior</button>
             <button class="multi-btn" type="button" id="nextBtn">Siguiente</button>
-            <button class="multi-btn-clear" type="button" id="clearBtn" style="background-color: #6c757d;">Limpiar campos</button>
+            <button class="multi-btn-clear" type="button" id="clearBtn">Limpiar campos</button>
             
             <button class="multi-btn-submit" type="submit" id="submitBtn" style="display: none;">Registrar consulta</button>
             <div class="step-indicator" id="stepIndicator">Paso 1 de 4</div>
@@ -172,7 +173,7 @@ btnBuscar.addEventListener('click', async () => {
     } catch (e) {
         alert("Error al buscar paciente.");
     } finally {
-        btnBuscar.textContent = "Buscar";
+        btnBuscar.textContent = "Buscar CURP";
     }
 });
 
@@ -297,6 +298,61 @@ btnBuscar.addEventListener('click', async () => {
 
     showStep(0);
 })();
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Obtener textareas
+    const textareas = document.querySelectorAll('textarea[maxlength]');
+
+    textareas.forEach(function(textarea) {
+        // Seleccionar textareas
+        const contadorId = 'contador-' + textarea.id;
+        const contadorEl = document.getElementById(contadorId);
+
+        if (contadorEl) {
+            //Obtener limite
+            const limite = parseInt(textarea.getAttribute('maxlength'));
+
+            // Logica contador
+            const actualizarContador = function() {
+                const caracteresEscritos = textarea.value.length;
+                const restantes = limite - caracteresEscritos;
+                
+                contadorEl.textContent = restantes + " caracteres restantes";
+
+                //Colores dinamicos
+                if (restantes <= 50) {
+                    contadorEl.style.color = 'var(--PANTONE7420C)'; 
+                } else if (restantes <= (limite * 0.10)) { 
+                    contadorEl.style.color = 'var(--PANTONE1255C)'; 
+                } else {
+                    contadorEl.style.color = 'gray';
+                }
+            };
+
+            //Inicializar contador
+            actualizarContador();
+
+            // Escuchar eventos de entrada
+            textarea.addEventListener('input', actualizarContador);
+        }
+    });
+});
+</script>
+
+<script>
+    //Auto-scroll
+    document.addEventListener("DOMContentLoaded", function() {
+        const formulario = document.getElementById("multiStepForm");
+        
+        if (formulario) {
+            setTimeout(() => {
+                formulario.scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'     
+                });
+            }, 300);
+        }
+    });
 </script>
 
 <script src="Scripts/js/timeout.js"></script>

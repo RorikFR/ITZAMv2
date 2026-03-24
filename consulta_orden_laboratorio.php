@@ -14,20 +14,20 @@ require 'header.php';
     <br>
 
         <div class="tabla-container">
-            <table id="tablaLaboratorio" class="display" style="width:100%">
+            <table id="tablaLaboratorio" class="display responsive nowrap" style="width:100%">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Nombre del paciente</th>
-                        <th>Apellido Paterno</th>
-                        <th>Apellido Materno</th>
-                        <th>CURP</th>
-                        <th>Género</th>
-                        <th>Médico solicitante</th>
-                        <th>Prioridad</th>
-                        <th>Estudio requerido</th>
-                        <th>Diagnóstico preliminar</th>
-                        <th>Acciones</th>
+                        <th class="all">ID</th>
+                        <th class="min-tablet">Nombre del paciente</th>
+                        <th class="min-tablet">Apellido Paterno</th>
+                        <th class="min-tablet">Apellido Materno</th>
+                        <th class="min-tablet">CURP</th>
+                        <th class="min-tablet">Género</th>
+                        <th class="min-tablet">Médico solicitante</th>
+                        <th class="all">Prioridad</th>
+                        <th class="all">Estudio requerido</th>
+                        <th class="min-tablet">Diagnóstico preliminar</th>
+                        <th class="min-tablet">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="cuerpoTabla"></tbody>
@@ -59,6 +59,7 @@ require 'header.php';
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
@@ -175,7 +176,8 @@ require 'header.php';
             });
 
             tablaInstancia = $('#tablaLaboratorio').DataTable({
-            language: {
+                responsive: true,
+                language: {
                     "decimal": "",
                     "emptyTable": "No hay información en la base de datos",
                     "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",

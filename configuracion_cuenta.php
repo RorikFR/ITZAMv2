@@ -23,7 +23,7 @@ require 'header.php';
             </div>
             <div>
                 <a href="configuracion_foto_perfil.php">
-                    <img class="dashboard-icon" src="Assets/noun-black-cat-707608.png" alt="Foto de perfil">
+                    <img class="dashboard-icon" src="Assets/identification-card.png" alt="Foto de perfil">
                     <p class="card-subtitle">Foto del perfil</p>
                 </a>
             </div>

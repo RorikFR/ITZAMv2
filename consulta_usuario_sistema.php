@@ -20,12 +20,12 @@ require 'header.php';
             <tr>
                 <th class="all">ID</th>
                 <th class="all">Nombre de usuario</th>
-                <th>Email</th>
+                <th class="min-tablet">Email</th>
                 <th class="all">Estatus</th>
-                <th>Rol</th>
-                <th>Fecha de creación</th>
-                <th>Fecha de suspensión</th>
-                <th class="all">Acciones</th>
+                <th class="all">Rol</th>
+                <th class="min-tablet">Fecha de creación</th>
+                <th class="min-tablet">Fecha de suspensión</th>
+                <th class="min-tablet">Acciones</th>
             </tr>
         </thead>
         <tbody id="cuerpoTabla"></tbody>
@@ -68,8 +68,8 @@ require 'header.php';
             </div>
             
             <div class="modal-actions" style="margin-top: 20px;">
-                <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
                 <button type="button" class="btn-save" id="btnSavePerfil" onclick="guardarCambiosUsuario()">Guardar Cambios</button>
+                <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
             </div>
         </form>
     </div>
@@ -77,7 +77,7 @@ require 'header.php';
 
 <div id="modalPassword" class="modal-overlay" style="display:none;">
     <div class="modal-box" style="max-width: 400px;">
-        <div class="modal-header" style="background-color: #ffc107; color: #000;">Restablecer Contraseña</div>
+        <div class="modal-header">Restablecer Contraseña</div>
         
         <form id="formPasswordModal" novalidate autocomplete="off">
             <input type="hidden" id="passModalIdUsuario"> 
@@ -94,8 +94,8 @@ require 'header.php';
             </div>
             
             <div class="modal-actions" style="margin-top: 20px;">
+                <button type="button" class="btn-save" id="btnSavePass" onclick="guardarNuevaContrasena()">Actualizar contraseña</button>
                 <button type="button" class="btn-cancel" onclick="cerrarModalPass()">Cancelar</button>
-                <button type="button" class="btn-save" id="btnSavePass" style="background-color: #ffc107; color: #000; border: none;" onclick="guardarNuevaContrasena()">Actualizar Clave</button>
             </div>
         </form>
     </div>
@@ -103,6 +103,7 @@ require 'header.php';
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
@@ -204,9 +205,9 @@ require 'header.php';
                     <td>${item['Fecha de creación']}</td>
                     <td>${fechaSuspension}</td>
                     <td>
-                        <button class="btn-edit" style="margin-right: 5px;" onclick="abrirModal(${item.idUsuario}, '${item['Nombre de usuario']}', '${item.Email}', '${item['Rol']}', '${item['Estatus']}')">Editar</button>
+                        <button class="btn-edit" onclick="abrirModal(${item.idUsuario}, '${item['Nombre de usuario']}', '${item.Email}', '${item['Rol']}', '${item['Estatus']}')">Editar</button>
                         
-                        <button class="btn-pass" style="background-color: #ffc107; color: #000; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px;" onclick="abrirModalPass(${item.idUsuario}, '${item['Nombre de usuario']}')">Cambiar clave</button>
+                        <button class="btn-pass" onclick="abrirModalPass(${item.idUsuario}, '${item['Nombre de usuario']}')">Cambiar contraseña</button>
                         
                         <button class="btn-del" onclick="suspenderUsuario(${item.idUsuario}, '${item['Estatus']}')">Suspender</button>
                     </td>
@@ -215,7 +216,6 @@ require 'header.php';
         });
 
         tablaInstancia = $('#tablaUsuarios').DataTable({
-            responsive: {
                 details: {
                     renderer: function (api, rowIdx, columns) {
                         let data = $.map(columns, function (col, i) {
@@ -227,8 +227,8 @@ require 'header.php';
                         }).join('');
                         return data ? $('<div class="dtr-detalle-fila"/>').append(data) : false;
                     }
-                }
             },
+                responsive: true,
                 language: {
                     "decimal": "",
                     "emptyTable": "No hay información en la base de datos",

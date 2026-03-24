@@ -1,87 +1,87 @@
 <?php
 date_default_timezone_set('America/Mexico_City');
 
-require 'inactive.php';       // 1. Escudo de inactividad
-require 'autorizacion.php';   // 2. Motor de roles
+//Validaciones de seguridad e inactividad
+require 'inactive.php';       
+require 'autorizacion.php';   
 
-// 3. LA BARRERA DE HIERRO: Solo Administradores
+//RBAC
 requerir_roles(['Administrador']);
 
+//Menu dinamico
 require 'header.php';
 ?>
-<!doctype html>
 
     <div class="title-box">
         <h1>Catálogos del sistema</h1>
-        <p style="text-align: center; color: #666;">Selecciona un diccionario de datos para gestionar sus registros.</p>
     </div>
 
-    <div id="vista-tarjetas" style="display: flex; gap: 20px; flex-wrap: wrap; padding: 20px; justify-content: center; max-width: 1200px; margin: auto;">
+<div id="vista-tarjetas" class="vista-tarjetas">
         
-        <div onclick="abrirCatalogo('cat_especialidades', 'Especialidades Médicas')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-            <h1 style="font-size: 3em; margin: 0; color: #007bff;">🩺</h1>
-            <h3 style="margin: 10px 0;">Especialidades</h3>
-            <p style="color: #666; font-size: 0.9em;">Pediatría, Cardiología, etc.</p>
+        <div class="tarjeta-catalogo" onclick="abrirCatalogo('cat_especialidades', 'Especialidades Médicas')">
+            <h1 class="tarjeta-icono">🩺</h1>
+            <h3 class="tarjeta-titulo">Especialidades</h3>
+            <p class="tarjeta-desc">Pediatría, Cardiología, etc.</p>
         </div>
 
-        <div onclick="abrirCatalogo('cat_puestos', 'Puestos de Personal')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-            <h1 style="font-size: 3em; margin: 0; color: #17a2b8;">👨‍⚕️</h1>
-            <h3 style="margin: 10px 0;">Puestos</h3>
-            <p style="color: #666; font-size: 0.9em;">Médico General, Enfermería, etc.</p>
+        <div class="tarjeta-catalogo" onclick="abrirCatalogo('cat_puestos', 'Puestos de Personal')">
+            <h1 class="tarjeta-icono">👨‍⚕️</h1>
+            <h3 class="tarjeta-titulo">Puestos</h3>
+            <p class="tarjeta-desc">Médico General, Enfermería, etc.</p>
         </div>
 
-        <div onclick="abrirCatalogo('cat_tipo_consulta', 'Tipos de Consulta')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-            <h1 style="font-size: 3em; margin: 0; color: #6f42c1;">📋</h1>
-            <h3 style="margin: 10px 0;">Tipos de Consulta</h3>
-            <p style="color: #666; font-size: 0.9em;">General, Urgencias, Especialidad.</p>
+        <div class="tarjeta-catalogo" onclick="abrirCatalogo('cat_tipo_consulta', 'Tipos de Consulta')">
+            <h1 class="tarjeta-icono">📋</h1>
+            <h3 class="tarjeta-titulo">Tipos de Consulta</h3>
+            <p class="tarjeta-desc">General, Urgencias, Especialidad.</p>
         </div>
 
-        <div onclick="abrirCatalogo('cat_motivos_asesoria', 'Motivos de Asesoría')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-            <h1 style="font-size: 3em; margin: 0; color: #e83e8c;">🗣️</h1>
-            <h3 style="margin: 10px 0;">Motivos de Asesoría</h3>
-            <p style="color: #666; font-size: 0.9em;">Vacunación, Tratamiento, etc.</p>
+        <div class="tarjeta-catalogo" onclick="abrirCatalogo('cat_motivos_asesoria', 'Motivos de Asesoría')">
+            <h1 class="tarjeta-icono">🗣️</h1>
+            <h3 class="tarjeta-titulo">Motivos de Asesoría</h3>
+            <p class="tarjeta-desc">Vacunación, Tratamiento, etc.</p>
         </div>
 
-        <div onclick="abrirCatalogo('cat_estudios_laboratorio', 'Estudios de Laboratorio')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-            <h1 style="font-size: 3em; margin: 0; color: #20c997;">🧪</h1>
-            <h3 style="margin: 10px 0;">Estudios Médicos</h3>
-            <p style="color: #666; font-size: 0.9em;">Biometría, Química Sanguínea, etc.</p>
+        <div class="tarjeta-catalogo" onclick="abrirCatalogo('cat_estudios_laboratorio', 'Estudios de Laboratorio')">
+            <h1 class="tarjeta-icono">🧪</h1>
+            <h3 class="tarjeta-titulo">Estudios Médicos</h3>
+            <p class="tarjeta-desc">Biometría, Química Sanguínea, etc.</p>
         </div>
 
-        <div onclick="abrirCatalogo('cat_prioridad_lab', 'Prioridades de Laboratorio')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-            <h1 style="font-size: 3em; margin: 0; color: #dc3545;">🚨</h1>
-            <h3 style="margin: 10px 0;">Prioridades Lab.</h3>
-            <p style="color: #666; font-size: 0.9em;">Urgente, Rutina, Programado.</p>
+        <div class="tarjeta-catalogo" onclick="abrirCatalogo('cat_prioridad_lab', 'Prioridades de Laboratorio')">
+            <h1 class="tarjeta-icono">🚨</h1>
+            <h3 class="tarjeta-titulo">Prioridades Lab.</h3>
+            <p class="tarjeta-desc">Urgente, Rutina, Programado.</p>
         </div>
 
-        <div onclick="abrirCatalogo('proveedores', 'Proveedores Autorizados')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-            <h1 style="font-size: 3em; margin: 0; color: #fd7e14;">📦</h1>
-            <h3 style="margin: 10px 0;">Proveedores</h3>
-            <p style="color: #666; font-size: 0.9em;">Farmacéuticas, Material médico.</p>
+        <div class="tarjeta-catalogo" onclick="abrirCatalogo('proveedores', 'Proveedores Autorizados')">
+            <h1 class="tarjeta-icono">📦</h1>
+            <h3 class="tarjeta-titulo">Proveedores</h3>
+            <p class="tarjeta-desc">Farmacéuticas, Material médico.</p>
         </div>
 
-        <div onclick="abrirCatalogo('cat_afiliacion', 'Tipos de Afiliación')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-            <h1 style="font-size: 3em; margin: 0; color: #198754;">🤝</h1>
-            <h3 style="margin: 10px 0;">Afiliaciones</h3>
-            <p style="color: #666; font-size: 0.9em;">IMSS, ISSSTE, INSABI, etc.</p>
+        <div class="tarjeta-catalogo" onclick="abrirCatalogo('cat_afiliacion', 'Tipos de Afiliación')">
+            <h1 class="tarjeta-icono">🤝</h1>
+            <h3 class="tarjeta-titulo">Afiliaciones</h3>
+            <p class="tarjeta-desc">IMSS, ISSSTE, INSABI, etc.</p>
         </div>
 
-        <div onclick="abrirCatalogo('cat_categoria', 'Categorías de Unidad')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-            <h1 style="font-size: 3em; margin: 0; color: #ffc107;">🏢</h1>
-            <h3 style="margin: 10px 0;">Categorías</h3>
-            <p style="color: #666; font-size: 0.9em;">Clínica, Hospital General, etc.</p>
+        <div class="tarjeta-catalogo" onclick="abrirCatalogo('cat_categoria', 'Categorías de Unidad')">
+            <h1 class="tarjeta-icono">🏢</h1>
+            <h3 class="tarjeta-titulo">Categorías</h3>
+            <p class="tarjeta-desc">Clínica, Hospital General, etc.</p>
         </div>
 
-        <div onclick="abrirCatalogo('registro_unidad', 'Unidades Médicas')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #f8f9fa; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-            <h1 style="font-size: 3em; margin: 0; color: #0dcaf0;">🏥</h1>
-            <h3 style="margin: 10px 0;">Unidades Médicas</h3>
-            <p style="color: #666; font-size: 0.9em;"><em>Vista de solo lectura</em></p>
+        <div class="tarjeta-catalogo readonly" onclick="abrirCatalogo('registro_unidad', 'Unidades Médicas')">
+            <h1 class="tarjeta-icono">🏥</h1>
+            <h3 class="tarjeta-titulo">Unidades Médicas</h3>
+            <p class="tarjeta-desc"><em>Vista de solo lectura</em></p>
         </div>
 
-        <div onclick="abrirCatalogo('catalogo_ubicacion', 'Códigos Postales')" style="cursor: pointer; padding: 30px 20px; border: 1px solid #ddd; border-radius: 10px; width: 250px; text-align: center; background: #f8f9fa; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;">
-            <h1 style="font-size: 3em; margin: 0; color: #6c757d;">📍</h1>
-            <h3 style="margin: 10px 0;">Ubicaciones</h3>
-            <p style="color: #666; font-size: 0.9em;"><em>Vista de solo lectura</em></p>
+        <div class="tarjeta-catalogo readonly" onclick="abrirCatalogo('catalogo_ubicacion', 'Códigos Postales')">
+            <h1 class="tarjeta-icono">📍</h1>
+            <h3 class="tarjeta-titulo">Ubicaciones</h3>
+            <p class="tarjeta-desc"><em>Vista de solo lectura</em></p>
         </div>
 
     </div>
@@ -90,11 +90,11 @@ require 'header.php';
         
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <button onclick="volverTarjetas()" class="btn-cancel" style="margin: 0;">⬅ Volver al menú</button>
-            <h2 id="titulo-catalogo-actual" style="margin: 0; color: #0056b3;">Nombre del Catálogo</h2>
+            <h2 id="titulo-catalogo-actual">Nombre del Catálogo</h2>
             <button onclick="abrirModalNuevo()" class="btn-save" style="margin: 0;">+ Nuevo Registro</button>
         </div>
 
-        <div class="tabla-container">
+        <div class="tabla-container-cat">
             <table id="tablaDetalleCatalogo" class="display responsive nowrap" style="width:100%">
                 <thead>
                     <tr>
@@ -117,12 +117,12 @@ require 'header.php';
                 
                 <div class="form-group">
                     <label for="inputModalValor">Valor / Nombre del registro:</label>
-                    <input type="text" id="inputModalValor" required maxlength="150" placeholder="Ej. Cardiología, A+, Oral..." autofocus>
+                    <input type="text" id="inputModalValor" required maxlength="150" autofocus>
                 </div>
                 
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
                     <button type="button" class="btn-save" id="btnSaveCatalogo" onclick="guardarCambios()">Guardar</button>
+                    <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -159,10 +159,10 @@ require 'header.php';
     let catalogoActualBD = ""; 
     let catalogoActualNombre = "";
     
-    // LISTA DE CATÁLOGOS COMPLEJOS (No editables desde este modal simple)
+    //Catalogos solo lectura
     const catalogosSoloLectura = ['registro_unidad', 'catalogo_ubicacion'];
 
-    // --- NAVEGACIÓN ENTRE VISTAS ---
+    //Navegacion
     function abrirCatalogo(tabla_bd, nombre_amigable) {
         catalogoActualBD = tabla_bd;
         catalogoActualNombre = nombre_amigable;
@@ -188,7 +188,7 @@ require 'header.php';
         catalogoActualBD = "";
     }
 
-    // --- 1. CARGAR DATOS DEL CATÁLOGO SELECCIONADO (GET) ---
+    //Cargar datos de catalogo
     async function cargarDatosCatalogo() {
         if (tablaInstancia !== null) {
             tablaInstancia.destroy();
@@ -209,7 +209,7 @@ require 'header.php';
         }
     }
 
-    // --- RENDERIZAR E INICIALIZAR DATATABLES ---
+    //Renderizar e inicializar DataTables
     function renderizar(datos) {
         cuerpoTabla.innerHTML = "";
         
@@ -219,7 +219,7 @@ require 'header.php';
             cuerpoTabla.innerHTML = "<tr><td colspan='3' style='text-align:center; padding: 20px;'>El catálogo está vacío.</td></tr>";
         } else {
             datos.forEach(item => {
-                // Sanitizamos las comillas para no romper el HTML de los botones
+                //Sanitizar entradas
                 const valorSafe = item.valor ? item.valor.replace(/'/g, "\\'").replace(/"/g, '&quot;') : ''; 
 
                 let botonesAccion = `
@@ -292,7 +292,7 @@ require 'header.php';
         });
     }
 
-    // --- 2. ELIMINAR (POST) ---
+    //Eliminar registro
     async function eliminarRegistro(id) {
         if(!confirm(`¿Confirma que desea eliminar este registro del catálogo de ${catalogoActualNombre}?`)) return;
 
@@ -316,7 +316,7 @@ require 'header.php';
         } catch (error) { alert("Error al eliminar"); }
     }
 
-    // --- 3. GESTIÓN DEL MODAL (NUEVO / EDITAR) ---
+    //Crear registro
     function abrirModalNuevo() {
         document.getElementById("modal-titulo").innerText = `Nuevo Registro - ${catalogoActualNombre}`;
         formModal.reset();
@@ -324,6 +324,7 @@ require 'header.php';
         modal.classList.add("show");
     }
 
+    //Editar registro
     function abrirModalEditar(id, valor) {
         document.getElementById("modal-titulo").innerText = `Editar Registro - ${catalogoActualNombre}`;
         inputModalId.value = id;
@@ -335,6 +336,7 @@ require 'header.php';
         modal.classList.remove("show"); 
     }
 
+    //Guardar cambios
     async function guardarCambios() {
         if (!formModal.checkValidity()) {
             formModal.reportValidity();
@@ -353,7 +355,7 @@ require 'header.php';
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    accion: 'editar', // Tu backend parece usar la acción base para guardar o insertar
+                    accion: 'editar', 
                     tabla: catalogoActualBD,
                     id: id, 
                     valor: valor 

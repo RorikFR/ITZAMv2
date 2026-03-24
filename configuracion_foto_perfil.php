@@ -26,7 +26,7 @@ $foto_actual = isset($_SESSION['foto_perfil']) && $_SESSION['foto_perfil'] !== '
                 <form id="form-foto-perfil" action="" method="post" enctype="multipart/form-data">
                     
                     <div style="margin-bottom: 20px;">
-                        <img id="profile-picture" src="<?= htmlspecialchars($foto_actual) ?>" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 3px solid #0056b3; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                        <img id="profile-picture" class="profile-picture" src="<?= htmlspecialchars($foto_actual) ?>">
                     </div>
                     
                     <div class="form-group" style="margin-bottom: 20px;">

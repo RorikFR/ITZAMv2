@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// Opcional: Si el usuario YA tiene sesión, lo mandamos directo al sistema para que no vea el login de nuevo.
 if (isset($_SESSION['idUsuario'])) {
     header("Location: home.php"); 
     exit;
@@ -12,16 +11,15 @@ if (isset($_SESSION['idUsuario'])) {
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
-		<title>Login</title>
+		<title>Login - ITZAM</title>
 		<link rel="stylesheet" href="styles.css" />
 		<script src="https://www.google.com/recaptcha/api.js" async defer></script>
-
 	</head>
 	<body>
 
 	<header>
 		<div class="topbar-container-login">
-			<div class="topbar-header-login">Sistema web de consulta de información clínica ITZAM</div>
+			<div class="topbar-header-login">Sistema web de consulta de información clínica</div>
 		</div>
 	</header>
 
@@ -50,9 +48,12 @@ if (isset($_SESSION['idUsuario'])) {
 								</div>
 								<div id="error" class="err" aria-live="polite"></div>
 
-								<button class="btn" type="submit">Iniciar sesión</button>
+								<button class="btn-login" type="submit">Iniciar sesión</button>
 							</form>
-							<span class="forgot" id="forgot">Olvide mi contraseña y/o usuario</span>
+							
+							<span class="forgot" id="forgot" onclick="abrirModalRecuperacion()">
+								Olvidé mi contraseña y/o usuario
+							</span>
 						</main>
 					</div>
 				</div>
@@ -60,106 +61,54 @@ if (isset($_SESSION['idUsuario'])) {
 			</div>
 		</div>
 
-<div id="myModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <span class="close">&times;</span>
-      <h2>¿Olvidaste tus credenciales de acceso?</h2>
-    </div>
-    <div class="modal-body">
-      <p class="modal-body" id="recover-instructions">
-        Ingresa tu correo electrónico registrado para solicitar al administrador el restablecimiento de tu acceso.
-      </p>
-      
-      <input type="email" id="recover-email" class="login" placeholder="ejemplo@correo.com" style="width: 90%; margin-bottom: 15px;" required>
-      
-      <button class="btn" id="btn-recover" onclick="enviarSolicitudRecuperacion()">Enviar solicitud</button>
-      
-      <p id="recover-message" class="modal-body" style="display:none; font-weight:bold; margin-top:15px;"></p>
-    </div>
-  </div>
-</div>
+		<div id="modalRecuperacion" class="modal-overlay" style="display:none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center;">
+			<div class="modal-box" style="background: white; border-radius: 8px; max-width: 420px; text-align: center; padding: 0; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+				<div class="modal-header">
+					Recuperación de Acceso
+				</div>
+				
+				<div style="padding: 30px 20px;">
+					<h1 style="font-size: 3.5em; margin: 0 0 15px 0; color: #B58500;">🔒</h1>
+					
+					<h3 style="color: #231F20; margin-bottom: 15px;">¿Problemas para iniciar sesión?</h3>
+					
+					<p style="color: #97999B; font-size: 0.95em; line-height: 1.6; margin-bottom: 20px;">
+						Por políticas de seguridad y protección de datos clínicos, el restablecimiento de contraseñas se realiza estrictamente de forma interna.
+					</p>
+					
+					<p style="color: #231F20; font-weight: bold; font-size: 0.95em; margin-bottom: 25px; padding: 10px; background-color: #f8f9fa; border-radius: 5px; border: 1px dashed #97999B;">
+						Comunícate con Soporte para solicitar una nueva clave.
+					</p>
+					
+					<button type="button" class="btn-save" onclick="cerrarModalRecuperacion()">Entendido</button>
+				</div>
+			</div>
+		</div>
 
-<script>
-	// --- LÓGICA DE RECUPERACIÓN DE CONTRASEÑA (POR CORREO) ---
-    async function enviarSolicitudRecuperacion() {
-        const email = document.getElementById('recover-email').value.trim();
-        const msgEl = document.getElementById('recover-message');
-        const btn = document.getElementById('btn-recover');
+		<footer class="bottombar">© 2026 ITZAM</footer>
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!email || !emailRegex.test(email)) {
-            msgEl.style.display = 'block';
-            msgEl.style.color = '#d9534f'; 
-            msgEl.textContent = 'Por favor, ingresa un correo electrónico válido.';
-            return;
-        }
-
-        btn.textContent = 'Enviando...';
-        btn.disabled = true;
-        msgEl.style.display = 'none';
-
-        try {
-            const res = await fetch('backend_recuperar.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email }) 
-            });
-            const data = await res.json();
-
-            msgEl.style.display = 'block';
-            
-            if (data.estatus === 'exito') {
-                msgEl.style.color = '#5cb85c'; 
-                msgEl.textContent = '✅ ' + data.mensaje;
-                
-                document.getElementById('recover-email').style.display = 'none';
-                btn.style.display = 'none';
-                document.getElementById('recover-instructions').style.display = 'none';
-                
-            } else {
-                msgEl.style.color = '#d9534f'; 
-                msgEl.textContent = '⚠️ ' + data.mensaje;
-                btn.textContent = 'Enviar solicitud';
-                btn.disabled = false;
-            }
-            
-        } catch (err) {
-            msgEl.style.display = 'block';
-            msgEl.style.color = '#d9534f';
-            msgEl.textContent = 'Error de conexión con el servidor.';
-            btn.textContent = 'Enviar solicitud';
-            btn.disabled = false;
-        }
-    }
-</script>
-
-	<footer class="bottombar">© 2026 ITZAM</footer>
-
-<script>
-	var modal = document.getElementById("myModal");
-	var btn = document.getElementById("forgot");
-	var span = document.getElementsByClassName("close")[0];
-
-	btn.onclick = function() {
-	  modal.style.display = "block";
-	}
-
-	span.onclick = function() {
-	  modal.style.display = "none";
-	}
-
-	window.onclick = function(event) {
-	  if (event.target == modal) {
-	    modal.style.display = "none";
-	  }
-	}
-</script>
-		
 		<script>
+			// Modal
+			function abrirModalRecuperacion() {
+				document.getElementById('modalRecuperacion').style.display = 'flex';
+			}
+
+			function cerrarModalRecuperacion() {
+				document.getElementById('modalRecuperacion').style.display = 'none';
+			}
+
+			//Cerrar modal
+			window.addEventListener('click', function(event) {
+				var modal = document.getElementById('modalRecuperacion');
+				if (event.target === modal) {
+					cerrarModalRecuperacion();
+				}
+			});
+
+			// Logica de inicio de sesion
 			const form = document.getElementById('login-form');
 			const errorEl = document.getElementById('error');
-            const submitBtn = form.querySelector('button[type="submit"]'); // 🔥 Novedad: Capturamos el botón
+            const submitBtn = form.querySelector('button[type="submit"]');
 
 			form.addEventListener('submit', async (ev) => {
 				ev.preventDefault();
@@ -184,12 +133,11 @@ if (isset($_SESSION['idUsuario'])) {
 					'g-recaptcha-response': token
 				};
 
-                // 🔥 Novedad: Bloqueamos el botón y cambiamos el texto
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Verificando...';
 
 				try {
-					const res = await fetch('/login.php', {
+					const res = await fetch('login.php', {
 						method: 'POST',
 						headers: {'Content-Type':'application/json'},
 						body: JSON.stringify(payload)
@@ -201,26 +149,23 @@ if (isset($_SESSION['idUsuario'])) {
 						window.location.href = data.redirect;
 						return;
 					}
-					alert('Inicio de sesión correcto');
 				} catch (err) {
 					errorEl.textContent = err.message || 'Error en el inicio de sesión';
 					errorEl.style.display = 'block';
 					if (typeof grecaptcha !== 'undefined') grecaptcha.reset();
 				} finally {
-                    // 🔥 Novedad: Reactivamos el botón al terminar
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Iniciar sesión';
                 }
 			});
 
-			// Agrega esto en tu script de index.html
+			//Alerta por inactividad
 			const urlParams = new URLSearchParams(window.location.search);
 			if (urlParams.has('timeout')) {
-			    const errorEl = document.getElementById('error');
 			    errorEl.textContent = "Tu sesión ha expirado por inactividad. Por favor, ingresa de nuevo.";
 			    errorEl.style.display = 'block';
 			    
-			    // Limpiamos la URL para que no se quede el ?timeout=1
+			    // Limpiamos la URL para que no se quede el ?timeout=1 si el usuario recarga
 			    window.history.replaceState({}, document.title, window.location.pathname);
 			}
 		</script>

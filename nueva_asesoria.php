@@ -28,7 +28,7 @@ require 'header.php';
                     <label class="form" for="curp">*CURP:</label>
                     <div style="display: flex; gap: 10px;">
 					    <input class="form" type="text" id="curp" name="curp" maxlength="18" style="text-transform: uppercase; width: 100%;" required />
-                        <button type="button" id="btn-buscar-curp" class="btn" style="padding: 10px 20px;">Buscar</button>
+                        <button type="button" id="btn-buscar-curp" class="btn-small">🔍</button>
                     </div>
                     <small id="curp-mensaje" style="color: #d9534f; display: none; margin-bottom: 10px;">Paciente no encontrado.</small>
 			
@@ -50,11 +50,11 @@ require 'header.php';
 					</select>
 
 					<label class="form" for="comentarios">*Comentarios:</label>
-					<textarea class="form" id="comentario-asesoria" name="comentarios" rows="8" required></textarea>
+					<textarea class="form" id="comentario-asesoria" name="comentarios" rows="8" maxlength="1000" required></textarea>
+                    <small id="contador-comentario-asesoria" class="contador-char">Límite de caracteres: 1000</small>
 				</fieldset>
-
                 <button type="submit" id="submit" class="long-btn">Registrar Asesoría</button>
-				<button type="button" id="clear" class="long-btn" style="background-color: #6c757d;">Limpiar campos</button>
+				<button type="button" id="clear" class="clr-btn">Limpiar campos</button>
             </form>
         </div>
 	</div>
@@ -125,7 +125,7 @@ require 'header.php';
         } catch (error) {
             alert("Error de conexión al buscar paciente.");
         } finally {
-            btnBuscarCurp.textContent = "Buscar";
+            btnBuscarCurp.textContent = "🔍";
         }
     });
 
@@ -184,6 +184,45 @@ require 'header.php';
         document.getElementById('idPaciente').value = '';
         curpMensaje.style.display = 'none';
     });
+
+    document.addEventListener("DOMContentLoaded", function() {
+    // Obtener textareas
+    const textareas = document.querySelectorAll('textarea[maxlength]');
+
+    textareas.forEach(function(textarea) {
+        // Seleccionar textareas
+        const contadorId = 'contador-' + textarea.id;
+        const contadorEl = document.getElementById(contadorId);
+
+        if (contadorEl) {
+            //Obtener limite
+            const limite = parseInt(textarea.getAttribute('maxlength'));
+
+            // Logica contador
+            const actualizarContador = function() {
+                const caracteresEscritos = textarea.value.length;
+                const restantes = limite - caracteresEscritos;
+                
+                contadorEl.textContent = restantes + " caracteres restantes";
+
+                //Colores dinamicos
+                if (restantes <= 50) {
+                    contadorEl.style.color = 'var(--PANTONE7420C)'; 
+                } else if (restantes <= (limite * 0.10)) { 
+                    contadorEl.style.color = 'var(--PANTONE1255C)'; 
+                } else {
+                    contadorEl.style.color = 'gray';
+                }
+            };
+
+            //Inicializar contador
+            actualizarContador();
+
+            // Escuchar eventos de entrada
+            textarea.addEventListener('input', actualizarContador);
+        }
+    });
+});
 </script>
 
 <script src="Scripts/js/timeout.js"></script>

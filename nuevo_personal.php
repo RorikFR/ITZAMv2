@@ -246,4 +246,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 })();
 </script>
 
+
+<script>
+    //Auto-scroll
+    document.addEventListener("DOMContentLoaded", function() {
+        const formulario = document.getElementById("multiStepForm");
+        
+        if (formulario) {
+            setTimeout(() => {
+                formulario.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start'     
+                });
+            }, 300);
+        }
+    });
+</script>
+
 <script src="Scripts/js/timeout.js"></script>

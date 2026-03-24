@@ -33,7 +33,7 @@ require 'header.php';
                     <label for="curp">*CURP del paciente:</label>
                     <div style="display: flex; gap: 10px; margin-bottom: 5px;">
                         <input class="form" type="text" id="curp" name="curp" maxlength="18" style="text-transform: uppercase; width: 100%; margin-bottom: 0;" required />
-                        <button type="button" id="btn-buscar-curp" class="btn" style="padding: 10px 20px;">Buscar</button>
+                        <button type="button" id="btn-buscar-curp" class="btn-small">🔍</button>
                     </div>
                     <small id="curp-mensaje" style="color: #d9534f; display: none; margin-bottom: 15px;"></small>
 
@@ -51,8 +51,8 @@ require 'header.php';
                     </select>
 
                     <label for="laboratorio-observ">Observaciones para laboratorio:</label>
-                    <textarea class="form" id="laboratorio-observ" name="observaciones" rows="4" maxlength="2000"></textarea> 
-                    <small style="color: gray; float: right; margin-bottom: 10px;">Límite: 2000 caracteres</small>
+                    <textarea id="laboratorio-observ" maxlength="2000"></textarea> 
+                    <small id="contador-laboratorio-observ" class="contador-char"></small>
                 </fieldset>
             </div>
 
@@ -61,7 +61,7 @@ require 'header.php';
 
                     <label for="laboratorio-diag-pre">*Diagnóstico preliminar:</label>
                     <textarea id="laboratorio-diag-pre" name="diagnostico_preliminar" rows="6" maxlength="5000" required></textarea>
-                    <small style="color: gray; float: right; margin-bottom: 10px;">Límite: 5000 caracteres</small>
+                    <small id="contador-laboratorio-diag-pre" class="contador-char">Límite: 5000 caracteres</small>
                 </fieldset>
             </div>
         </form>
@@ -134,7 +134,7 @@ btnBuscar.addEventListener('click', async () => {
     } catch (e) {
         alert("Error al buscar paciente.");
     } finally {
-        btnBuscar.textContent = "Buscar";
+        btnBuscar.textContent = "🔍";
     }
 });
 
@@ -246,6 +246,61 @@ btnBuscar.addEventListener('click', async () => {
 
     showStep(0);
 })();
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Obtener textareas
+    const textareas = document.querySelectorAll('textarea[maxlength]');
+
+    textareas.forEach(function(textarea) {
+        // Seleccionar textareas
+        const contadorId = 'contador-' + textarea.id;
+        const contadorEl = document.getElementById(contadorId);
+
+        if (contadorEl) {
+            //Obtener limite
+            const limite = parseInt(textarea.getAttribute('maxlength'));
+
+            // Logica contador
+            const actualizarContador = function() {
+                const caracteresEscritos = textarea.value.length;
+                const restantes = limite - caracteresEscritos;
+                
+                contadorEl.textContent = restantes + " caracteres restantes";
+
+                //Colores dinamicos
+                if (restantes <= 50) {
+                    contadorEl.style.color = 'var(--PANTONE7420C)'; 
+                } else if (restantes <= (limite * 0.10)) { 
+                    contadorEl.style.color = 'var(--PANTONE1255C)'; 
+                } else {
+                    contadorEl.style.color = 'gray';
+                }
+            };
+
+            //Inicializar contador
+            actualizarContador();
+
+            // Escuchar eventos de entrada
+            textarea.addEventListener('input', actualizarContador);
+        }
+    });
+});
+</script>
+
+<script>
+    //Auto-scroll
+    document.addEventListener("DOMContentLoaded", function() {
+        const formulario = document.getElementById("multiStepForm");
+        
+        if (formulario) {
+            setTimeout(() => {
+                formulario.scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'     
+                });
+            }, 300);
+        }
+    });
 </script>
 
 <script src="Scripts/js/timeout.js"></script>

@@ -1,112 +1,73 @@
 <?php
-// 1. ESCUDOS BASE
-require 'seguridad_backend.php'; // Valida la sesión, inactividad y formatea la salida a JSON
-require 'autorizacion.php';      // Carga el motor de permisos
+//Validaciones de seguridad e inactividad
+require 'seguridad_backend.php'; 
+require 'autorizacion.php';      
 
-// 2. 🛑 LA BARRERA DE HIERRO (Nivel 3)
-// Usamos la función terminada en "_api" para que devuelva un error HTTP 403 en lugar de redirigir.
+//RBAC
 requerir_roles_api(['Administrador']); 
 
-// --- 1. CONFIGURACIÓN DE LA BASE DE DATOS ---
+//Conexión a DB
 require 'db_conn.php';
 
-// --- 2. EL ESCUDO DE SEGURIDAD: LA LISTA BLANCA ---
+//Lista de catalogos permitidos
 $catalogos_permitidos = [
-    'cat_motivos_asesoria' => [
-        'col_id'    => 'idMotivo', 
-        'col_valor' => 'nombre_motivo'
-    ],
-    'cat_tipo_consulta' => [
-        'col_id'    => 'idTipoConsulta', 
-        'col_valor' => 'nombre_tipo'
-    ],
-    'cat_especialidades' => [
-        'col_id'    => 'idEspecialidad', 
-        'col_valor' => 'nombre_especialidad'
-    ],
-    'cat_puestos' => [
-        'col_id'    => 'idPuesto', 
-        'col_valor' => 'nombre_puesto'
-    ],
-    'cat_prioridad_lab' => [
-        'col_id'    => 'idPrioridad', 
-        'col_valor' => 'nombre_prioridad'
-    ],
-    'cat_estudios_laboratorio' => [
-        'col_id'    => 'idEstudio', 
-        'col_valor' => 'nombre_estudio'
-    ],
-    'proveedores' => [
-        'col_id'    => 'idProveedor', 
-        'col_valor' => 'nombre'
-    ],
-    'registro_unidad' => [
+    'cat_motivos_asesoria' => ['col_id' => 'idMotivo', 'col_valor' => 'nombre_motivo'],
+    'cat_tipo_consulta'    => ['col_id' => 'idTipoConsulta', 'col_valor' => 'nombre_tipo'],
+    'cat_especialidades'   => ['col_id' => 'idEspecialidad', 'col_valor' => 'nombre_especialidad'],
+    'cat_puestos'          => ['col_id' => 'idPuesto', 'col_valor' => 'nombre_puesto'],
+    'cat_prioridad_lab'    => ['col_id' => 'idPrioridad', 'col_valor' => 'nombre_prioridad'],
+    'cat_estudios_laboratorio' => ['col_id' => 'idEstudio', 'col_valor' => 'nombre_estudio'],
+    'proveedores'          => ['col_id' => 'idProveedor', 'col_valor' => 'nombre'],
+    'cat_afiliacion'       => ['col_id' => 'idAfiliacion', 'col_valor' => 'nombre_afiliacion'],
+    'cat_categoria'        => ['col_id' => 'idCategoria', 'col_valor' => 'nombre_categoria'],
+    
+    //Solo lectura
+    'registro_unidad'      => [
         'col_id'    => 'idUnidad', 
-        // Usamos una subconsulta SQL para extraer el nombre de la otra tabla en tiempo real
-        'col_valor' => "CONCAT(nombre, ' (', (SELECT nombre_afiliacion FROM cat_afiliacion WHERE cat_afiliacion.idAfiliacion = registro_unidad.idAfiliacion), ')')"
+        'col_valor' => "CONCAT(nombre, ' (', (SELECT nombre_afiliacion FROM cat_afiliacion WHERE cat_afiliacion.idAfiliacion = registro_unidad.idAfiliacion LIMIT 1), ')')"
     ],
-    'cat_afiliacion' => [
-        'col_id'    => 'idAfiliacion', 
-        'col_valor' => 'nombre_afiliacion'
-    ],
-    'cat_categoria' => [
-        'col_id'    => 'idCategoria', 
-        'col_valor' => 'nombre_categoria'
-    ],
-    'catalogo_ubicacion' => [
+    'catalogo_ubicacion'   => [
         'col_id'    => 'idUbicacion',
         'col_valor' => "CONCAT(codigo_postal, ' - ', colonia, ', ', ciudad)" 
     ]
 ];
 
+$catalogos_solo_lectura = ['registro_unidad', 'catalogo_ubicacion'];
+
 $method = $_SERVER['REQUEST_METHOD'];
 
-// ==========================================
-// 🔵 PETICIONES GET: LECTURA DE DATOS
-// ==========================================
+//Carga de datos
 if ($method === 'GET') {
     
-    // 🔥 1. ACCIONES ESPECIALES PRIMERO (Antes de la Lista Blanca) 🔥
+    // Buscar código postal
     if (isset($_GET['accion']) && $_GET['accion'] === 'buscar_cp') {
         
-        // Sanitización extrema: Forzamos que solo lleguen números
         $cp = preg_replace('/\D/', '', $_GET['cp'] ?? '');
 
-        // Validación de longitud
         if (strlen($cp) !== 5) {
             echo json_encode(["estatus" => "error", "mensaje" => "El código postal debe ser de 5 dígitos."]);
             exit;
         }
 
         try {
-            // Traemos todas las colonias que compartan este CP, junto con su ciudad y estado
-            $stmt = $pdo->prepare("
-                SELECT idUbicacion, colonia, ciudad, estado 
-                FROM catalogo_ubicacion 
-                WHERE codigo_postal = :cp 
-                ORDER BY colonia ASC
-            ");
+            $stmt = $pdo->prepare("SELECT idUbicacion, colonia, ciudad, estado FROM catalogo_ubicacion WHERE codigo_postal = :cp ORDER BY colonia ASC");
             $stmt->execute(['cp' => $cp]);
             $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Respuesta al Frontend
             if (count($resultados) > 0) {
                 echo json_encode(["estatus" => "exito", "data" => $resultados]);
             } else {
-                echo json_encode(["estatus" => "error", "mensaje" => "CP no encontrado."]);
+                echo json_encode(["estatus" => "error", "mensaje" => "CP no encontrado en la base de datos."]);
             }
         } catch (PDOException $e) {
-            echo json_encode(["estatus" => "error", "mensaje" => "Error de base de datos."]);
+            echo json_encode(["estatus" => "error", "mensaje" => "Error interno de base de datos."]);
         }
-        
-        // Matamos el proceso aquí para que no intente validar la Lista Blanca
         exit;
     }
 
-    // 🛡️ 2. LÓGICA NORMAL DE CATÁLOGOS (La Lista Blanca) 🛡️
+    //Catalogos
     $tabla_solicitada = $_GET['tabla'] ?? '';
 
-    // Verificamos que la tabla exista en nuestra Lista Blanca
     if (!array_key_exists($tabla_solicitada, $catalogos_permitidos)) {
         echo json_encode(["error" => "Catálogo no válido o no autorizado por el sistema."]);
         exit;
@@ -116,40 +77,45 @@ if ($method === 'GET') {
     $col_valor = $catalogos_permitidos[$tabla_solicitada]['col_valor'];
 
     try {
-        // Armamos la consulta dinámica segura
-        $sql = "SELECT $col_id AS id, $col_valor AS valor FROM $tabla_solicitada ORDER BY $col_valor ASC";
+        $sql = "SELECT $col_id AS id, $col_valor AS valor FROM $tabla_solicitada ORDER BY valor ASC";
         $stmt = $pdo->query($sql);
         
         echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
     } catch (Exception $e) {
-        echo json_encode(["error" => "Error al consultar el catálogo."]);
+        echo json_encode(["error" => "Error al consultar el catálogo seleccionado."]);
     }
+    exit;
 }
 
-// ==========================================
-// 🔴 PETICIONES POST: CREAR, EDITAR, ELIMINAR
-// ==========================================
+
+//Crear, Editar o Eliminar
 elseif ($method === 'POST') {
     
-    $inputJSON = file_get_contents('php://input');
-    $input = json_decode($inputJSON, true);
+    $input = json_decode(file_get_contents('php://input'), true);
     
     $accion = $input['accion'] ?? '';
     $tabla_solicitada = $input['tabla'] ?? '';
 
-    // Verificamos seguridad nuevamente para las acciones POST
+    //Verificar que catalogo este en lista permitida
     if (!array_key_exists($tabla_solicitada, $catalogos_permitidos)) {
         echo json_encode(["estatus" => "error", "mensaje" => "Intento de acceso a tabla no autorizada."]);
+        exit;
+    }
+
+    //Verificar si es de solo lectura
+    if (in_array($tabla_solicitada, $catalogos_solo_lectura)) {
+        echo json_encode(["estatus" => "error", "mensaje" => "Operación denegada. Este catálogo es gestionado por un módulo especializado y es de solo lectura aquí."]);
         exit;
     }
 
     $col_id = $catalogos_permitidos[$tabla_solicitada]['col_id'];
     $col_valor = $catalogos_permitidos[$tabla_solicitada]['col_valor'];
 
-    // --- ACCIÓN: CREAR (NUEVO REGISTRO) ---
-    if ($accion === 'crear') {
-        $valor = trim($input['valor'] ?? '');
+    //Sanitizar entradas
+    $valor = strip_tags(trim($input['valor'] ?? ''));
 
+    //Crear registro
+    if ($accion === 'crear') {
         if (empty($valor)) {
             echo json_encode(["estatus" => "error", "mensaje" => "El valor no puede estar vacío."]); exit;
         }
@@ -159,16 +125,15 @@ elseif ($method === 'POST') {
             $stmt = $pdo->prepare($sql);
             $stmt->execute(['valor' => $valor]);
             
-            echo json_encode(["estatus" => "exito", "mensaje" => "Registro agregado correctamente al catálogo."]);
+            echo json_encode(["estatus" => "exito", "mensaje" => "Registro agregado correctamente."]);
         } catch (Exception $e) {
             echo json_encode(["estatus" => "error", "mensaje" => "Error al guardar el nuevo registro."]);
         }
     }
     
-    // --- ACCIÓN: EDITAR ---
+    //Editar registro
     elseif ($accion === 'editar') {
         $id = filter_var($input['id'] ?? '', FILTER_VALIDATE_INT);
-        $valor = trim($input['valor'] ?? '');
 
         if (empty($id) || empty($valor)) {
             echo json_encode(["estatus" => "error", "mensaje" => "Datos incompletos para actualizar."]); exit;
@@ -181,11 +146,11 @@ elseif ($method === 'POST') {
             
             echo json_encode(["estatus" => "exito", "mensaje" => "Registro actualizado correctamente."]);
         } catch (Exception $e) {
-            echo json_encode(["estatus" => "error", "mensaje" => "Error de base de datos al actualizar."]);
+            echo json_encode(["estatus" => "error", "mensaje" => "Error al intentar actualizar el registro."]);
         }
     }
     
-    // --- ACCIÓN: ELIMINAR ---
+    //Eliminar registro
     elseif ($accion === 'eliminar') {
         $id = filter_var($input['id'] ?? '', FILTER_VALIDATE_INT);
 
@@ -198,13 +163,13 @@ elseif ($method === 'POST') {
             $stmt = $pdo->prepare($sql);
             $stmt->execute(['id' => $id]);
             
-            echo json_encode(["estatus" => "exito", "mensaje" => "Registro eliminado del catálogo."]);
+            echo json_encode(["estatus" => "exito", "mensaje" => "Registro eliminado exitosamente."]);
         } catch (PDOException $e) {
-            // 🔥 EL ESCUDO 3FN: Evitamos que borren algo que ya está en uso
+            //Mantener integridad referencial. (FK)
             if ($e->getCode() == 23000) {
                 echo json_encode([
                     "estatus" => "error", 
-                    "mensaje" => "No se puede borrar. Este registro ya está siendo utilizado en expedientes, consultas o inventario."
+                    "mensaje" => "No se puede borrar. Este registro ya está siendo utilizado (por ejemplo, en un expediente o por un usuario)."
                 ]);
             } else {
                 echo json_encode(["estatus" => "error", "mensaje" => "Error interno al intentar eliminar el registro."]);

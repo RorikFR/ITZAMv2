@@ -10,23 +10,22 @@ requerir_roles(['Médico', 'Enfermería']);
 //Menu de navegación dinámico
 require 'header.php';
 ?>
-
-    <br>
+<br>
 
         <div class="tabla-container">
-            <table id="tablaAsesorias" class="display" style="width:100%; text-align: center;">
+            <table id="tablaAsesorias" class="display responsive nowrap" style="width:100%; text-align: center;">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>CURP</th>
-                        <th>Nombre</th>
-                        <th>Apellido paterno</th>
-                        <th>Apellido materno</th>
-                        <th>Motivo de la solicitud</th>
-                        <th>Comentarios</th>
-                        <th>Atendió</th>
-                        <th>Fecha</th>
-                        <th>Acciones</th>
+                        <th class="all">ID</th>
+                        <th class="min-tablet">Nombre</th>
+                        <th class="min-tablet">Apellido paterno</th>
+                        <th class="min-tablet">Apellido materno</th>
+                        <th class="min-tablet">CURP</th>
+                        <th class="all">Motivo de la solicitud</th>
+                        <th class="min-tablet">Comentarios</th>
+                        <th class="min-tablet">Atendió</th>
+                        <th class="min-tablet">Fecha</th>
+                        <th class="all">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="cuerpoTabla"></tbody>
@@ -60,6 +59,7 @@ require 'header.php';
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
@@ -145,10 +145,10 @@ require 'header.php';
                     cuerpoTabla.innerHTML += `
                         <tr>
                             <td><b>${item.idAsesoria}</b></td>
-                            <td style="font-family: monospace;">${item.curp}</td>
                             <td>${item.nombre}</td>
                             <td>${item.apellido_p}</td>
                             <td>${item.apellido_m}</td>
+                            <td style="font-family: monospace;">${item.curp}</td>
                             <td>${item.motivo}</td>
                             <td>${item.comentarios}</td>
                             <td><b>${item.personal_medico}</b></td> 
@@ -163,6 +163,7 @@ require 'header.php';
 
 
             tablaInstancia = $('#tablaAsesorias').DataTable({
+                responsive: true,
                 language: {
                     "decimal": "",
                     "emptyTable": "No hay información en la base de datos",

@@ -27,15 +27,13 @@ require 'header.php';
         
         <form class="multiform" id="multiStepForm" novalidate autocomplete="off">
             <div class="tab active" data-step="0" aria-hidden="false">
-                
-                <fieldset style="background-color: #e8f4fd; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid #b6d4fe;">
-                    <label for="idCatalogoEquipo" style="color: #084298;">🩺 <strong>Catálogo Oficial de Equipos:</strong></label>
-                    <select class="form" id="idCatalogoEquipo" name="idCatalogoEquipo" style="border-color: #0d6efd;">
-                        <option value="nuevo" selected>➕ Registrar un equipo nuevo en el catálogo</option>
-                    </select>
-                </fieldset>
 
                 <fieldset id="inventario-datos-generales-equipo">
+                    <label for="idCatalogoEquipo" style="color: var(--PANTONE627C);"><strong>Catálogo de Equipos:</strong></label>
+                    <select class="form" id="idCatalogoEquipo" name="idCatalogoEquipo" style="border-color: var(--PANTONE627C);">
+                        <option value="nuevo" selected>➕ Registrar un equipo nuevo en el catálogo</option>
+                    </select>
+
                     <label for="nombre">*Nombre del Equipo:</label>
                     <input class="form datos-equipo" type="text" id="nombre" name="nombre" maxlength="120" pattern="^[\w\s.-]+$" required placeholder="Ej. Monitor de Signos Vitales">
                     
@@ -246,6 +244,22 @@ require 'header.php';
 
         showStep(0);
     })();
+</script>
+
+<script>
+    //Auto-scroll
+    document.addEventListener("DOMContentLoaded", function() {
+        const formulario = document.getElementById("multiStepForm");
+        
+        if (formulario) {
+            setTimeout(() => {
+                formulario.scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'     
+                });
+            }, 300);
+        }
+    });
 </script>
 
 <script src="Scripts/js/timeout.js"></script>

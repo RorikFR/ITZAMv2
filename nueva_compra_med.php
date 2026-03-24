@@ -28,14 +28,12 @@ require 'header.php';
         <form class="multiform" id="multiStepForm" novalidate autocomplete="off">
             <div class="tab active" data-step="0" aria-hidden="false">
                 
-                <fieldset style="background-color: #e8f4fd; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid #b6d4fe;">
-                    <label for="idCatalogoMed" style="color: #084298;">⚕️ <strong>Catálogo Oficial ITZAM:</strong></label>
-                    <select class="form" id="idCatalogoMed" name="idCatalogoMed" style="border-color: #0d6efd;">
-                        <option value="nuevo" selected>➕ Registrar un medicamento nuevo en el catálogo</option>
-                    </select>
-                </fieldset>
 
                 <fieldset id="inventario-datos-generales-med">
+                    <label for="idCatalogoMed" style="color: var(--PANTONE627C);">⚕️ <strong>Catálogo de medicamentos:</strong></label>
+                    <select class="form" id="idCatalogoMed" name="idCatalogoMed" style="border-color: var(--PANTONE627C);">
+                        <option value="nuevo" selected>➕ Registrar un medicamento nuevo en el catálogo</option>
+                    </select>
                     <label for="nombre">*Nombre comercial:</label>
                     <input class="form datos-med" type="text" id="nombre" name="nombre" maxlength="120" pattern="^[\w\s.-]+$" required>
 
@@ -290,6 +288,22 @@ require 'header.php';
 
         showStep(0);
     })();
+</script>
+
+<script>
+    //Auto-scroll
+    document.addEventListener("DOMContentLoaded", function() {
+        const formulario = document.getElementById("multiStepForm");
+        
+        if (formulario) {
+            setTimeout(() => {
+                formulario.scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'     
+                });
+            }, 300);
+        }
+    });
 </script>
 
 <script src="Scripts/js/timeout.js"></script>

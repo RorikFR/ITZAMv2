@@ -17,18 +17,18 @@ require 'header.php';
                 <thead>
                     <tr>
                         <th class="all">ID</th>
-                        <th class="all">CURP</th>
+                        <th class="min-tablet">CURP</th>
                         <th class="all">Nombre</th>
                         <th class="all">Apellido paterno</th>
                         <th class="all">Apellido materno</th>
-                        <th class="all">Fecha de nacimiento</th>
-                        <th class="all">Género</th>
-                        <th class="all">Teléfono</th>   
-                        <th class="all">Email</th>
-                        <th>Indígena</th>
-                        <th>Afrodesc</th>
-                        <th>Nacionalidad</th>
-                        <th class="all">Acciones</th>
+                        <th class="min-tablet">Fecha de nacimiento</th>
+                        <th class="min-tablet">Género</th>
+                        <th class="min-tablet">Teléfono</th>   
+                        <th class="min-tablet">Email</th>
+                        <th class="min-tablet">Indígena</th>
+                        <th class="min-tablet">Afrodesc</th>
+                        <th class="min-tablet">Nacionalidad</th>
+                        <th class="min-tablet">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="cuerpoTabla"></tbody>
@@ -62,6 +62,7 @@ require 'header.php';
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
@@ -133,7 +134,6 @@ require 'header.php';
             });
 
             tablaInstancia = $('#tablaPacientes').DataTable({
-                responsive: {
                     details: {
                         renderer: function (api, rowIdx, columns) {
                             let data = $.map(columns, function (col, i) {
@@ -149,8 +149,8 @@ require 'header.php';
                                 $('<div class="dtr-detalle-fila"/>').append(data) :
                                 false;
                         }
-                    }
-                },
+                    },
+                responsive: true,
                 language: {
                     "decimal": "",
                     "emptyTable": "No hay información en la base de datos",

@@ -47,8 +47,8 @@ require 'header.php';
                 </div>
                 
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
                     <button type="button" class="btn-save" id="btnSaveCorreo" onclick="guardarCambios()">Guardar Cambios</button>
+                    <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -77,8 +77,8 @@ require 'header.php';
                 </div>
                 
                 <div class="modal-actions">
+                    <button type="button" class="btn-save" id="btnSavePass" onclick="guardarPassword()">Actualizar Contraseña</button>
                     <button type="button" class="btn-cancel" onclick="cerrarModalPassword()">Cancelar</button>
-                    <button type="button" class="btn-save" id="btnSavePass" onclick="guardarPassword()" style="background-color: #28a745; color: white; border: none;">Actualizar Contraseña</button>
                 </div>
             </form>
         </div>
@@ -151,8 +151,8 @@ require 'header.php';
                         <td>${item.Email}</td>
                         <td>${item['Fecha de registro']}</td>
                         <td>
-                            <button class="btn-edit" onclick="abrirModal(${item.idUsuario}, '${item['Nombre de usuario']}', '${item.Email}')" style="margin-right: 5px;">Actualizar Email</button>
-                            <button class="btn-edit" onclick="abrirModalPassword(${item.idUsuario})" style="background-color: #343a40; color: white;">Cambiar Contraseña</button>
+                            <button class="btn-edit" onclick="abrirModal(${item.idUsuario}, '${item['Nombre de usuario']}', '${item.Email}')">Actualizar Email</button>
+                            <button class="btn-pass" onclick="abrirModalPassword(${item.idUsuario})">Cambiar Contraseña</button>
                         </td>
                     </tr>
                 `;

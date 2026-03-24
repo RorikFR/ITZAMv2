@@ -69,6 +69,12 @@ require 'header.php';
 
                         <label for="numero">Número (Exterior/Interior):</label>
                         <input class="form" type="text" id="numero" name="numero" pattern="^[a-zA-Z0-9\s\-\/]+$" title="Solo se permiten letras, números, espacios, diagonales o guiones" required />
+
+                        <label for="telefono">*Teléfono:</label>
+                        <input class="form" type="tel" id="telefono" name="telefono" pattern="^\d{10}$" title="El teléfono debe tener exactamente 10 números, sin espacios ni guiones" required />
+
+                        <label for="email">Correo electrónico (opcional):</label>
+                        <input class="form" type="email" id="email" name="email" />
                 </fieldset>
             
                 <fieldset id="paciente-direccion-2" style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; border: 1px solid #dee2e6;">
@@ -89,15 +95,6 @@ require 'header.php';
 
                     <label for="estado">*Estado:</label>
                     <input class="form" type="text" id="estado" name="estado" readonly style="background-color: #e9ecef; color: #6c757d;" required maxlength="60" />
-                </fieldset>
-
-                <fieldset id="paciente-datos-contacto">
-                    <legend>Medios de contacto</legend>
-                    <label for="telefono">*Teléfono:</label>
-                    <input class="form" type="tel" id="telefono" name="telefono" pattern="^\d{10}$" title="El teléfono debe tener exactamente 10 números, sin espacios ni guiones" required />
-
-                    <label for="email">Correo electrónico (opcional):</label>
-                    <input class="form" type="email" id="email" name="email" />
                 </fieldset>
             </div>
 

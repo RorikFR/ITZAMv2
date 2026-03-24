@@ -13,18 +13,18 @@ require 'header.php';
         <br>
 
       <div class="tabla-container">
-            <table id="tablaExpediente" class="display" style="width:100%">
+            <table id="tablaExpediente" class="display responsive nowrap" style="width:100%">
                 <thead>
                     <tr>    
-                        <th>ID Consulta</th>
-                        <th>Nombre del paciente</th>
-                        <th>CURP</th>
-                        <th>Médico que atendió</th>
-                        <th>Cédula</th>
-                        <th>Unidad Médica</th>
-                        <th>Tipo Consulta</th>
-                        <th>Fecha</th>
-                        <th>Acciones</th>
+                        <th class="min-tablet">ID Consulta</th>
+                        <th class="min-tablet">Nombre del paciente</th>
+                        <th class="all">CURP</th>
+                        <th class="min-tablet">Médico que atendió</th>
+                        <th class="min-tablet">Cédula</th>
+                        <th class="min-tablet">Unidad Médica</th>
+                        <th class="all">Tipo Consulta</th>
+                        <th class="all">Fecha</th>
+                        <th class="min-tablet">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="cuerpoTabla"></tbody>
@@ -73,7 +73,7 @@ require 'header.php';
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-    
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
     
@@ -175,8 +175,8 @@ require 'header.php';
                         <td><span style="background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 0.9em;">${item.tipo_consulta}</span></td>
                         <td>${item.fecha_consulta}</td>
                         <td style="white-space: nowrap;">
-                            <button class="btn-edit" style="background-color: #0d6efd; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer;" onclick="generarPDFIndividual(${index})" title="Generar Nota de Esta Consulta">PDF</button>
-                            <button class="btn-edit" style="background-color: #198754; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer;" onclick="generarHistoriaClinica('${item.curp}')" title="Generar Historia Clínica Completa">Historial</button>
+                            <button class="btn-pdf" onclick="generarPDFIndividual(${index})" title="Generar Nota de Esta Consulta">PDF</button>
+                            <button class="btn-historial" onclick="generarHistoriaClinica('${item.curp}')" title="Generar Historia Clínica Completa">Historial</button>
                             <button class="btn-edit" onclick="abrirModal(${item.idConsulta}, ${item.idPersonal}, ${item.idUnidad}, ${item.idTipoConsulta || 'null'})">Editar</button>
                             <button class="btn-del" onclick="eliminarRegistro(${item.idConsulta})">Borrar</button>
                         </td>
@@ -185,6 +185,7 @@ require 'header.php';
             });
 
             tablaInstancia = $('#tablaExpediente').DataTable({
+                responsive: true,
                 language: {
                     "decimal": "",
                     "emptyTable": "No hay información en la base de datos",

@@ -22,10 +22,10 @@ require 'header.php';
                         <th class="all">Nombre</th>
                         <th class="all">Apellido paterno</th>
                         <th class="all">Apellido materno</th>   
-                        <th>Cédula profesional</th>
-                        <th>Email institucional</th>
-                        <th>Teléfono celular</th>
-                        <th class="all">Acciones</th>
+                        <th class="min-tablet">Cédula profesional</th>
+                        <th class="min-tablet">Email institucional</th>
+                        <th class="min-tablet">Teléfono celular</th>
+                        <th class="min-tablet">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="cuerpoTabla"></tbody>
@@ -59,6 +59,7 @@ require 'header.php';
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
@@ -124,7 +125,6 @@ require 'header.php';
             });
 
             tablaInstancia = $('#tablaPersonal').DataTable({
-                responsive: {
                     details: {
                         renderer: function (api, rowIdx, columns) {
                             let data = $.map(columns, function (col, i) {
@@ -140,8 +140,8 @@ require 'header.php';
                                 $('<div class="dtr-detalle-fila"/>').append(data) :
                                 false;
                         }
-                    }
-                },
+                    },
+                    responsive: true,
                 language: {
                     "decimal": "",
                     "emptyTable": "No hay información en la base de datos",

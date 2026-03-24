@@ -15,95 +15,95 @@ require 'header.php';
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-		<div class="title-box" style="text-align: center; margin-bottom: 20px;">
+		<div class="title-box">
             <h1>Estadísticas Operativas y Epidemiológicas</h1>
         </div>
 
         <div style="text-align: center;">
-            <button class="btn-reporte-completo" onclick="descargarReporteCompleto()" style="margin-top: 10px; padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <button class="btn-reporte-completo" onclick="descargarReporteCompleto()">
                 📊 Descargar Reporte Completo
             </button>
         </div>
 
-        <div id="dashboard-completo" class="graph-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; padding: 20px;">
+        <div id="dashboard-completo" class="graph-container">
             
-            <div id="tarjeta-unidad" class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                <p class="card-subtitle" style="font-weight: bold; margin-bottom: 15px; color: #333;">Consultas médicas por unidad médica</p>
+            <div id="tarjeta-unidad" class="chart-card">
+                <p class="card-subtitle">Consultas médicas por unidad médica</p>
                 <div style="position: relative; height: 300px;">
                     <canvas id="chartUnidad"></canvas>
                 </div>
-                <div class="botones-accion" style="text-align: right; margin-top: 15px;">
-                    <a href="detalle_estadistica.php?modulo=unidades" class="btn-detalle" style="display: inline-block; padding: 8px 15px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; margin-left: 10px;">🔍 Ver Detalles</a>
+                <div class="botones-accion">
+                    <a href="detalle_estadistica.php?modulo=unidades" class="btn-detalle">Ver Detalles</a>
                 </div>
             </div>
             
-            <div id="tarjeta-categoria" class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                <p class="card-subtitle" style="font-weight: bold; margin-bottom: 15px; color: #333;">Consultas médicas por tipo de atención</p>
+            <div id="tarjeta-categoria" class="chart-card">
+                <p class="card-subtitle">Consultas médicas por tipo de atención</p>
                 <div style="position: relative; height: 300px;">
                     <canvas id="chartCategoria"></canvas>
                 </div>
-                <div class="botones-accion" style="text-align: right; margin-top: 15px;">
-                    <a href="detalle_estadistica.php?modulo=categorias" class="btn-detalle" style="display: inline-block; padding: 8px 15px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; margin-left: 10px;">🔍 Ver Detalles</a>
+                <div class="botones-accion">
+                    <a href="detalle_estadistica.php?modulo=categorias" class="btn-detalle">Ver Detalles</a>
                 </div>
             </div>
             
-            <div id="tarjeta-incidencia" class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                <p class="card-subtitle" style="font-weight: bold; margin-bottom: 15px; color: #333;">Top 5: Diagnósticos de mayor incidencia</p>
+            <div id="tarjeta-incidencia" class="chart-card">
+                <p class="card-subtitle">Top 5: Diagnósticos de mayor incidencia</p>
                 <div style="position: relative; height: 300px;">
                     <canvas id="chartIncidencia"></canvas>
                 </div>
-                <div class="botones-accion" style="text-align: right; margin-top: 15px;">
-                    <a href="detalle_estadistica.php?modulo=incidencia" class="btn-detalle" style="display: inline-block; padding: 8px 15px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; margin-left: 10px;">🔍 Ver Detalles</a>
+                <div class="botones-accion">
+                    <a href="detalle_estadistica.php?modulo=incidencia" class="btn-detalle">Ver Detalles</a>
                 </div>
             </div>
             
-            <div id="tarjeta-personal" class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                <p class="card-subtitle" style="font-weight: bold; margin-bottom: 15px; color: #333;">Productividad por personal médico</p>
+            <div id="tarjeta-personal" class="chart-card">
+                <p class="card-subtitle">Productividad por personal médico</p>
                 <div style="position: relative; height: 300px;">
                     <canvas id="chartPersonal"></canvas>
                 </div>
-                <div class="botones-accion" style="text-align: right; margin-top: 15px;">
-                    <a href="detalle_estadistica.php?modulo=personal" class="btn-detalle" style="display: inline-block; padding: 8px 15px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; margin-left: 10px;">🔍 Ver Detalles</a>
+                <div class="botones-accion">
+                    <a href="detalle_estadistica.php?modulo=personal" class="btn-detalle">Ver Detalles</a>
                 </div>
             </div>
             
-            <div id="tarjeta-edad" class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                <p class="card-subtitle" style="font-weight: bold; margin-bottom: 15px; color: #333;">Distribución de edades en consulta</p>
+            <div id="tarjeta-edad" class="chart-card">
+                <p class="card-subtitle">Distribución de edades en consulta</p>
                 <div style="position: relative; height: 300px;">
                     <canvas id="chartEdad"></canvas>
                 </div>
-                <div class="botones-accion" style="text-align: right; margin-top: 15px;">
-                    <a href="detalle_estadistica.php?modulo=edades" class="btn-detalle" style="display: inline-block; padding: 8px 15px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; margin-left: 10px;">🔍 Ver Detalles</a>
+                <div class="botones-accion">
+                    <a href="detalle_estadistica.php?modulo=edades" class="btn-detalle">Ver Detalles</a>
                 </div>
             </div>
             
-            <div id="tarjeta-inventario" class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                <p class="card-subtitle" style="font-weight: bold; margin-bottom: 15px; color: #333;">Top 10 Medicamentos en stock</p>
+            <div id="tarjeta-inventario" class="chart-card">
+                <p class="card-subtitle">Top 10 Medicamentos en stock</p>
                 <div style="position: relative; height: 300px;">
                     <canvas id="chartInventario"></canvas>
                 </div>
-                <div class="botones-accion" style="text-align: right; margin-top: 15px;">
-                    <a href="detalle_estadistica.php?modulo=inventario" class="btn-detalle" style="display: inline-block; padding: 8px 15px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; margin-left: 10px;">🔍 Ver Detalles</a>
+                <div class="botones-accion">
+                    <a href="detalle_estadistica.php?modulo=inventario" class="btn-detalle">Ver Detalles</a>
                 </div>
             </div>
 
-            <div id="tarjeta-insumos" class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                <p class="card-subtitle" style="font-weight: bold; margin-bottom: 15px; color: #333;">Top 10 Insumos médicos en stock</p>
+            <div id="tarjeta-insumos" class="chart-card">
+                <p class="card-subtitle">Top 10 Insumos médicos en stock</p>
                 <div style="position: relative; height: 300px;">
                     <canvas id="chartInsumos"></canvas>
                 </div>
-                <div class="botones-accion" style="text-align: right; margin-top: 15px;">
-                    <a href="detalle_estadistica.php?modulo=insumos" class="btn-detalle" style="display: inline-block; padding: 8px 15px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; margin-left: 10px;">🔍 Ver Detalles</a>
+                <div class="botones-accion">
+                    <a href="detalle_estadistica.php?modulo=insumos" class="btn-detalle">Ver Detalles</a>
                 </div>
             </div>
 
-            <div id="tarjeta-equipo" class="chart-card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                <p class="card-subtitle" style="font-weight: bold; margin-bottom: 15px; color: #333;">Top 10 Equipo médico asignado</p>
+            <div id="tarjeta-equipo" class="chart-card">
+                <p class="card-subtitle">Top 10 Equipo médico asignado</p>
                 <div style="position: relative; height: 300px;">
                     <canvas id="chartEquipo"></canvas>
                 </div>
-                <div class="botones-accion" style="text-align: right; margin-top: 15px;">
-                    <a href="detalle_estadistica.php?modulo=equipo" class="btn-detalle" style="display: inline-block; padding: 8px 15px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 4px; margin-left: 10px;">🔍 Ver Detalles</a>
+                <div class="botones-accion">
+                    <a href="detalle_estadistica.php?modulo=equipo" class="btn-detalle">Ver Detalles</a>
                 </div>
             </div>
         </div>
