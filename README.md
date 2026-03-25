@@ -53,9 +53,3 @@ Destaca por su sólida arquitectura de seguridad, un motor de control de acceso 
 * MySQL / MariaDB (Base de datos relacional)
 
 ---
-
-## 🚀 Instalación y Despliegue
-
-1. **Clonar el repositorio:**
-   ```bash
-   git clone [https://github.com/tu-usuario/itzam-clinico.git](https://github.com/tu-usuario/itzam-clinico.git)
